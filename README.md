@@ -18,6 +18,10 @@ This is a light-weighted NAS system, based on Node.js express, no database used,
 - `npm run start`: start the server on 0.0.0.0
 
 ## Changelog
+#### v1.1.3
+- Updated the UI
+  - Improved the markdown preview UI
+
 #### v1.1.2
 - Updated the UI
 - Now provide all `npm run` commands, details are in [`npm` parameters](#npm-parameters)

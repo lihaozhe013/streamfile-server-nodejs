@@ -5,7 +5,6 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import "./markdown-styles.css";
-import "./interface-styles.css";
 
 function MarkdownViewer() {
   // Get markdown content from window object (passed from server)
