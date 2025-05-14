@@ -10,6 +10,9 @@ This is a simple NAS system, very light, no database used, support markdown prev
 4. run `npm run start` to run
 
 ## Changelog
+#### v1.1.1
+- update the UI, looks prettier
+
 #### v1.1.0
 - Implemented markdown preview feature
 

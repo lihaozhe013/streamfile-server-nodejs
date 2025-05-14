@@ -1,0 +1,10 @@
+#bloackquote-notes {
+  /* border-left: 4px solid #ccc; */
+  padding-left: 1rem;
+  font-family: 'Helvetica Neue', 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0 1em;
+  color: #4f555d;
+  border-left: 0.25em solid #2190ff;
+  font-style: italic;
+}

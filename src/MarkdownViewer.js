@@ -4,7 +4,8 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import "./styles.css";
+import "./markdown-styles.css";
+import "./interface-styles.css";
 
 function MarkdownViewer() {
   // Get markdown content from window object (passed from server)
@@ -25,12 +26,12 @@ function MarkdownViewer() {
     <div className="markdown-viewer">
       <div className="toolbar">
         <h1>Markdown Viewer</h1>
-        <p style={{ fontFamily: 'Segoe UI' }}>Notes: Edit feature is temporary, just for preview use, it won't modify the file!</p>
         <button onClick={toggleEditMode}>
           {isPreviewOnly ? "Edit" : "Preview Only"}
         </button>
       </div>
-
+      <blockquote id="bloackquote-notes">Note: The edit feature is temporary and is for preview purposes only, it does not modify the file!</blockquote>
+      <br />
       <div className={`container ${isPreviewOnly ? "preview-only" : ""}`}>
         {!isPreviewOnly && (
           <textarea
