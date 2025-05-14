@@ -9,9 +9,9 @@ body {
 
 h1 {
     text-align: center;
-    font-family: serif;
-    font-size: 60px;
-    font-weight: bold;
+    font-family: 'Helvetica Neue', 'Segoe UI', sans-serif;
+    font-size: 40px;
+    font-weight: 900;
 }
 
 .app {
@@ -31,7 +31,7 @@ h1 {
 
 fieldset {
     text-align: center;
-    font-family: serif;
+    font-family: 'Helvetica Neue', 'Segoe UI', sans-serif;
     background-color: #000000;
     border: 2px solid #ffffff;
     margin: auto;
@@ -39,7 +39,7 @@ fieldset {
 
 fieldset:hover {
     text-align: center;
-    font-family: serif;
+    font-family: 'Helvetica Neue', 'Segoe UI', sans-serif;
     color: #3cff2d;
     background-color: #000000;
     border: 2px solid #3cff2d;
@@ -47,10 +47,15 @@ fieldset:hover {
 }
 
 legend {
-    font-family: serif;
+    font-family: 'Helvetica Neue', 'Segoe UI', sans-serif;
     font-size: 18px;
     display: block;
     text-align: center;
+    font-weight: 900;
+    background-color: #444;  /* Dark gray background */
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
 }
 
 button:hover {
@@ -59,8 +64,15 @@ button:hover {
 
 p {
     font-size: 13px;
-    font-family: serif;
+    font-family: 'Helvetica Neue', 'Segoe UI', sans-serif;
     text-align: center;
+}
+
+a {
+    font-size: 13px;
+    font-family: 'Helvetica Neue', 'Segoe UI', sans-serif;
+    text-align: center;
+    font-style: bold;
 }
 
 #progressContainer {
@@ -76,4 +88,17 @@ p {
     width: 100%;
     background-color: #ddd;
     height: 20px;
+}
+
+blockquote {
+    font-size: 14px;
+    font-family: 'Helvetica Neue', 'Segoe UI', sans-serif;
+    background-color: #1a1a1a;
+    border-left: 4px solid #ffcc00;
+    color: #f0f0f0; /* Light text for readability */
+    font-style: italic;
+    margin: 1em 0;
+    padding: 1em 1.5em;
+    position: relative;
+    text-align: center;
 }
