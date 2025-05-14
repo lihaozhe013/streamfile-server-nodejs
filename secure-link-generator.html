@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Link Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; }
+    #output { margin-top: 1rem; font-family: monospace; }
+  </style>
+</head>
+<body>
+
+  <h2>Generate Secure Access URL</h2>
+  <button onclick="generateSecureUrl()">Generate Link</button>
+  <div id="output"></div>
+
+  <script>
+    function generateSecureUrl() {
+      const base = "https://yourdomain.com/secure/";
+      const randomString = generateRandomString(32); // 256 bits
+      const fullUrl = base + randomString;
+      document.getElementById("output").innerHTML =
+        `<a href="${fullUrl}" target="_blank">${fullUrl}</a>`;
+    }
+
+    function generateRandomString(length) {
+      const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
+      let result = "";
+      const array = new Uint8Array(length);
+      crypto.getRandomValues(array); // secure random values
+      for (let i = 0; i < length; i++) {
+        result += charset[array[i] % charset.length];
+      }
+      return result;
+    }
+  </script>
+
+</body>
+</html>
