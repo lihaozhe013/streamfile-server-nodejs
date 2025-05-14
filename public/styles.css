@@ -29,16 +29,17 @@ h1 {
 }
 
 fieldset {
+    width: 60%;
     text-align: center;
     background-color: #000000;
-    border: 2px solid #ffffff;
+    border: 5px solid #a4a4a4;
     margin: auto;
     border-radius: 15px;
 }
 
 fieldset:hover {
     color: #3cff2d;
-    border: 2px solid #3cff2d;
+    border: 5px solid #3cff2d;
 }
 
 legend {

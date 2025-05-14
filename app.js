@@ -6,8 +6,8 @@ const fs = require('fs');
 const os = require('os');
 
 const app = express();
-const PORT = 8000;
-const HOST = '0.0.0.0';
+const HOST = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT || 8000;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const NEW_UPLOAD_DIR = path.join(__dirname, 'uploads/new_upload_things');
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -98,5 +98,6 @@ app.get('/', (req, res) => {
 
 // start
 app.listen(PORT, HOST, () => {
-    console.log(`NAS Started: http://${LOCAL_IP}:${PORT}`);
+    console.log(`NAS Started: http://${HOST === '0.0.0.0' ? LOCAL_IP : HOST}:${PORT}`);
+
 });
