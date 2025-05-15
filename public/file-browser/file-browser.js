@@ -9,7 +9,7 @@ async function fetchFiles(path = '') {
     const up = path.split('/').slice(0, -1).join('/');
     const upPath = `?path=${encodeURIComponent(up)}`;
     list.innerHTML += 
-    `<a href="${upPath}">
+    `<a href="${upPath}" class="file-row">
       <img src="/icons/icons8-folder-48.png" class="icons">
       (Go Back)
     </a> <br>`;
@@ -18,10 +18,10 @@ async function fetchFiles(path = '') {
     const url = new URL(window.location.href);
     const baseUrl = `${url.protocol}//${url.host}/`;
     list.innerHTML += 
-    `<a href="${baseUrl}">
+    `<a href="${baseUrl}" class="file-row">
       <img src="/icons/icons8-folder-48.png" class="icons">
       (Go Back)
-    </a> <br>`;
+    </a>`;
   }
 
   files.forEach(async file => {
@@ -41,26 +41,26 @@ async function fetchFiles(path = '') {
           // If index.html exists, point to the directory URL only
           const href = `/files/${encodedPath}/`;
           list.innerHTML += `
-            <a href="${href}" class="folder">
+            <a href="${href}" class="file-row">
               <img src="/icons/icons8-folder-48.png" class="icons">
               ${displayName}/
-            </a><br>`;
+            </a>`;
           return;
         }
       } catch (e) {}
 
       list.innerHTML += `
-        <a href="?path=${encodedPath}" class="folder">
+        <a href="?path=${encodedPath}" class="file-row">
           <img src="/icons/icons8-folder-48.png" class="icons">
           ${displayName}/
-        </a><br>`;
+        </a>`;
     } else {
       const filePath = `/files/${encodedPath}`;
       list.innerHTML += `
-        <a href="${filePath}" class="file">
+        <a href="${filePath}" class="file-row">
           <img src="/icons/file-icon.png" class="icons">
           ${displayName}
-        </a><br>`;
+        </a>`;
     }
   });
 
