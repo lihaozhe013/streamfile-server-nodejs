@@ -49,7 +49,6 @@ async function fetchFiles(path = '') {
         }
       } catch (e) {}
 
-      // Default behavior - browse via query param
       list.innerHTML += `
         <a href="?path=${encodedPath}" class="folder">
           <img src="/icons/icons8-folder-48.png" class="icons">

@@ -78,7 +78,7 @@ app.use(express.static(PUBLIC_DIR));
 
 // Serve custom file browser UI for /files and all nested paths
 app.get('/files', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/custom-file-browser.html'));
+    res.sendFile(path.join(__dirname, 'public/file-browser/file-browser.html'));
 });
 
 // List files in subdirectories of uploads
