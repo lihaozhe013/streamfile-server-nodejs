@@ -3,7 +3,11 @@ body {
 }
 a {
     text-decoration: none; display: block; margin: 5px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
+
 .folder {
     font-weight: bold;
 }

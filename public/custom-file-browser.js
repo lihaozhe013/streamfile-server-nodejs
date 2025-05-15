@@ -8,7 +8,20 @@ async function fetchFiles(path = '') {
   if (path) {
     const up = path.split('/').slice(0, -1).join('/');
     const upPath = `?path=${encodeURIComponent(up)}`;
-    list.innerHTML += `<a href="${upPath}">..(Go Back)</a> <br>`;
+    list.innerHTML += 
+    `<a href="${upPath}">
+      <img src="/icons/icons8-folder-48.png" class="icons">
+      (Go Back)
+    </a> <br>`;
+  }
+  else {
+    const url = new URL(window.location.href);
+    const baseUrl = `${url.protocol}//${url.host}/`;
+    list.innerHTML += 
+    `<a href="${baseUrl}">
+      <img src="/icons/icons8-folder-48.png" class="icons">
+      (Go Back)
+    </a> <br>`;
   }
 
   files.forEach(file => {
@@ -21,12 +34,14 @@ async function fetchFiles(path = '') {
     const href = isDir
       ? `?path=${encodedPath}`
       : `/files/${encodedPath}`;
-    list.innerHTML +=
-    `<a href="${href}" class="${isDir ? 'folder' : 'file'}">
-      <img src="${isDir ? '/icons/icons8-folder-48.png' : '/icons/file-icon.png'}" class="icons">
-      ${displayName}${isDir ? '/' : ''}
-    </a> 
-    <br>`;
+    if (displayName != '.DS_Store') {
+      list.innerHTML +=
+        `<a href="${href}" class="${isDir ? 'folder' : 'file'}">
+          <img src="${isDir ? '/icons/icons8-folder-48.png' : '/icons/file-icon.png'}" class="icons">
+          ${displayName}${isDir ? '/' : ''}
+        </a> 
+        <br>`;
+    }
   });
 }
 
