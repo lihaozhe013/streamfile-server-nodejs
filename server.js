@@ -74,8 +74,46 @@ app.get('/files/*', (req, res, next) => {
 
 // setup static files (after the markdown interceptor)
 app.use('/files', express.static(UPLOAD_DIR));
-app.use('/files', serveIndex(UPLOAD_DIR, { icons: true }));
 app.use(express.static(PUBLIC_DIR));
+
+// Serve custom file browser UI for /files and all nested paths
+app.get('/files', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/custom-file-browser.html'));
+});
+
+// List files in subdirectories of uploads
+app.get('/api/list-files', (req, res) => {
+    const relativePath = req.query.path || '';
+    const safeRelativePath = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, '');
+    const fullPath = path.join(UPLOAD_DIR, safeRelativePath);
+
+    if (!fullPath.startsWith(UPLOAD_DIR)) {
+        return res.status(400).json({ error: 'Invalid path' });
+    }
+
+    fs.readdir(fullPath, { withFileTypes: true }, async (err, entries) => {
+        if (err) return res.status(500).json({ error: 'Failed to read directory' });
+
+        // Resolve symlinks to determine if they point to directories
+        const files = await Promise.all(entries.map(async entry => {
+            const entryPath = path.join(fullPath, entry.name);
+            let isDirectory = false;
+            try {
+                const stat = await fs.promises.stat(entryPath); // Follows symlinks
+                isDirectory = stat.isDirectory();
+            } catch (e) {
+                // If error (broken link), assume not a directory
+            }
+            return {
+                name: entry.name,
+                isDirectory
+            };
+        }));
+
+        res.json(files);
+    });
+});
+
 
 // set up multer for file uploading
 const storage = multer.diskStorage({
