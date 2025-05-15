@@ -41,7 +41,6 @@ app.get('/files/*', (req, res, next) => {
     // Decode the URL component to get the actual filename
     const decodedPath = decodeURIComponent(req.path.substring(7)); // Remove '/files/' prefix
     const filePath = path.join(UPLOAD_DIR, decodedPath);
-    
     if (fs.existsSync(filePath) && path.extname(filePath).toLowerCase() === '.md') {
         fs.readFile(filePath, 'utf8', (err, data) => {
             if (err) {
@@ -71,6 +70,24 @@ app.get('/files/*', (req, res, next) => {
     }
 });
 
+// Automatically serve index.html inside folders
+app.use('/files', async (req, res, next) => {
+    const requestedPath = path.join(UPLOAD_DIR, decodeURIComponent(req.path));
+    try {
+        const stat = await fs.promises.stat(requestedPath);
+        if (stat.isDirectory()) {
+            const indexPath = path.join(requestedPath, 'index.html');
+            console.log(indexPath);
+            if (fs.existsSync(indexPath)) {
+                return res.sendFile(indexPath);
+            }
+        }
+    } catch (err) {
+        // Ignore and let next middleware handle
+    }
+
+    next(); // Not a directory or no index.html, continue to static handler
+});
 
 // setup static files (after the markdown interceptor)
 app.use('/files', express.static(UPLOAD_DIR));
@@ -136,5 +153,5 @@ app.get('/', (req, res) => {
 
 // start
 app.listen(PORT, HOST, () => {
-    console.log(`NAS Started: http://${HOST === '0.0.0.0' ? LOCAL_IP : HOST}:${PORT}`);
+    console.log(`Server Started: http://${HOST === '0.0.0.0' ? LOCAL_IP : HOST}:${PORT}`);
 });
