@@ -1,0 +1,14 @@
+body {
+    font-family: Arial, sans-serif; padding: 20px;
+}
+a {
+    text-decoration: none; display: block; margin: 5px 0;
+}
+.folder {
+    font-weight: bold;
+}
+
+.icons {
+    width: 35px;
+    height: 35px;
+}
