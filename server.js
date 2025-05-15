@@ -136,5 +136,5 @@ app.get('/', (req, res) => {
 
 // start
 app.listen(PORT, HOST, () => {
-    console.log(`NAS Started: http://${HOST === '0.0.0.0' ? LOCAL_IP : HOST}:${PORT}`);
+    console.log(`Server Started: http://${HOST === '0.0.0.0' ? LOCAL_IP : HOST}:${PORT}`);
 });
