@@ -13,6 +13,15 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  color: black;
+}
+
+a:active {
+  color: black;
+}
+
+a:visited {
+  color: black;
 }
 
 .icons {

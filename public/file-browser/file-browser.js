@@ -43,7 +43,7 @@ async function fetchFiles(path = '') {
           list.innerHTML += `
             <a href="${href}" class="file-row">
               <img src="/icons/icons8-folder-48.png" class="icons">
-              ${displayName}/
+              ${displayName}
             </a>`;
           return;
         }
@@ -52,7 +52,7 @@ async function fetchFiles(path = '') {
       list.innerHTML += `
         <a href="?path=${encodedPath}" class="file-row">
           <img src="/icons/icons8-folder-48.png" class="icons">
-          ${displayName}/
+          ${displayName}
         </a>`;
     } else {
       const filePath = `/files/${encodedPath}`;
