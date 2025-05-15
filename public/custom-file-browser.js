@@ -24,25 +24,47 @@ async function fetchFiles(path = '') {
     </a> <br>`;
   }
 
-  files.forEach(file => {
+  files.forEach(async file => {
     const isDir = file.isDirectory;
     const fullPath = path ? `${path}/${file.name}` : file.name;
-
     const displayName = file.name;
     const encodedPath = encodeURIComponent(fullPath).replace(/%2F/g, '/');
 
-    const href = isDir
-      ? `?path=${encodedPath}`
-      : `/files/${encodedPath}`;
-    if (displayName != '.DS_Store') {
-      list.innerHTML +=
-        `<a href="${href}" class="${isDir ? 'folder' : 'file'}">
-          <img src="${isDir ? '/icons/icons8-folder-48.png' : '/icons/file-icon.png'}" class="icons">
-          ${displayName}${isDir ? '/' : ''}
-        </a> 
-        <br>`;
+    if (displayName === '.DS_Store') return;
+
+    if (isDir) {
+      // Check if index.html exists
+      const indexUrl = `/files/${encodedPath}/index.html`;
+      try {
+        const res = await fetch(indexUrl, { method: 'HEAD' });
+        if (res.ok) {
+          // If index.html exists, point to the directory URL only
+          const href = `/files/${encodedPath}/`;
+          list.innerHTML += `
+            <a href="${href}" class="folder">
+              <img src="/icons/icons8-folder-48.png" class="icons">
+              ${displayName}/
+            </a><br>`;
+          return;
+        }
+      } catch (e) {}
+
+      // Default behavior - browse via query param
+      list.innerHTML += `
+        <a href="?path=${encodedPath}" class="folder">
+          <img src="/icons/icons8-folder-48.png" class="icons">
+          ${displayName}/
+        </a><br>`;
+    } else {
+      const filePath = `/files/${encodedPath}`;
+      list.innerHTML += `
+        <a href="${filePath}" class="file">
+          <img src="/icons/file-icon.png" class="icons">
+          ${displayName}
+        </a><br>`;
     }
   });
+
 }
 
 // Decode path in URL bar safely
