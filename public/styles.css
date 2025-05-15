@@ -29,12 +29,12 @@ h1 {
 }
 
 fieldset {
-    width: 60%;
     text-align: center;
     background-color: #000000;
-    border: 5px solid #a4a4a4;
+    border: 5px solid #c7c7c7;
     margin: auto;
     border-radius: 15px;
+    min-width: 300px;
 }
 
 fieldset:hover {
@@ -47,7 +47,7 @@ legend {
     display: block;
     text-align: center;
     font-weight: 700;
-    background-color: #444;  /* Dark gray background */
+    background-color: rgb(52,120,198);  /* Dark gray background */
     color: #fff;
     padding: 5px 10px;
     border-radius: 5px;
@@ -93,4 +93,20 @@ blockquote {
     padding: 1em 1.5em;
     position: relative;
     text-align: center;
+}
+
+#avatar-img {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    width: 20%;
+    height: auto;
+    min-width: 150px;
+}
+
+#subtitle {
+    font-size: 15px;
+    font-style: italic;
+    text-align: center;
+    color: #3cff2d;
 }

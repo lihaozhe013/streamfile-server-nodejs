@@ -2,7 +2,7 @@
 ## Introduction
 This is a cross-platform, light-weighted web server system, based on Node.js, no database used, support markdown preview.
 
-This system aim to privide a easy way for files and information provider of an organization.
+This system aim to privide a easy way to deploy a server system for files and information provider of an organization.
 
 ## How to Setup
 ### Deployment
