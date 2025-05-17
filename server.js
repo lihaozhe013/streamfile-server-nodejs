@@ -36,6 +36,19 @@ if (!fs.existsSync(NEW_UPLOAD_DIR)) {
     fs.mkdirSync(NEW_UPLOAD_DIR, { recursive: true });
 }
 
+app.get('/files/*', (req, res, next) => {
+    const decodedPath = decodeURIComponent(req.path.substring(7));
+    const filePath = path.join(UPLOAD_DIR, decodedPath);
+
+    fs.stat(filePath, (err, stats) => {
+        if (!err && stats.isDirectory()) {
+            return res.sendFile(path.join(__dirname, 'public/file-browser/file-browser.html'));
+        }
+        next();
+    });
+});
+
+
 // Intercept requests for markdown files
 app.get('/files/*', (req, res, next) => {
     // Decode the URL component to get the actual filename
