@@ -42,9 +42,17 @@ app.get('/files/*', (req, res, next) => {
 
     fs.stat(filePath, (err, stats) => {
         if (!err && stats.isDirectory()) {
-            return res.sendFile(path.join(__dirname, 'public/file-browser/file-browser.html'));
+            const indexHtmlPath = path.join(filePath, 'index.html');
+            fs.access(indexHtmlPath, fs.constants.F_OK, (err) => {
+                if (!err) {
+                    return res.sendFile(indexHtmlPath);
+                } else {
+                    return res.sendFile(path.join(__dirname, 'public/file-browser/file-browser.html'));
+                }
+            });
+        } else {
+            next(); // not a directory, go to next handler
         }
-        next();
     });
 });
 
