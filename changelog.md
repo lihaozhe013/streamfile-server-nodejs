@@ -1,4 +1,7 @@
 # Changelog
+### v1.3.1 & v1.3.2
+- fixed bugs for secure link feature
+
 ### v1.3.0
 - New Feature: Customized file browser replaced the default Node.js Express file browser
 
