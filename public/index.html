@@ -7,39 +7,46 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>SIMPLE SERVER</h1>
-    <h2>A Light Weighted Server System</h2>
-    <br>
-    <div id="app" class="app">
-        <fieldset>
-            <legend>Upload File</legend>
-            <br>
-            <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
-                <input type="file" name="file" id="fileInput" required/>
-                <button type="submit">Upload File</button>
-            </form>
-            <div id="progressContainer">
-                <div id="progressWrapper">
-                    <div id="progressBar"></div>
+    <div class="container mx-auto">
+        <h1 class="text-center">Simple Server</h1>
+        <h2 class="text-center mb-4">A Light Weighted Server System</h2>
+        
+        <div class="max-w-md mx-auto">
+            <div class="card mb-4">
+                <h2 class="mb-2">Upload File</h2>
+                <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm" class="flex flex-col gap-2">
+                    <input type="file" name="file" id="fileInput" required class="py-2"/>
+                    <button type="submit" class="btn btn-primary">Upload File</button>
+                </form>
+                <div id="progressContainer" class="progress-container" style="display: none;">
+                    <div id="progressBar" class="progress-bar"></div>
+                    <span id="progressText" class="text-sm"></span>
                 </div>
-                <span id="progressText"></span>
             </div>
-            <br>
-        </fieldset>
-        <br>
-        <fieldset>
-            <legend>Drive</legend>
-            <p>File List: &nbsp <a class="a-element-button" href="/files">Browse Files Here</a></p>
-        </fieldset>
-        <blockquote>This is the main page of Simple Server.</blockquote>
+            
+            <div class="card mb-4">
+                <h2 class="mb-2">Drive</h2>
+                <div class="file-row">
+                    <img src="/icons/icons8-folder-48.png" class="icons">
+                    <a href="/files" class="btn">Browse Files Here</a>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <blockquote>
+                    This is the main page of Simple Server.
+                </blockquote>
+            </div>
+            
+            <div class="text-center mb-4">
+                <img src="avatar.jpeg" id="avatar-img" class="avatar"/>
+            </div>
+            
+            <div class="text-center text-sm mb-4">
+                <p>Developed by <a href="https://github.com/lihaozhe013/simple-NAS-nodejs" target="_blank">lihaozhe013</a></p>
+            </div>
+        </div>
     </div>
-    <br>
-    <img src="avatar.jpeg" id="avatar-img"/>
-    <br>
-    <div style="font-size: 13px; text-align: center;">
-        <p>Developed by <a class="a-element-button" href="https://github.com/lihaozhe013/simple-NAS-nodejs" target="_blank">lihaozhe013</a></p>
-    </div>
-    <br>
     
     <script src="upload.js"></script>
 </body>

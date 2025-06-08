@@ -20,6 +20,8 @@ document.getElementById('uploadForm').addEventListener('submit', (e) => {
     progressContainer.style.display = 'block';
     progressBar.style.width = '0%';
     progressText.textContent = '0%';
+    progressText.style.color = '#fff';
+    progressText.style.padding = '0 8px';
 
     // Listen for progress events
     xhr.upload.addEventListener('progress', (event) => {
