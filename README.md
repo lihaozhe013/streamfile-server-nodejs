@@ -1,116 +1,221 @@
-# Simple Server NodeJS - TypeScript Version
+# Simple Server NodeJS
 
-A simple Express server for file sharing and markdown viewing, now converted to TypeScript.
+A lightweight, cross-platform web server built with Node.js and TypeScript for file sharing, markdown viewing, and secure file management. Perfect for organizations needing a simple file server with no database requirements.
 
-## Setup
+## ✨ Features
 
-1. Install dependencies:
-```bash
-npm install
+- 📁 **File Upload & Management** - Easy drag-and-drop file uploads
+- 📝 **Markdown Preview** - Real-time markdown rendering with KaTeX math support
+- 🔒 **Private File Access** - Secure file sharing via direct URLs
+- 📂 **Directory Navigation** - Intuitive file browser interface
+- 🎨 **Modern UI** - Clean, responsive design with Tailwind CSS
+- 🔐 **Access Control** - Multiple security levels for different file types
+- 🌐 **Cross-Platform** - Works on Windows, macOS, and Linux
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd simple-server-nodejs
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Build the project**
+   ```bash
+   npm run build
+   ```
+
+4. **Start the server**
+   ```bash
+   npm start
+   ```
+
+5. **Access your server**
+   - Open your browser and go to `http://localhost:8000`
+   - Or access from other devices using your local IP address
+
+## 📋 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start server on all interfaces (0.0.0.0) |
+| `npm run preview` | Start server on localhost only (127.0.0.1) |
+| `npm run build` | Full build (TypeScript + Webpack + CSS) |
+| `npm run build:ts` | Compile TypeScript only |
+| `npm run build:css` | Build and watch Tailwind CSS |
+| `npm run dev` | Build TypeScript and start preview |
+| `npm run dev:all` | Full build and start server |
+
+## 📁 Directory Structure
+
+```
+simple-server-nodejs/
+├── server.ts              # Main server file
+├── public/                # Static web assets
+│   ├── file-browser/      # File browser UI
+│   ├── markdown-viewer/   # Markdown preview components
+│   └── index.html         # Main page
+├── uploads/               # File storage directory
+│   ├── incoming/          # Upload staging (hidden from web)
+│   ├── private-files/     # Private files (URL access only)
+│   └── [your files...]    # Public files and folders
+└── dist/                  # Compiled TypeScript output
 ```
 
-2. Build the project:
+## 🔐 File Access Levels
+
+### 1. **Public Files** (`uploads/`)
+- ✅ Visible in file browser
+- ✅ Accessible via web interface
+- ✅ Can be browsed and downloaded by anyone
+
+### 2. **Private Files** (`uploads/private-files/`)
+- ❌ Hidden from file browser
+- ✅ Accessible via direct URL if known
+- 🔗 Perfect for sharing specific files with direct links
+- **Example**: `http://yourserver:8000/private-files/secret-folder/document.pdf`
+
+### 3. **Incoming Files** (`uploads/incoming/`)
+- ❌ Completely hidden from web access
+- ❌ Not accessible via any URL
+- 📤 Used for file upload staging
+- 🔒 Maximum security for sensitive uploads
+
+## 📝 Supported File Types
+
+| Category | File Types | Preview Support |
+|----------|------------|-----------------|
+| **Documents** | `.md`, `.html`, `.pdf` | ✅ Markdown, ✅ HTML, ✅ PDF |
+| **Media** | `.mp4`, `.mp3`, `.jpg`, `.png`, `.gif` | ✅ Native browser support |
+| **Archives** | `.zip`, `.tar`, `.gz` | ❌ Download only |
+| **Office** | `.docx`, `.xlsx`, `.pptx` | ❌ Download only |
+| **Code** | `.js`, `.ts`, `.py`, `.css`, etc. | ✅ Syntax highlighting |
+
+### Special Features
+- **Markdown Files**: Full preview with KaTeX math rendering, GitHub Flavored Markdown
+- **Directory Index**: Automatic `index.html` serving for folders
+- **Chinese Characters**: Full support for Unicode filenames
+
+## 🔒 Security Features
+
+### Secure Link Generation
+Create secure, hard-to-guess URLs for sensitive files:
+
+1. Use the built-in secure link generator (if available)
+2. Generate a secure filename: `B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES`
+3. Rename your file: `secret-document.pdf` → `B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.pdf`
+4. Place in `uploads/private-files/`
+5. Share the direct URL: `http://yourserver:8000/private-files/B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.pdf`
+
+### Access Control Best Practices
+- Use `private-files/` for confidential documents
+- Create `index.html` warning pages in sensitive directories
+- Use secure, random filenames for sensitive content
+- Regularly audit file permissions and access logs
+
+## 🛠️ Configuration
+
+### Environment Variables
+- `HOST` - Server host (default: `0.0.0.0`)
+- `PORT` - Server port (default: `8000`)
+
+### Custom Setup
 ```bash
+# Start on specific host/port
+HOST=192.168.1.100 PORT=3000 npm start
+
+# Development with custom settings
+HOST=localhost PORT=8080 npm run dev
+```
+
+## 🌐 Network Access
+
+### Local Network Sharing
+1. Find your local IP address
+2. Ensure firewall allows connections on your chosen port
+3. Share the URL: `http://[YOUR-IP]:8000`
+
+### Security Considerations
+- The server binds to `0.0.0.0` by default (accessible from network)
+- Use `npm run preview` for localhost-only access
+- Consider using a reverse proxy (nginx) for production
+- Implement additional authentication if needed
+
+## 🔧 Development
+
+### Building Components
+```bash
+# Watch CSS changes
+npm run build:css
+
+# Rebuild everything
 npm run build
+
+# Development mode
+npm run dev:all
 ```
 
-3. Start the server:
-```bash
-npm start
-```
+### Project Architecture
+- **Backend**: Express.js with TypeScript
+- **Frontend**: React components with Tailwind CSS
+- **Build Tools**: Webpack, Babel, TypeScript compiler
+- **File Handling**: Multer for uploads, serve-static for delivery
 
-Or use the development mode:
-```bash
-npm run dev
-```
+## 📚 API Endpoints
 
-## Available Scripts
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Main application page |
+| `/files` | GET | File browser interface |
+| `/files/*` | GET | Access public files and folders |
+| `/private-files/*` | GET | Access private files by direct URL |
+| `/api/list-files` | GET | Get directory contents (JSON) |
+| `/upload` | POST | Upload files to incoming directory |
 
-- `npm start` - Start the server with HOST=0.0.0.0
-- `npm run preview` - Start the server with HOST=127.0.0.1
-- `npm run build` - Compile TypeScript, build webpack assets, and generate CSS
-- `npm run dev` - Build and preview the server
-- `npm run build:css` - Watch and build Tailwind CSS
+## 🤝 Contributing
 
-## Project Structure
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes and test thoroughly
+4. Commit with clear messages: `git commit -m "Add feature description"`
+5. Push and create a Pull Request
 
-- `server.ts` - Main server file
-- `public/` - Static files
-- `uploads/` - Directory for uploaded files
-- `dist/` - Compiled TypeScript output
+## 📄 License
 
-## Features
+This project is open source. Please check the license file for details.
 
-- File uploading and browsing
-- Markdown file viewing
-- Directory navigation
-- Static file serving
+## 🆘 Troubleshooting
 
-## Introduction
-This is a cross-platform, light-weighted web server system, based on Node.js, no database used, support markdown preview.
+### Common Issues
 
-This system aim to privide a easy way to deploy a server system for files and information provider of an organization.
+**Server won't start**
+- Check if port 8000 is already in use
+- Try a different port: `PORT=3000 npm start`
 
-## How to Setup
-### Deployment
-1. Clone this repo
-2. Run `npm install` to install dependencies
-3. Run `npm run build` to bundle markdown dependencies
-4. Create a folder called `uploads`, or use `ln -s` symbolic link
-5. Run `npm run start` to run
-6. Use web browser to visit your ip address + port number
+**Files not uploading**
+- Ensure `uploads/incoming/` directory exists and is writable
+- Check file size limits in your system
 
-### How to use the server
-- You can put files into `/uploads` directory
-- Sub-folders are supported in Simple Server
-- Secure Link Trick
-  > Note: If there's a file called `index.html` in a folder, the server will directly return this page to the user when the user tries to access this folder. You can use this trick to Hide contents inside a folder with a Encrypted file name. Detailed information about this trick can be found [here](#hide-content-trick)
-- Supported File Types are listed [here](#supported-file-types)
-- Markdown Files Preview
-  
+**Can't access from other devices**
+- Verify firewall settings
+- Use `npm start` (not `npm run preview`)
+- Check your local IP address
 
-### Supported File Types
+**Markdown not rendering**
+- Ensure webpack build completed successfully: `npm run build`
+- Check browser console for JavaScript errors
 
-| File Type        | Support  |
-| :--------------- | :------- |
-| mp4, mp3         | yes      |
-| mkv, mov, avi    | no       |
-| pdf              | yes      |
-| md               | yes      |
-| html             | yes      |
-| docx, doc, odt   | no       |
+---
 
-### Secure Link Trick
-While Node.js Express will automatically send `index.html` to user when they tries to access a folder that includes `index.html`, you can hide some files or folders with encrypted file/folder name.
-
-A file called `secure-link-generator.html` is provided in this project, you can use it to generate secure url and you can replace your secret file name with a secure file name, for example:
-
-I use `secure-link-generator.html` to generate a link: 
-[https://yourdomain.com/secure/B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES](https://yourdomain.com/secure/B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES)
-
-I extract the secure part and rename my file name to
-```
-B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.md
-```
-
-then organize your `uploads` folder like this:
-
-```md
-simple-server-nodejs/uploads
-├── normal-folder
-│   ├── file1
-│   ├── file2
-├── secure-links
-│   ├── index.html
-│   ├── B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.md
-```
-
-when you try to access the following url:
-
-[https://yourdomain.com/files/secure-links/B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.md](https://yourdomain.com/files/secure-links/B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.md)
-
-you can access your secure file while people who don't have the link can't reach it.
-
-The same, you can create a secure folder in the same way.
-
-Note that you can edit `index.html` to anything, just make sure to have it in your secure folder. My recommendation is to make `index.html` a warning page, informing users not to access this folder.
+**Version**: 2.0.0 | **Author**: lihaozhe | **Built with**: Node.js, TypeScript, Express, React
