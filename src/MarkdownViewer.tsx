@@ -118,7 +118,16 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
 
   // Handle back button click
   const handleBackClick = () => {
-    window.history.back();
+    const currentPath = window.location.pathname;
+    // Remove the filename by finding the last '/' and removing everything after it
+    const lastSlashIndex = currentPath.lastIndexOf('/');
+    if (lastSlashIndex > 0) {
+      const parentPath = currentPath.substring(0, lastSlashIndex);
+      window.location.href = parentPath;
+    } else {
+      // If no parent directory, go to root
+      window.location.href = '/';
+    }
   };
 
   // Handle TOC item click
