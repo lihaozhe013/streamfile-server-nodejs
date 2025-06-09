@@ -1,24 +1,26 @@
-const express = require('express');
-const multer = require('multer');
-const serveIndex = require('serve-index');
-const path = require('path');
-const fs = require('fs');
-const os = require('os');
+import express, { Request, Response, NextFunction } from 'express';
+import multer from 'multer';
+import serveIndex from 'serve-index';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
 
 const app = express();
 const HOST = process.env.HOST || '0.0.0.0';
-const PORT = process.env.PORT || 8000;
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
-const NEW_UPLOAD_DIR = path.join(__dirname, 'uploads/new_upload_things');
-const PUBLIC_DIR = path.join(__dirname, 'public');
+const PORT = parseInt(process.env.PORT || '8000', 10);
+const UPLOAD_DIR = path.join(__dirname, '../uploads');
+const NEW_UPLOAD_DIR = path.join(__dirname, '../uploads/new_upload_things');
+const PUBLIC_DIR = path.join(__dirname, '../public');
 
-function getLocalIP() {
+function getLocalIP(): string {
     const interfaces = os.networkInterfaces();
     for (const interfaceName in interfaces) {
-        const interface = interfaces[interfaceName];
-        for (const iface of interface) {
-            if (iface.family === 'IPv4' && !iface.internal) {
-                return iface.address;
+        const interface_ = interfaces[interfaceName];
+        if (interface_) {
+            for (const iface of interface_) {
+                if (iface.family === 'IPv4' && !iface.internal) {
+                    return iface.address;
+                }
             }
         }
     }
@@ -36,7 +38,7 @@ if (!fs.existsSync(NEW_UPLOAD_DIR)) {
     fs.mkdirSync(NEW_UPLOAD_DIR, { recursive: true });
 }
 
-app.get('/files/*', (req, res, next) => {
+app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
     const decodedPath = decodeURIComponent(req.path.substring(7));
     const filePath = path.join(UPLOAD_DIR, decodedPath);
 
@@ -47,7 +49,7 @@ app.get('/files/*', (req, res, next) => {
                 if (!err) {
                     return res.sendFile(indexHtmlPath);
                 } else {
-                    return res.sendFile(path.join(__dirname, 'public/file-browser/file-browser.html'));
+                    return res.sendFile(path.join(__dirname, '../public/file-browser/file-browser.html'));
                 }
             });
         } else {
@@ -56,9 +58,8 @@ app.get('/files/*', (req, res, next) => {
     });
 });
 
-
 // Intercept requests for markdown files
-app.get('/files/*', (req, res, next) => {
+app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
     // Decode the URL component to get the actual filename
     const decodedPath = decodeURIComponent(req.path.substring(7)); // Remove '/files/' prefix
     const filePath = path.join(UPLOAD_DIR, decodedPath);
@@ -92,19 +93,23 @@ app.get('/files/*', (req, res, next) => {
     }
 });
 
-
 // setup static files (after the markdown interceptor)
 app.use('/files', express.static(UPLOAD_DIR));
 app.use(express.static(PUBLIC_DIR));
 
 // Serve custom file browser UI for /files and all nested paths
-app.get('/files', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/file-browser/file-browser.html'));
+app.get('/files', (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../public/file-browser/file-browser.html'));
 });
 
+interface FileEntry {
+    name: string;
+    isDirectory: boolean;
+}
+
 // List files in subdirectories of uploads
-app.get('/api/list-files', (req, res) => {
-    const relativePath = req.query.path || '';
+app.get('/api/list-files', (req: Request, res: Response) => {
+    const relativePath = req.query.path as string || '';
     const safeRelativePath = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, '');
     const fullPath = path.join(UPLOAD_DIR, safeRelativePath);
 
@@ -116,7 +121,7 @@ app.get('/api/list-files', (req, res) => {
         if (err) return res.status(500).json({ error: 'Failed to read directory' });
 
         // Resolve symlinks to determine if they point to directories
-        const files = await Promise.all(entries.map(async entry => {
+        const files: FileEntry[] = await Promise.all(entries.map(async entry => {
             const entryPath = path.join(fullPath, entry.name);
             let isDirectory = false;
             try {
@@ -135,7 +140,6 @@ app.get('/api/list-files', (req, res) => {
     });
 });
 
-
 // set up multer for file uploading
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, NEW_UPLOAD_DIR),
@@ -146,16 +150,16 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // file uploading port
-app.post('/upload', upload.single('file'), (req, res) => {
+app.post('/upload', upload.single('file'), (req: Request, res: Response) => {
     res.send({ message: 'File uploaded successfully!', file: req.file });
 });
 
 // Main Page
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
+app.get('/', (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // start
 app.listen(PORT, HOST, () => {
     console.log(`Server Started: http://${HOST === '0.0.0.0' ? LOCAL_IP : HOST}:${PORT}`);
-});
+}); 

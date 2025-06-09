@@ -1,4 +1,51 @@
-# Simple Server
+# Simple Server NodeJS - TypeScript Version
+
+A simple Express server for file sharing and markdown viewing, now converted to TypeScript.
+
+## Setup
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Build the project:
+```bash
+npm run build
+```
+
+3. Start the server:
+```bash
+npm start
+```
+
+Or use the development mode:
+```bash
+npm run dev
+```
+
+## Available Scripts
+
+- `npm start` - Start the server with HOST=0.0.0.0
+- `npm run preview` - Start the server with HOST=127.0.0.1
+- `npm run build` - Compile TypeScript, build webpack assets, and generate CSS
+- `npm run dev` - Build and preview the server
+- `npm run build:css` - Watch and build Tailwind CSS
+
+## Project Structure
+
+- `server.ts` - Main server file
+- `public/` - Static files
+- `uploads/` - Directory for uploaded files
+- `dist/` - Compiled TypeScript output
+
+## Features
+
+- File uploading and browsing
+- Markdown file viewing
+- Directory navigation
+- Static file serving
+
 ## Introduction
 This is a cross-platform, light-weighted web server system, based on Node.js, no database used, support markdown preview.
 
@@ -32,13 +79,6 @@ This system aim to privide a easy way to deploy a server system for files and in
 | md               | yes      |
 | html             | yes      |
 | docx, doc, odt   | no       |
-
-### `npm` parameters
-
-- `npm run build`: build the markdown previewer component developed by react.js
-- `npm run preview`: run this program on localhost
-- `npm run dev`: a combination of `npm run build` and `npm run preview`, build and run in one command
-- `npm run start`: start the server on `0.0.0.0`
 
 ### Secure Link Trick
 While Node.js Express will automatically send `index.html` to user when they tries to access a folder that includes `index.html`, you can hide some files or folders with encrypted file/folder name.

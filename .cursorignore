@@ -1,0 +1,10 @@
+uploads/
+node_modules/
+.env
+.gitignore
+.cursorignore
+.cursorrules
+.cursorconfig
+.cursorignore
+.cursorrules
+.cursorconfig
