@@ -9,7 +9,8 @@ const app = express();
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = parseInt(process.env.PORT || '8000', 10);
 const UPLOAD_DIR = path.join(__dirname, '../uploads');
-const NEW_UPLOAD_DIR = path.join(__dirname, '../uploads/new_upload_things');
+const INCOMING_DIR = path.join(__dirname, '../uploads/incoming');
+const PRIVATE_DIR = path.join(__dirname, '../uploads/private-files');
 const PUBLIC_DIR = path.join(__dirname, '../public');
 
 function getLocalIP(): string {
@@ -34,13 +35,25 @@ if (!fs.existsSync(UPLOAD_DIR)) {
     fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-if (!fs.existsSync(NEW_UPLOAD_DIR)) {
-    fs.mkdirSync(NEW_UPLOAD_DIR, { recursive: true });
+if (!fs.existsSync(INCOMING_DIR)) {
+    fs.mkdirSync(INCOMING_DIR, { recursive: true });
 }
+
+if (!fs.existsSync(PRIVATE_DIR)) {
+    fs.mkdirSync(PRIVATE_DIR, { recursive: true });
+}
+
+// Serve private files directly by URL (but don't list them in browser)
+app.use('/private-files', express.static(PRIVATE_DIR));
 
 app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
     const decodedPath = decodeURIComponent(req.path.substring(7));
     const filePath = path.join(UPLOAD_DIR, decodedPath);
+
+    // Block access to the incoming directory
+    if (filePath.startsWith(INCOMING_DIR)) {
+        return res.status(403).json({ error: 'Access denied' });
+    }
 
     fs.stat(filePath, (err, stats) => {
         if (!err && stats.isDirectory()) {
@@ -63,6 +76,11 @@ app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
     // Decode the URL component to get the actual filename
     const decodedPath = decodeURIComponent(req.path.substring(7)); // Remove '/files/' prefix
     const filePath = path.join(UPLOAD_DIR, decodedPath);
+    
+    // Block access to the incoming directory
+    if (filePath.startsWith(INCOMING_DIR)) {
+        return res.status(403).json({ error: 'Access denied' });
+    }
     
     if (fs.existsSync(filePath) && path.extname(filePath).toLowerCase() === '.md') {
         fs.readFile(filePath, 'utf8', (err, data) => {
@@ -136,13 +154,16 @@ app.get('/api/list-files', (req: Request, res: Response) => {
             };
         }));
 
-        res.json(files);
+        // Filter out the incoming and private-files directories from file listings
+        const filteredFiles = files.filter(file => file.name !== 'incoming' && file.name !== 'private-files');
+
+        res.json(filteredFiles);
     });
 });
 
 // set up multer for file uploading
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, NEW_UPLOAD_DIR),
+    destination: (req, file, cb) => cb(null, INCOMING_DIR),
     filename: function (req, file, cb) { // Chinese Character Support
         cb(null, Buffer.from(file.originalname, 'latin1').toString('utf8'));
     }
