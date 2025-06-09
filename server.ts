@@ -94,7 +94,7 @@ app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Markdown Preview - ${path.basename(filePath)}</title>
-                    <link rel="stylesheet" href="/markdown-viewer/styles.css">
+                    <link rel="stylesheet" href="/output.css">
                 </head>
                 <body>
                     <div id="root"></div>
