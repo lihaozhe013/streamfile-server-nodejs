@@ -1,0 +1,41 @@
+{
+  "name": "file-search-rust-addon",
+  "version": "1.0.0",
+  "description": "A Node.js native addon for file searching written in Rust",
+  "main": "index.js",
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build-debug": "napi build --platform",
+    "prepublishOnly": "napi prepublish -t npm",
+    "test": "node test.js",
+    "artifacts": "napi artifacts"
+  },
+  "napi": {
+    "name": "file-search-rust-addon",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "x86_64-pc-windows-msvc",
+        "i686-pc-windows-msvc",
+        "aarch64-pc-windows-msvc",
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-gnu",
+        "armv7-unknown-linux-gnueabihf"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.0"
+  },
+  "keywords": [
+    "rust",
+    "napi",
+    "file-search",
+    "native-addon"
+  ],
+  "author": "",
+  "license": "MIT"
+} 
