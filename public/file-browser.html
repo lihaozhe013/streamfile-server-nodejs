@@ -7,27 +7,32 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="container mx-auto">
-    <h1 class="text-center">File Browser</h1>
-    
-    <!-- Search Section -->
-    <div class="card mx-auto mb-4">
-      <h3>Search Files</h3>
-      <div class="search-container">
-        <input type="text" id="search-input" placeholder="Enter filename to search..." class="search-input">
-        <button id="search-btn" class="btn">Search</button>
-        <button id="clear-search-btn" class="btn btn-secondary">Clear</button>
-      </div>
-      <div id="search-results" class="search-results" style="display: none;">
-        <h4>Search Results:</h4>
-        <div id="search-list"></div>
+  <!-- Top header with search -->
+  <div class="top-header">
+    <div class="container">
+      <div class="header-content">
+        <h1 class="header-title">File Browser</h1>
+        <div class="github-search-container">
+          <input type="text" id="search-input" placeholder="Search files..." class="github-search-input">
+          <button id="search-btn" class="github-search-btn">Search</button>
+          <button id="clear-search-btn" class="github-clear-btn">×</button>
+        </div>
       </div>
     </div>
+  </div>
+
+  <div class="container main-content">
+    <!-- Search Results Section -->
+    <div id="search-results" class="search-results-panel" style="display: none;">
+      <h4>Search Results:</h4>
+      <div id="search-list"></div>
+    </div>
     
-    <div id="file-list" class="card mx-auto">Loading...</div>
+    <!-- File List -->
+    <div id="file-list" class="file-list-panel">Loading...</div>
     
     <div class="text-center mt-4">
-      <a href="/" class="btn">Back</a>
+      <a href="/" class="btn">Back to Home</a>
     </div>
   </div>
 
