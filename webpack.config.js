@@ -2,10 +2,14 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/MarkdownViewer.tsx',
+  entry: {
+    'markdown-viewer/bundle': './src/MarkdownViewer.tsx',
+    'file-browser/file-browser': './src/frontend/file-browser.ts',
+    'upload': './src/frontend/upload.ts',
+  },
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'public', 'markdown-viewer'),
+    filename: '[name].js',
+    path: path.resolve(__dirname, 'dist'),
   },
   module: {
     rules: [

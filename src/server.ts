@@ -1,17 +1,18 @@
 import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-import serveIndex from 'serve-index';
+const { searchFilesInPath, searchFilesStructured } = require('../dist/search_feat/index.js');
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
 
 const app = express();
 const HOST = process.env.HOST || '0.0.0.0';
-const PORT = parseInt(process.env.PORT || '8000', 10);
+const PORT = parseInt(process.env.PORT || '80', 10);
 const UPLOAD_DIR = path.join(__dirname, '../uploads');
 const INCOMING_DIR = path.join(__dirname, '../uploads/incoming');
 const PRIVATE_DIR = path.join(__dirname, '../uploads/private-files');
 const PUBLIC_DIR = path.join(__dirname, '../public');
+const DIST_DIR = path.join(__dirname, '..');
 
 function getLocalIP(): string {
     const interfaces = os.networkInterfaces();
@@ -62,7 +63,7 @@ app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
                 if (!err) {
                     return res.sendFile(indexHtmlPath);
                 } else {
-                    return res.sendFile(path.join(__dirname, '../public/file-browser/file-browser.html'));
+                    return res.sendFile(path.join(__dirname, '../public/file-browser.html'));
                 }
             });
         } else {
@@ -94,14 +95,14 @@ app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Markdown Preview - ${path.basename(filePath)}</title>
-                    <link rel="stylesheet" href="/output.css">
+                    <link rel="stylesheet" href="/dist/output.css">
                 </head>
                 <body>
                     <div id="root"></div>
                     <script>
                         window.markdownContent = ${JSON.stringify(data)};
                     </script>
-                    <script src="/markdown-viewer/bundle.js"></script>
+                    <script src="/dist/markdown-viewer/bundle.js"></script>
                 </body>
                 </html>
             `);
@@ -114,10 +115,11 @@ app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
 // setup static files (after the markdown interceptor)
 app.use('/files', express.static(UPLOAD_DIR));
 app.use(express.static(PUBLIC_DIR));
+app.use(express.static(DIST_DIR)); // Serve dist files (including output.css)
 
 // Serve custom file browser UI for /files and all nested paths
 app.get('/files', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../public/file-browser/file-browser.html'));
+    res.sendFile(path.join(__dirname, '../public/file-browser.html'));
 });
 
 interface FileEntry {
@@ -175,12 +177,68 @@ app.post('/upload', upload.single('file'), (req: Request, res: Response) => {
     res.send({ message: 'File uploaded successfully!', file: req.file });
 });
 
+app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res: Response) => {
+    const fileName = req.params.fileName;
+    const currentDir = req.params[0] || ''; // 获取通配符匹配的路径部分
+    
+    if (!fileName) {
+        return res.json({error: "file_name parameter is required"});
+    }
+    
+    // 规范化路径，防止路径遍历攻击
+    const safeCurrentDir = path.normalize(currentDir).replace(/^(\.\.(\/|\\|$))+/, '');
+    const searchPath = path.join(UPLOAD_DIR, safeCurrentDir);
+    
+    // 确保搜索路径在UPLOAD_DIR内
+    if (!searchPath.startsWith(UPLOAD_DIR)) {
+        return res.json({error: "Invalid search path"});
+    }
+    
+    try {
+        const jsonResult = searchFilesInPath(fileName, searchPath);
+        const files = JSON.parse(jsonResult);
+        
+        // 过滤掉路径前缀为private-files或incoming的文件
+        const filteredFiles = files.filter((file: { path: string }) => {
+            const relativePath = path.relative(UPLOAD_DIR, file.path);
+            return !relativePath.startsWith('private-files') && !relativePath.startsWith('incoming');
+        });
+        
+        // 为每个文件路径拼接UPLOAD_DIR前缀，生成完整路径
+        const resultFiles = filteredFiles.map((file: { full_file_name: string; path: string }) => {
+            return {
+                file_name: file.full_file_name,
+                file_path: file.path, // 保持原始完整路径
+                relative_path: path.relative(UPLOAD_DIR, file.path) // 添加相对路径信息
+            };
+        });
+        
+        console.log(`Found ${resultFiles.length} file(s) matching "${fileName}" in "${safeCurrentDir}":`);
+        resultFiles.forEach((file: { file_name: string; file_path: string; relative_path: string }) => {
+            console.log(`  - ${file.file_name} (in: ${file.relative_path})`);
+        });
+        
+        return res.json({
+            query: {
+                file_name: fileName,
+                current_dir: safeCurrentDir
+            },
+            results: resultFiles,
+            count: resultFiles.length
+        });
+    } catch (error) {
+        console.error('Search error:', error);
+        return res.json({error: "Search failed", details: error instanceof Error ? error.message : "Unknown error"});
+    }
+})
+
 // Main Page
 app.get('/', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+    res.sendFile(path.join(__dirname, '../../public/index.html'));
 });
 
 // start
 app.listen(PORT, HOST, () => {
     console.log(`Server Started: http://${HOST === '0.0.0.0' ? LOCAL_IP : HOST}:${PORT}`);
-}); 
+});
+  

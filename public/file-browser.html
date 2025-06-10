@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>File Browser</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container mx-auto">
+    <h1 class="text-center">File Browser</h1>
+    
+    <!-- Search Section -->
+    <div class="card mx-auto mb-4">
+      <h3>Search Files</h3>
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="Enter filename to search..." class="search-input">
+        <button id="search-btn" class="btn">Search</button>
+        <button id="clear-search-btn" class="btn btn-secondary">Clear</button>
+      </div>
+      <div id="search-results" class="search-results" style="display: none;">
+        <h4>Search Results:</h4>
+        <div id="search-list"></div>
+      </div>
+    </div>
+    
+    <div id="file-list" class="card mx-auto">Loading...</div>
+    
+    <div class="text-center mt-4">
+      <a href="/" class="btn">Back</a>
+    </div>
+  </div>
+
+  <script src="/dist/file-browser/file-browser.js"></script>
+</body>
+</html>

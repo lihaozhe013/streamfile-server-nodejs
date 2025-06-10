@@ -1,5 +1,9 @@
 # Changelog
 
+### v2.1.0
+- upgraded all components to typescript
+- upgraded markdown viewer
+
 ### v2.0.0
 - upgraded to typescript + tailwind css
 - now provide `uploads/incoming` and `uploads/private-files` folders, and they won't be displayed on the frontend

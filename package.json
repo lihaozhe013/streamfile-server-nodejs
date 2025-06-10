@@ -1,15 +1,17 @@
 {
   "name": "simple-server-nodejs",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "main": "dist/server.js",
   "scripts": {
     "start": "cross-env HOST=0.0.0.0 node dist/server.js",
     "preview": "cross-env HOST=127.0.0.1 node dist/server.js",
-    "build": "tsc && webpack && npx tailwindcss -i ./public/tailwind.css -o ./public/output.css",
-    "build:ts": "tsc",
-    "dev": "npm run build:ts && npm run preview",
-    "build:css": "tailwindcss -i ./public/tailwind.css -o ./public/output.css --watch",
-    "dev:all": "npm run build && npm run preview"
+    "build": "npm run build:server && npm run build:frontend && npm run build:css",
+    "build:server": "tsc",
+    "build:frontend": "webpack",
+    "build:css": "npx tailwindcss -i ./public/tailwind.css -o ./dist/output.css",
+    "dev": "npm run build && npm run preview",
+    "build:css:watch": "tailwindcss -i ./public/tailwind.css -o ./dist/output.css --watch",
+    "dev:server": "npm run build:server && npm run preview"
   },
   "author": {
     "name": "lihaozhe"

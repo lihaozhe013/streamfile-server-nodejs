@@ -15,7 +15,8 @@
     "noEmit": false,
     "jsx": "react-jsx",
     "sourceMap": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "outDir": "dist"
   },
   "include": [
     "src/**/*"
@@ -23,6 +24,6 @@
   "exclude": [
     "node_modules",
     "dist",
-    "server.ts"
+    "src/server.ts"
   ]
 } 
