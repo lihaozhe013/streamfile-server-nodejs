@@ -234,7 +234,7 @@ app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res
 
 // Main Page
 app.get('/', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../../public/index.html'));
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // start
