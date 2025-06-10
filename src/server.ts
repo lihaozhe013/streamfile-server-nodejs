@@ -157,7 +157,12 @@ app.get('/api/list-files', (req: Request, res: Response) => {
         }));
 
         // Filter out the incoming and private-files directories from file listings
-        const filteredFiles = files.filter(file => file.name !== 'incoming' && file.name !== 'private-files');
+        // Also filter out files and directories that start with '.'
+        const filteredFiles = files.filter(file => 
+            file.name !== 'incoming' && 
+            file.name !== 'private-files' &&
+            !file.name.startsWith('.')
+        );
 
         res.json(filteredFiles);
     });
@@ -199,9 +204,12 @@ app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res
         const files = JSON.parse(jsonResult);
         
         // 过滤掉路径前缀为private-files或incoming的文件
-        const filteredFiles = files.filter((file: { path: string }) => {
+        // Also filter out files that start with '.'
+        const filteredFiles = files.filter((file: { path: string; full_file_name: string }) => {
             const relativePath = path.relative(UPLOAD_DIR, file.path);
-            return !relativePath.startsWith('private-files') && !relativePath.startsWith('incoming');
+            return !relativePath.startsWith('private-files') && 
+                   !relativePath.startsWith('incoming') &&
+                   !file.full_file_name.startsWith('.');
         });
         
         // 为每个文件路径拼接UPLOAD_DIR前缀，生成完整路径

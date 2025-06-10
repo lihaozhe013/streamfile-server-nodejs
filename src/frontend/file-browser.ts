@@ -66,7 +66,8 @@ async function fetchFiles(path: string = ''): Promise<void> {
     const displayName: string = file.name;
     const encodedPath: string = fullPath.split('/').map(encodeURIComponent).join('/');
 
-    if (displayName === '.DS_Store') return;
+    // Skip .DS_Store and files/directories that start with '.'
+    if (displayName === '.DS_Store' || displayName.startsWith('.')) return;
 
     if (isDir) {
       const href: string = `/files/${encodedPath}/`;
