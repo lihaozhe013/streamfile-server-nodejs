@@ -22,6 +22,88 @@ interface Heading {
   level: number;
 }
 
+// Utility function to clean markdown formatting from text
+const cleanMarkdownText = (text: string): string => {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  
+  return text
+    // Remove bold formatting: **text** or __text__
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    // Remove italic formatting: *text* or _text_
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/_(.*?)_/g, '$1')
+    // Remove strikethrough: ~~text~~
+    .replace(/~~(.*?)~~/g, '$1')
+    // Remove inline code: `text`
+    .replace(/`([^`]+)`/g, '$1')
+    // Remove links: [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove images: ![alt](url) -> alt
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    // Clean up any remaining markdown characters
+    .replace(/[*_~`[\]()]/g, '')
+    .trim();
+};
+
+// Utility function to generate consistent heading IDs
+const generateHeadingId = (text: string, existingIds: Set<string> = new Set()): string => {
+  if (!text || typeof text !== 'string') {
+    return `heading-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  // Clean markdown formatting first
+  const cleanText = cleanMarkdownText(text);
+  
+  let baseId = cleanText
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters except hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+  
+  // If baseId is empty after cleaning, generate a fallback
+  if (!baseId) {
+    baseId = `heading-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  // Ensure uniqueness by adding a suffix if needed
+  let finalId = baseId;
+  let counter = 1;
+  while (existingIds.has(finalId)) {
+    finalId = `${baseId}-${counter}`;
+    counter++;
+  }
+  
+  existingIds.add(finalId);
+  return finalId;
+};
+
+// Utility function to extract text content consistently
+const extractTextContent = (node: any): string => {
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return node.toString();
+  if (!node) return '';
+  
+  if (Array.isArray(node)) {
+    return node.map(extractTextContent).join('');
+  }
+  
+  if (typeof node === 'object') {
+    if (node.props && node.props.children) {
+      return extractTextContent(node.props.children);
+    }
+    if (node.children) {
+      return extractTextContent(node.children);
+    }
+  }
+  
+  return '';
+};
+
 const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   // Get markdown content from window object (passed from server)
   const [markdownText, setMarkdownText] = useState<string>(
@@ -31,42 +113,70 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   const [activeHeading, setActiveHeading] = useState<string>("");
   const [isTocOpen, setIsTocOpen] = useState<boolean>(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const usedIds = useRef<Set<string>>(new Set());
 
   // Extract headings from markdown content
   useEffect(() => {
     if (markdownText) {
       const headingRegex = /^(#{1,6})\s+(.+)$/gm;
       const extractedHeadings: Heading[] = [];
+      const newUsedIds = new Set<string>();
       let match;
 
       while ((match = headingRegex.exec(markdownText)) !== null) {
         const level = match[1].length;
-        const text = match[2].trim();
-        const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-        extractedHeadings.push({ id, text, level });
+        const rawText = match[2].trim();
+        const cleanText = cleanMarkdownText(rawText); // Clean text for display
+        const id = generateHeadingId(rawText, newUsedIds); // Use raw text for ID generation (it will be cleaned inside)
+        extractedHeadings.push({ id, text: cleanText, level });
       }
 
+      usedIds.current = newUsedIds;
       setHeadings(extractedHeadings);
+      
+      // Reset active heading when headings change
+      setActiveHeading("");
     }
   }, [markdownText]);
 
   // Handle scroll to update active heading
   useEffect(() => {
     const handleScroll = () => {
-      const headingElements = headings.map(h => document.getElementById(h.id)).filter(Boolean);
-      
-      for (let i = headingElements.length - 1; i >= 0; i--) {
-        const element = headingElements[i];
-        if (element && element.getBoundingClientRect().top <= 100) {
-          setActiveHeading(headings[i].id);
-          break;
+      if (headings.length === 0) return;
+
+      const scrollPosition = window.scrollY + 120; // Offset for header
+      let currentActiveHeading = '';
+
+      // Find the heading that's currently in view
+      for (let i = 0; i < headings.length; i++) {
+        const element = document.getElementById(headings[i].id);
+        if (element) {
+          const elementTop = element.offsetTop;
+          
+          if (scrollPosition >= elementTop - 50) {
+            currentActiveHeading = headings[i].id;
+          } else {
+            break;
+          }
         }
+      }
+
+      // If no heading found and we're at the top, clear active heading
+      if (!currentActiveHeading && scrollPosition < 200) {
+        currentActiveHeading = '';
+      }
+
+      if (currentActiveHeading !== activeHeading) {
+        setActiveHeading(currentActiveHeading);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Initial check
+    handleScroll();
+    
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [headings]);
+  }, [headings, activeHeading]);
 
   // Handle relative paths in markdown content
   useEffect(() => {
@@ -130,19 +240,68 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
     }
   };
 
-  // Handle TOC item click
+  // Handle TOC item click - improved version with error handling
   const handleTocClick = (headingId: string) => {
     const element = document.getElementById(headingId);
+    
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Calculate the offset to account for the sticky header
+      const headerOffset = 80;
+      const elementPosition = element.offsetTop - headerOffset;
+      
+      // Smooth scroll to the element
+      window.scrollTo({
+        top: elementPosition,
+        behavior: 'smooth'
+      });
+      
+      // Update active heading immediately for better UX
+      setActiveHeading(headingId);
+    } else {
+      console.warn('Heading element not found for ID:', headingId);
+      // Try to find the heading by text content as fallback
+      const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      const targetHeading = headings.find(h => h.id === headingId);
+      
+      if (targetHeading) {
+        const fallbackElement = Array.from(allHeadings).find(el => {
+          const elementText = el.textContent?.trim() || '';
+          return elementText === targetHeading.text || 
+                 cleanMarkdownText(elementText) === targetHeading.text ||
+                 elementText === cleanMarkdownText(targetHeading.text);
+        });
+        
+        if (fallbackElement) {
+          const headerOffset = 80;
+          const elementPosition = fallbackElement.getBoundingClientRect().top + window.scrollY - headerOffset;
+          
+          window.scrollTo({
+            top: elementPosition,
+            behavior: 'smooth'
+          });
+          
+          setActiveHeading(headingId);
+        }
+      }
     }
   };
 
-  // Custom heading renderer to add IDs
+  // Custom heading renderer to add IDs - improved version with consistent ID generation
   const createHeadingRenderer = (level: number) => {
     return ({ children, ...props }: any) => {
-      const text = children[0];
-      const id = typeof text === 'string' ? text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') : '';
+      const renderedText = extractTextContent(children);
+      
+      // Find the matching heading from our extracted headings list
+      // The rendered text should match the cleaned text we stored
+      const matchingHeading = headings.find(h => h.text === renderedText && h.level === level);
+      
+      // If no match found, try to find by cleaning the rendered text and comparing
+      const fallbackHeading = !matchingHeading ? 
+        headings.find(h => cleanMarkdownText(h.text) === renderedText && h.level === level) : 
+        null;
+      
+      const finalHeading = matchingHeading || fallbackHeading;
+      const id = finalHeading ? finalHeading.id : generateHeadingId(renderedText, usedIds.current);
       
       const headingProps = { id, ...props };
       
@@ -201,19 +360,29 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
             <nav className="space-y-1">
               {headings.map((heading) => (
                 <button
-                  key={heading.id}
-                  onClick={() => {
+                  key={`mobile-${heading.id}-${heading.level}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     handleTocClick(heading.id);
                     setIsTocOpen(false);
                   }}
-                  className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors duration-200 ${
+                  className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
                     activeHeading === heading.id
-                      ? 'bg-blue-100 text-blue-700 font-medium'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
-                  style={{ paddingLeft: `${(heading.level - 1) * 12 + 12}px` }}
+                  style={{ 
+                    paddingLeft: `${Math.max(heading.level - 1, 0) * 16 + 12}px`,
+                    borderLeft: activeHeading === heading.id ? '3px solid #3b82f6' : '3px solid transparent'
+                  }}
+                  title={heading.text}
+                  data-heading-id={heading.id}
+                  data-heading-level={heading.level}
                 >
-                  {heading.text}
+                  <span className="block truncate">
+                    {heading.text}
+                  </span>
                 </button>
               ))}
             </nav>
@@ -223,9 +392,9 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
 
       {/* Main content with sidebar */}
       <main className="flex-1 flex max-w-none w-full">
-        {/* Desktop Table of Contents Sidebar */}
+        {/* Desktop Table of Contents Sidebar - Typora style */}
         <aside className="hidden lg:block w-80 flex-shrink-0 bg-white/50 border-r border-gray-200 min-h-screen">
-          <div className="sticky p-6">
+          <div className="sticky top-20 p-6 max-h-[calc(100vh-5rem)] overflow-y-auto">
             {/* Back button in sidebar */}
             <button 
               onClick={handleBackClick}
@@ -237,22 +406,34 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
               Back
             </button>
             
-            <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Table of Contents</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Outline</h3>
             {headings.length > 0 ? (
               <nav className="space-y-1">
                 {headings.map((heading) => (
-                  <button
-                    key={heading.id}
-                    onClick={() => handleTocClick(heading.id)}
-                    className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors duration-200 ${
-                      activeHeading === heading.id
-                        ? 'bg-blue-100 text-blue-700 font-medium border-l-2 border-blue-500'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                    style={{ paddingLeft: `${(heading.level - 1) * 12 + 12}px` }}
-                  >
+                                  <button
+                  key={`${heading.id}-${heading.level}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleTocClick(heading.id);
+                  }}
+                  className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
+                    activeHeading === heading.id
+                      ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  style={{ 
+                    paddingLeft: `${Math.max(heading.level - 1, 0) * 16 + 12}px`,
+                    borderLeft: activeHeading === heading.id ? '3px solid #3b82f6' : '3px solid transparent'
+                  }}
+                  title={heading.text}
+                  data-heading-id={heading.id}
+                  data-heading-level={heading.level}
+                >
+                  <span className="block truncate">
                     {heading.text}
-                  </button>
+                  </span>
+                </button>
                 ))}
               </nav>
             ) : (
