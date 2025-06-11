@@ -31,17 +31,26 @@ A lightweight, cross-platform web server built with Node.js and TypeScript for f
    npm install
    ```
 
-3. **Build the project**
+3. **Compile native addon**
+   ```bash
+   cd native/search_feat
+   chmod +x build.sh
+   ./build.sh
+   cd ../..
+   ```
+   > Note that compiling native plugins requires a Rust compiler
+
+4. **Build the project**
    ```bash
    npm run build
    ```
 
-4. **Start the server**
+5. **Start the server**
    ```bash
    npm start
    ```
 
-5. **Access your server**
+6. **Access your server**
    - Open your browser and go to `http://localhost:8000`
    - Or access from other devices using your local IP address
 

@@ -1,5 +1,8 @@
 # Changelog
 
+### v2.2.0
+- now have file search feature
+
 ### v2.1.0
 - upgraded all components to typescript
 - upgraded markdown viewer
