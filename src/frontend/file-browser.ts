@@ -140,7 +140,7 @@ async function searchFiles(fileName: string, currentDir: string = ''): Promise<v
     // Display search results
     searchList.innerHTML = '';
     data.results.forEach((result: SearchResult) => {
-      const fileUrl = `/files/${result.relative_path}`;
+      const fileUrl = `/files/${result.relative_path}/${result.file_name}`;
       searchList.innerHTML += `
         <a href="${fileUrl}" class="file-row search-result-item">
           <img src="/icons/file-icon.png" class="icons">
