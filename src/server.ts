@@ -184,17 +184,15 @@ app.post('/upload', upload.single('file'), (req: Request, res: Response) => {
 
 app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res: Response) => {
     const fileName = req.params.fileName;
-    const currentDir = req.params[0] || ''; // 获取通配符匹配的路径部分
+    const currentDir = req.params[0] || '';
     
     if (!fileName) {
         return res.json({error: "file_name parameter is required"});
     }
     
-    // 规范化路径，防止路径遍历攻击
     const safeCurrentDir = path.normalize(currentDir).replace(/^(\.\.(\/|\\|$))+/, '');
     const searchPath = path.join(UPLOAD_DIR, safeCurrentDir);
     
-    // 确保搜索路径在UPLOAD_DIR内
     if (!searchPath.startsWith(UPLOAD_DIR)) {
         return res.json({error: "Invalid search path"});
     }
@@ -203,8 +201,6 @@ app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res
         const jsonResult = searchFilesInPath(fileName, searchPath);
         const files = JSON.parse(jsonResult);
         
-        // 过滤掉路径前缀为private-files或incoming的文件
-        // Also filter out files that start with '.'
         const filteredFiles = files.filter((file: { path: string; full_file_name: string }) => {
             const relativePath = path.relative(UPLOAD_DIR, file.path);
             return !relativePath.startsWith('private-files') && 
@@ -212,18 +208,17 @@ app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res
                    !file.full_file_name.startsWith('.');
         });
         
-        // 为每个文件路径拼接UPLOAD_DIR前缀，生成完整路径
         const resultFiles = filteredFiles.map((file: { full_file_name: string; path: string }) => {
             return {
                 file_name: file.full_file_name,
-                file_path: file.path, // 保持原始完整路径
-                relative_path: path.relative(UPLOAD_DIR, file.path) // 添加相对路径信息
+                file_path: file.path,
+                relative_path: path.relative(UPLOAD_DIR, file.path)
             };
         });
         
-        console.log(`Found ${resultFiles.length} file(s) matching "${fileName}" in "${safeCurrentDir}":`);
+        // console.log(`Found ${resultFiles.length} file(s) matching "${fileName}" in "${safeCurrentDir}":`);
         resultFiles.forEach((file: { file_name: string; file_path: string; relative_path: string }) => {
-            console.log(`  - ${file.file_name} (in: ${file.relative_path})`);
+            // console.log(`  - ${file.file_name} (in: ${file.relative_path})`);
         });
         
         return res.json({
@@ -235,7 +230,7 @@ app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res
             count: resultFiles.length
         });
     } catch (error) {
-        console.error('Search error:', error);
+        // console.error('Search error:', error);
         return res.json({error: "Search failed", details: error instanceof Error ? error.message : "Unknown error"});
     }
 })
