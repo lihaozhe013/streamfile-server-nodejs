@@ -327,7 +327,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 flex flex-col font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-200 shadow-sm">
+      <header className="sticky lg:hidden top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-200 shadow-sm">
         <div className="max-w-none px-6 py-3 flex justify-end items-center">
           {/* Mobile TOC Toggle */}
           <button 
@@ -394,7 +394,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
       <main className="flex-1 flex max-w-none w-full">
         {/* Desktop Table of Contents Sidebar - Typora style */}
         <aside className="hidden lg:block w-80 flex-shrink-0 bg-white/50 border-r border-gray-200 min-h-screen">
-          <div className="sticky top-20 p-6 max-h-[calc(100vh-5rem)] overflow-y-auto">
+          <div className="sticky p-6 max-h-[calc(100vh-5rem)] overflow-y-auto">
             {/* Back button in sidebar */}
             <button 
               onClick={handleBackClick}
