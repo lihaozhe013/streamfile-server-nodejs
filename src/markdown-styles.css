@@ -1,7 +1,12 @@
 /* Markdown content styles only - web page layout now uses Tailwind CSS */
 
 .preview {
-  font-family: ui-sans-serif, system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  font-family:
+  "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC",
+  "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR",
+  "Hiragino Sans", "Meiryo", "Noto Sans JP",
+  "Segoe UI", "Roboto", "Arial", "Helvetica Neue", "Helvetica",
+  sans-serif;
 }
 
 .preview h1, .preview h2, .preview h3, .preview h4, .preview h5, .preview h6 {
