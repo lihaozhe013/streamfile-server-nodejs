@@ -215,12 +215,7 @@ app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res
                 relative_path: path.relative(UPLOAD_DIR, file.path)
             };
         });
-        
-        // console.log(`Found ${resultFiles.length} file(s) matching "${fileName}" in "${safeCurrentDir}":`);
-        resultFiles.forEach((file: { file_name: string; file_path: string; relative_path: string }) => {
-            // console.log(`  - ${file.file_name} (in: ${file.relative_path})`);
-        });
-        
+
         return res.json({
             query: {
                 file_name: fileName,
@@ -230,7 +225,6 @@ app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res
             count: resultFiles.length
         });
     } catch (error) {
-        // console.error('Search error:', error);
         return res.json({error: "Search failed", details: error instanceof Error ? error.message : "Unknown error"});
     }
 })
