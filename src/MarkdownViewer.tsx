@@ -393,9 +393,8 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
       {/* Main content with sidebar */}
       <main className="flex-1 flex max-w-none w-full">
         {/* Desktop Table of Contents Sidebar - Typora style */}
-        <aside className="hidden lg:block w-80 flex-shrink-0 bg-white/50 border-r border-gray-200 min-h-screen">
-          <div className="sticky p-6 max-h-[calc(100vh-5rem)] overflow-y-auto">
-            {/* Back button in sidebar */}
+        <aside className="hidden lg:block w-80 flex-shrink-0 bg-white/50 border-r border-gray-200 h-screen">
+          <div className="h-full p-6 overflow-y-auto">
             <button 
               onClick={handleBackClick}
               className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm hover:shadow-md"

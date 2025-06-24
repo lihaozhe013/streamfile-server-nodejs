@@ -12,34 +12,34 @@
         <h2 class="text-center mb-6 font-medium text-blue-400">A Light Weighted Server System</h2>
         
         <div class="max-w-md mx-auto">
-            <div class="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="mb-6 bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
                 <h2 class="mb-3 text-xl font-semibold">Upload File</h2>
                 <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm" class="flex flex-col gap-3">
-                    <input type="file" name="file" id="fileInput" required class="py-2 border border-gray-300 rounded-md"/>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">Upload File</button>
+                    <input type="file" name="file" id="fileInput" required class="py-2 border border-gray-300 rounded-xl"/>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full font-medium transition">Upload File</button>
                 </form>
                 <div id="progressContainer" class="w-full mt-3" style="display: none;">
-                    <div id="progressBar" class="h-2 bg-blue-400 rounded transition-all" style="width:0%"></div>
+                    <div id="progressBar" class="h-2 bg-blue-400 rounded-full transition-all" style="width:0%"></div>
                     <span id="progressText" class="text-sm block mt-1"></span>
                 </div>
             </div>
             
-            <div class="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="mb-6 bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
                 <h2 class="mb-3 text-xl font-semibold">Drive</h2>
                 <div class="flex items-center gap-3">
                     <img src="/icons/icons8-folder-48.png" class="w-8 h-8">
-                    <a href="/files" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">Browse Files Here</a>
+                    <a href="/files" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full font-medium transition">Browse Files Here</a>
                 </div>
             </div>
             
-            <div class="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="mb-6 bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
                 <blockquote class="italic text-gray-600">
                     This is the main page of Simple Server.
                 </blockquote>
             </div>
             
             <div class="text-center mb-6">
-                <img src="avatar.jpeg" id="avatar-img" class="w-20 h-20 rounded-full mx-auto shadow-md"/>
+                <img src="avatar.jpeg" id="avatar-img" class="w-20 h-20 rounded-2xl mx-auto shadow-md"/>
             </div>
             
             <div class="text-center text-sm mb-4 text-gray-500">

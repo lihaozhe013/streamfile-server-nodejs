@@ -48,13 +48,13 @@ async function fetchFiles(path: string = ''): Promise<void> {
     if (up) upUrl += '/' + encodeURIComponent(up).replace(/%2F/g, '/');
     if (!upUrl.endsWith('/')) upUrl += '/';
     list.innerHTML += 
-      `<a href="${upUrl}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline">
+      `<a href="${upUrl}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl">
         <img src="/icons/icons8-folder-48.png" class="w-5 h-5 mr-3">
         (Go Back)
       </a>`;
   } else {
     list.innerHTML += 
-      `<a href="/" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline">
+      `<a href="/" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl">
         <img src="/icons/icons8-folder-48.png" class="w-5 h-5 mr-3">
         (Back to Home)
       </a>`;
@@ -72,14 +72,14 @@ async function fetchFiles(path: string = ''): Promise<void> {
     if (isDir) {
       const href: string = `/files/${encodedPath}/`;
       list.innerHTML += `
-        <a href="${href}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline">
+        <a href="${href}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl">
           <img src="/icons/icons8-folder-48.png" class="w-5 h-5 mr-3">
           ${displayName}
         </a>`;
     } else {
       const filePath: string = `/files/${encodedPath}`;
       list.innerHTML += `
-        <a href="${filePath}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-gray-800 bg-white no-underline">
+        <a href="${filePath}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-gray-800 bg-white no-underline rounded-xl">
           <img src="/icons/file-icon.png" class="w-5 h-5 mr-3">
           ${displayName}
         </a>`;
@@ -142,7 +142,7 @@ async function searchFiles(fileName: string, currentDir: string = ''): Promise<v
     data.results.forEach((result: SearchResult) => {
       const fileUrl = `/files/${result.relative_path}/${result.file_name}`;
       searchList.innerHTML += `
-        <a href="${fileUrl}" class="flex items-center p-3 border-l-4 border-blue-600 bg-gray-50 hover:bg-blue-50 mb-2 rounded transition">
+        <a href="${fileUrl}" class="flex items-center p-3 border-l-4 border-blue-600 bg-gray-50 hover:bg-blue-50 mb-2 rounded-2xl transition">
           <img src="/icons/file-icon.png" class="w-5 h-5 mr-3">
           <div class="flex flex-col">
             <div class="font-medium text-gray-900">${result.file_name}</div>
