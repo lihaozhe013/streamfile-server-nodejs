@@ -8,9 +8,8 @@
     "build": "npm run build:server && npm run build:frontend && npm run build:css",
     "build:server": "tsc",
     "build:frontend": "webpack",
-    "build:css": "npx tailwindcss -i ./public/tailwind.css -o ./dist/output.css",
+    "build:css": "cp ./public/tailwind.js ./dist/tailwind.js",
     "dev": "npm run build && npm run preview",
-    "build:css:watch": "tailwindcss -i ./public/tailwind.css -o ./dist/output.css --watch",
     "dev:server": "npm run build:server && npm run preview"
   },
   "author": {

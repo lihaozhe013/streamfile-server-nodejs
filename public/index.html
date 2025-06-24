@@ -4,60 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Server</title>
-    <link rel="stylesheet" href="/dist/output.css">
-    <link rel="stylesheet" href="/styles.css">
-    <style>
-        body {
-            margin: 0;
-            font-family:
-            "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC",
-            "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR",
-            "Hiragino Sans", "Meiryo", "Noto Sans JP",
-            "Segoe UI", "Roboto", "Arial", "Helvetica Neue", "Helvetica",
-            sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-    </style>
+    <script src="/dist/tailwind.js"></script>
 </head>
-<body>
-    <div class="container mx-auto">
-        <h1 class="text-center">Simple Server</h1>
-        <h2 class="text-center mb-3 font-medium text-blue-300">A Light Weighted Server System</h2>
+<body class="bg-white min-h-screen font-sans text-gray-900">
+    <div class="max-w-2xl mx-auto px-4">
+        <h1 class="text-center text-3xl font-bold mt-8 mb-2">Simple Server</h1>
+        <h2 class="text-center mb-6 font-medium text-blue-400">A Light Weighted Server System</h2>
         
         <div class="max-w-md mx-auto">
-            <div class="card mb-4">
-                <h2 class="mb-2">Upload File</h2>
-                <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm" class="flex flex-col gap-2">
-                    <input type="file" name="file" id="fileInput" required class="py-2"/>
-                    <button type="submit" class="btn btn-primary">Upload File</button>
+            <div class="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <h2 class="mb-3 text-xl font-semibold">Upload File</h2>
+                <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm" class="flex flex-col gap-3">
+                    <input type="file" name="file" id="fileInput" required class="py-2 border border-gray-300 rounded-md"/>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">Upload File</button>
                 </form>
-                <div id="progressContainer" class="progress-container" style="display: none;">
-                    <div id="progressBar" class="progress-bar"></div>
-                    <span id="progressText" class="text-sm"></span>
+                <div id="progressContainer" class="w-full mt-3" style="display: none;">
+                    <div id="progressBar" class="h-2 bg-blue-400 rounded transition-all" style="width:0%"></div>
+                    <span id="progressText" class="text-sm block mt-1"></span>
                 </div>
             </div>
             
-            <div class="card mb-4">
-                <h2 class="mb-2">Drive</h2>
-                <div class="file-row">
-                    <img src="/icons/icons8-folder-48.png" class="icons">
-                    <a href="/files" class="btn">Browse Files Here</a>
+            <div class="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <h2 class="mb-3 text-xl font-semibold">Drive</h2>
+                <div class="flex items-center gap-3">
+                    <img src="/icons/icons8-folder-48.png" class="w-8 h-8">
+                    <a href="/files" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">Browse Files Here</a>
                 </div>
             </div>
             
-            <div class="card mb-4">
-                <blockquote>
+            <div class="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <blockquote class="italic text-gray-600">
                     This is the main page of Simple Server.
                 </blockquote>
             </div>
             
-            <div class="text-center mb-4">
-                <img src="avatar.jpeg" id="avatar-img" class="avatar"/>
+            <div class="text-center mb-6">
+                <img src="avatar.jpeg" id="avatar-img" class="w-20 h-20 rounded-full mx-auto shadow-md"/>
             </div>
             
-            <div class="text-center text-sm mb-4">
-                <p>Developed by <a href="https://github.com/lihaozhe013/simple-NAS-nodejs" target="_blank">lihaozhe013</a></p>
+            <div class="text-center text-sm mb-4 text-gray-500">
+                <p>Developed by <a href="https://github.com/lihaozhe013/simple-NAS-nodejs" target="_blank" class="text-blue-500 hover:underline">lihaozhe013</a></p>
             </div>
         </div>
     </div>

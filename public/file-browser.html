@@ -4,49 +4,35 @@
   <meta charset="UTF-8">
   <title>File Browser</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/dist/output.css">
-  <link rel="stylesheet" href="/styles.css">
-  <style>
-    body {
-      margin: 0;
-      font-family:
-        "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC",
-        "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR",
-        "Hiragino Sans", "Meiryo", "Noto Sans JP",
-        "Segoe UI", "Roboto", "Arial", "Helvetica Neue", "Helvetica",
-        sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-  </style>
+  <script src="/dist/tailwind.js"></script>
 </head>
-<body>
+<body class="bg-white min-h-screen font-sans text-gray-900">
   <!-- Top header with search -->
-  <div class="top-header">
-    <div class="container">
-      <div class="header-content">
-        <h1 class="header-title">File Browser</h1>
-        <div class="github-search-container">
-          <input type="text" id="search-input" placeholder="Search files..." class="github-search-input">
-          <button id="search-btn" class="github-search-btn">Search</button>
-          <button id="clear-search-btn" class="github-clear-btn">Clear</button>
+  <div class="w-full bg-gray-100 shadow-sm py-4 mb-6">
+    <div class="max-w-3xl mx-auto px-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 class="text-2xl font-bold tracking-tight">File Browser</h1>
+        <div class="flex gap-2 items-center">
+          <input type="text" id="search-input" placeholder="Search files..." class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-48">
+          <button id="search-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">Search</button>
+          <button id="clear-search-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-2 rounded-md font-medium transition">Clear</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="container main-content">
+  <div class="max-w-3xl mx-auto px-4">
     <!-- Search Results Section -->
-    <div id="search-results" class="search-results-panel" style="display: none;">
-      <h4>Search Results:</h4>
+    <div id="search-results" class="bg-white border border-gray-200 rounded-md p-4 mb-4 shadow-sm" style="display: none;">
+      <h4 class="text-lg font-semibold mb-2">Search Results:</h4>
       <div id="search-list"></div>
     </div>
     
     <!-- File List -->
-    <div id="file-list" class="file-list-panel">Loading...</div>
+    <div id="file-list" class="bg-white border border-gray-200 rounded-md p-4 shadow-sm">Loading...</div>
     
-    <div class="text-center mt-4">
-      <a href="/" class="btn">Back to Home</a>
+    <div class="text-center mt-6">
+      <a href="/" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition">Back to Home</a>
     </div>
   </div>
 
