@@ -8,9 +8,9 @@ import os from 'os';
 const app = express();
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = parseInt(process.env.PORT || '80', 10);
-const UPLOAD_DIR = path.join(__dirname, '../uploads');
-const INCOMING_DIR = path.join(__dirname, '../uploads/incoming');
-const PRIVATE_DIR = path.join(__dirname, '../uploads/private-files');
+const UPLOAD_DIR = path.join(__dirname, '../files');
+const INCOMING_DIR = path.join(__dirname, '../files/incoming');
+const PRIVATE_DIR = path.join(__dirname, '../files/private-files');
 const PUBLIC_DIR = path.join(__dirname, '../public');
 const DIST_DIR = path.join(__dirname, '..');
 
@@ -127,7 +127,7 @@ interface FileEntry {
     isDirectory: boolean;
 }
 
-// List files in subdirectories of uploads
+// List files in subdirectories of files
 app.get('/api/list-files', (req: Request, res: Response) => {
     const relativePath = req.query.path as string || '';
     const safeRelativePath = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, '');

@@ -9,7 +9,7 @@
 
 ### v2.0.0
 - upgraded to typescript + tailwind css
-- now provide `uploads/incoming` and `uploads/private-files` folders, and they won't be displayed on the frontend
+- now provide `files/incoming` and `files/private-files` folders, and they won't be displayed on the frontend
 - upgraded the GUI, now support phone much better
 
 ### v1.3.1 & v1.3.2
@@ -40,5 +40,5 @@
 
 ### v1.0.0
 - First Version
-- Implemented upload feature, user can upload files to `uploads/new_upload_things`
+- Implemented upload feature, user can upload files to `files/new_upload_things`
 - Implemented online video player feature

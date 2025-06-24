@@ -65,7 +65,7 @@ simple-server-nodejs/
 │   ├── file-browser/      # File browser UI
 │   ├── markdown-viewer/   # Markdown preview components
 │   └── index.html         # Main page
-├── uploads/               # File storage directory
+├── files/               # File storage directory
 │   ├── incoming/          # Upload staging (hidden from web)
 │   ├── private-files/     # Private files (URL access only)
 │   └── [your files...]    # Public files and folders
@@ -74,23 +74,23 @@ simple-server-nodejs/
 
 ## 🔐 File Access Levels
 
-### 1. **Public Files** (`uploads/`)
+### 1. **Public Files** (`files/`)
 
 - ✅ Visible in file browser
 - ✅ Accessible via web interface
 - ✅ Can be browsed and downloaded by anyone
 
-### 2. **Private Files** (`uploads/private-files/`)
+### 2. **Private Files** (`files/private-files/`)
 - ❌ Hidden from file browser
 - ✅ Accessible via direct URL if known
 - 🔗 Perfect for sharing specific files with direct links
 - **Example**: `http://yourserver:8000/private-files/secret-folder/document.pdf`
 
-### 3. **Incoming Files** (`uploads/incoming/`)
+### 3. **Incoming Files** (`files/incoming/`)
 - ❌ Completely hidden from web access
 - ❌ Not accessible via any URL
 - 📤 Used for file upload staging
-- 🔒 Maximum security for sensitive uploads
+- 🔒 Maximum security for sensitive files
 
 ## 📝 Supported File Types
 
@@ -115,7 +115,7 @@ Create secure, hard-to-guess URLs for sensitive files:
 1. Use the built-in secure link generator (if available)
 2. Generate a secure filename: `B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES`
 3. Rename your file: `secret-document.pdf` → `B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.pdf`
-4. Place in `uploads/private-files/`
+4. Place in `files/private-files/`
 5. Share the direct URL: `http://yourserver:8000/private-files/B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.pdf`
 
 ### Access Control Best Practices
