@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
 import "katex/dist/katex.min.css";
 import "./markdown-styles.css";
 
@@ -29,6 +30,8 @@ const cleanMarkdownText = (text: string): string => {
   }
   
   return text
+    // Remove HTML <br> tags and replace with spaces
+    .replace(/<br\s*\/?>/gi, ' ')
     // Remove bold formatting: **text** or __text__
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/__(.*?)__/g, '$1')
@@ -513,7 +516,8 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                 <div className="prose prose-lg prose-slate max-w-none preview">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkMath]}
-                    rehypePlugins={[rehypeKatex]}
+                    rehypePlugins={[rehypeKatex, rehypeRaw as any]}
+                    skipHtml={false}
                     components={{
                       h1: createHeadingRenderer(1),
                       h2: createHeadingRenderer(2),
@@ -521,6 +525,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                       h4: createHeadingRenderer(4),
                       h5: createHeadingRenderer(5),
                       h6: createHeadingRenderer(6),
+                      br: () => <br />,
                     }}
                   >
                     {markdownText}
