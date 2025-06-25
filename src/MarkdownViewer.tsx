@@ -112,6 +112,8 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [activeHeading, setActiveHeading] = useState<string>("");
   const [isTocOpen, setIsTocOpen] = useState<boolean>(false);
+  const [leftPanelWidth, setLeftPanelWidth] = useState<number>(20); // 10% default
+  const [isResizing, setIsResizing] = useState<boolean>(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const usedIds = useRef<Set<string>>(new Set());
 
@@ -144,7 +146,10 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
     const handleScroll = () => {
       if (headings.length === 0) return;
 
-      const scrollPosition = window.scrollY + 120; // Offset for header
+      const scrollContainer = contentRef.current;
+      if (!scrollContainer) return;
+
+      const scrollPosition = scrollContainer.scrollTop + 120; // Offset for header
       let currentActiveHeading = '';
 
       // Find the heading that's currently in view
@@ -171,11 +176,14 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    // Initial check
-    handleScroll();
-    
-    return () => window.removeEventListener('scroll', handleScroll);
+    const scrollContainer = contentRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+      // Initial check
+      handleScroll();
+      
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
   }, [headings, activeHeading]);
 
   // Handle relative paths in markdown content
@@ -240,17 +248,61 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
     }
   };
 
+  // Handle resizing start
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  // Handle resizing
+  const handleResize = (e: MouseEvent) => {
+    if (!isResizing) return;
+
+    const container = document.querySelector('main');
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+    
+    // Constrain to 30% maximum and 5% minimum
+    const constrainedWidth = Math.max(5, Math.min(30, newWidth));
+    setLeftPanelWidth(constrainedWidth);
+  };
+
+  // Handle resizing end
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  };
+
+  // Add global mouse event listeners for resizing
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResize);
+      document.addEventListener('mouseup', handleResizeEnd);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [isResizing]);
+
   // Handle TOC item click - improved version with error handling
   const handleTocClick = (headingId: string) => {
     const element = document.getElementById(headingId);
+    const scrollContainer = contentRef.current;
     
-    if (element) {
+    if (element && scrollContainer) {
       // Calculate the offset to account for the sticky header
       const headerOffset = 80;
       const elementPosition = element.offsetTop - headerOffset;
       
-      // Smooth scroll to the element
-      window.scrollTo({
+      // Smooth scroll to the element within the content container
+      scrollContainer.scrollTo({
         top: elementPosition,
         behavior: 'smooth'
       });
@@ -263,7 +315,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
       const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
       const targetHeading = headings.find(h => h.id === headingId);
       
-      if (targetHeading) {
+      if (targetHeading && scrollContainer) {
         const fallbackElement = Array.from(allHeadings).find(el => {
           const elementText = el.textContent?.trim() || '';
           return elementText === targetHeading.text || 
@@ -273,9 +325,9 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
         
         if (fallbackElement) {
           const headerOffset = 80;
-          const elementPosition = fallbackElement.getBoundingClientRect().top + window.scrollY - headerOffset;
+          const elementPosition = fallbackElement.getBoundingClientRect().top + scrollContainer.scrollTop - headerOffset;
           
-          window.scrollTo({
+          scrollContainer.scrollTo({
             top: elementPosition,
             behavior: 'smooth'
           });
@@ -390,11 +442,14 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
         </div>
       )}
 
-      {/* Main content with sidebar */}
-      <main className="flex-1 flex max-w-none w-full lg:ml-80">
-        {/* Desktop Table of Contents Sidebar - Typora style */}
-        <aside className="hidden lg:block fixed top-0 left-0 w-80 h-screen z-20 bg-white/50 border-r border-gray-200">
-          <div className="h-full p-6 overflow-y-auto">
+      {/* Main content with two-column layout */}
+      <main className="flex-1 flex w-full h-screen">
+        {/* Desktop Table of Contents Sidebar - dynamic width */}
+        <aside 
+          className="hidden lg:block bg-white border-r border-gray-200 overflow-y-auto"
+          style={{ width: `${leftPanelWidth}%`, minWidth: '150px', maxWidth: '30%' }}
+        >
+          <div className="p-4">
             <button 
               onClick={handleBackClick}
               className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -409,30 +464,30 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
             {headings.length > 0 ? (
               <nav className="space-y-1">
                 {headings.map((heading) => (
-                                  <button
-                  key={`${heading.id}-${heading.level}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleTocClick(heading.id);
-                  }}
+                  <button
+                    key={`${heading.id}-${heading.level}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleTocClick(heading.id);
+                    }}
                   className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
-                    activeHeading === heading.id
-                      ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                  style={{ 
+                      activeHeading === heading.id
+                        ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                    style={{ 
                     paddingLeft: `${Math.max(heading.level - 1, 0) * 16 + 12}px`,
                     borderLeft: activeHeading === heading.id ? '3px solid #3b82f6' : '3px solid transparent'
-                  }}
-                  title={heading.text}
-                  data-heading-id={heading.id}
-                  data-heading-level={heading.level}
-                >
+                    }}
+                    title={heading.text}
+                    data-heading-id={heading.id}
+                    data-heading-level={heading.level}
+                  >
                   <span className="block truncate">
-                    {heading.text}
-                  </span>
-                </button>
+                      {heading.text}
+                    </span>
+                  </button>
                 ))}
               </nav>
             ) : (
@@ -441,26 +496,36 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
           </div>
         </aside>
 
-        {/* Content area */}
-        <div className="flex-1 flex flex-col max-w-none min-w-0">
-          <article className="w-full bg-white min-h-screen">
-            {/* Content area with reduced margins */}
-            <div className="px-8 py-8 md:px-12 md:py-12 overflow-x-hidden" ref={contentRef}>
-              <div className="prose prose-lg prose-slate max-w-none preview overflow-x-hidden">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm, remarkMath]}
-                  rehypePlugins={[rehypeKatex]}
-                  components={{
-                    h1: createHeadingRenderer(1),
-                    h2: createHeadingRenderer(2),
-                    h3: createHeadingRenderer(3),
-                    h4: createHeadingRenderer(4),
-                    h5: createHeadingRenderer(5),
-                    h6: createHeadingRenderer(6),
-                  }}
-                >
-                  {markdownText}
-                </ReactMarkdown>
+        {/* Resizable divider */}
+        <div 
+          className="hidden lg:block w-1 bg-gray-200 hover:bg-gray-300 cursor-col-resize transition-colors duration-200 relative group"
+          onMouseDown={handleResizeStart}
+        >
+          <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-1 bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+        </div>
+
+        {/* Content area - 90% width with individual horizontal scroll */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <article className="w-full bg-white h-full overflow-hidden">
+            {/* Content area with individual horizontal scroll */}
+            <div className="h-full overflow-x-auto overflow-y-auto content-scroll-container" ref={contentRef}>
+              <div className="px-8 py-8 md:px-12 md:py-12 min-w-max content-wrapper">
+                <div className="prose prose-lg prose-slate max-w-none preview">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                    components={{
+                      h1: createHeadingRenderer(1),
+                      h2: createHeadingRenderer(2),
+                      h3: createHeadingRenderer(3),
+                      h4: createHeadingRenderer(4),
+                      h5: createHeadingRenderer(5),
+                      h6: createHeadingRenderer(6),
+                    }}
+                  >
+                    {markdownText}
+                  </ReactMarkdown>
+                </div>
               </div>
             </div>
           </article>

@@ -1,5 +1,35 @@
 /* Markdown content styles only - web page layout now uses Tailwind CSS */
 
+/* Layout-specific styles for the new two-column structure */
+.content-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.content-scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.content-scroll-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.content-scroll-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.content-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Ensure content doesn't overflow the container */
+.content-wrapper {
+  min-width: 0;
+  max-width: none;
+}
+
 .preview {
   font-family:
   "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC",
