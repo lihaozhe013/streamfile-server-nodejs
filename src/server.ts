@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-const { searchFilesInPath, searchFilesStructured } = require('../dist/search_feat/index.js');
+const { searchFilesInPath, searchFilesStructured } = require('../dist/search_feat.node');
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
