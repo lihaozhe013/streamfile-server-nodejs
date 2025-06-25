@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Viewer</title>
+    <script src="/dist/tailwind.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        // Get the file path from the current URL
+        const currentPath = window.location.pathname;
+        const filePath = currentPath.replace('/files/', '');
+        
+        // Fetch markdown content from the API
+        fetch(`/api/markdown-content?path=${encodeURIComponent(filePath)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch markdown content');
+                }
+                return response.json();
+            })
+            .then(data => {
+                window.markdownContent = data.content;
+                document.title = data.filename;
+                // Load the markdown viewer bundle
+                const script = document.createElement('script');
+                script.src = '/dist/markdown-viewer/bundle.js';
+                document.body.appendChild(script);
+            })
+            .catch(error => {
+                console.error('Error loading markdown content:', error);
+                document.getElementById('root').innerHTML = '<div class="p-4 text-red-600">Error loading markdown content</div>';
+            });
+    </script>
+</body>
+</html>

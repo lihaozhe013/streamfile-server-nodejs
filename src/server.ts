@@ -84,31 +84,44 @@ app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
     }
     
     if (fs.existsSync(filePath) && path.extname(filePath).toLowerCase() === '.md') {
-        fs.readFile(filePath, 'utf8', (err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.send(`
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>${path.basename(filePath)}</title>
-                    <script src="/dist/tailwind.js"></script>
-                </head>
-                <body>
-                    <div id="root"></div>
-                    <script>
-                        window.markdownContent = ${JSON.stringify(data)};
-                    </script>
-                    <script src="/dist/markdown-viewer/bundle.js"></script>
-                </body>
-                </html>
-            `);
-        });
+        res.sendFile(path.join(__dirname, '../public/markdown-viewer.html'));
     } else {
         next();
+    }
+});
+
+// API endpoint to get markdown content
+app.get('/api/markdown-content', (req: Request, res: Response) => {
+    const filePath = req.query.path as string;
+    if (!filePath) {
+        return res.status(400).json({ error: 'Path parameter is required' });
+    }
+    
+    const decodedPath = decodeURIComponent(filePath);
+    const fullPath = path.join(UPLOAD_DIR, decodedPath);
+    
+    // Block access to the incoming directory
+    if (fullPath.startsWith(INCOMING_DIR)) {
+        return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    if (!fullPath.startsWith(UPLOAD_DIR)) {
+        return res.status(400).json({ error: 'Invalid path' });
+    }
+    
+    if (fs.existsSync(fullPath) && path.extname(fullPath).toLowerCase() === '.md') {
+        fs.readFile(fullPath, 'utf8', (err, data) => {
+            if (err) {
+                return res.status(500).json({ error: 'Failed to read file' });
+            }
+            res.json({ 
+                content: data, 
+                filename: path.basename(fullPath),
+                path: decodedPath 
+            });
+        });
+    } else {
+        res.status(404).json({ error: 'File not found or not a markdown file' });
     }
 });
 
