@@ -44,6 +44,19 @@ if (!fs.existsSync(PRIVATE_DIR)) {
     fs.mkdirSync(PRIVATE_DIR, { recursive: true });
 }
 
+// Add 404 index.html to INCOMING_DIR and PRIVATE_DIR if they don't have one
+const incomingIndexPath = path.join(INCOMING_DIR, 'index.html');
+const privateIndexPath = path.join(PRIVATE_DIR, 'index.html');
+const source404Path = path.join(__dirname, '../public/404-index.html');
+
+if (!fs.existsSync(incomingIndexPath)) {
+    fs.copyFileSync(source404Path, incomingIndexPath);
+}
+
+if (!fs.existsSync(privateIndexPath)) {
+    fs.copyFileSync(source404Path, privateIndexPath);
+}
+
 // Serve private files directly by URL (but don't list them in browser)
 app.use('/private-files', express.static(PRIVATE_DIR));
 
