@@ -15,8 +15,6 @@ declare global {
   }
 }
 
-interface MarkdownViewerProps {}
-
 interface Heading {
   id: string;
   text: string;
@@ -107,7 +105,7 @@ const extractTextContent = (node: any): string => {
   return '';
 };
 
-const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
+const MarkdownViewer: React.FC = () => {
   // Get markdown content from window object (passed from server)
   const [markdownText, setMarkdownText] = useState<string>(
     window.markdownContent || ""
@@ -525,7 +523,6 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                       h4: createHeadingRenderer(4),
                       h5: createHeadingRenderer(5),
                       h6: createHeadingRenderer(6),
-                      br: () => <br />,
                     }}
                   >
                     {markdownText}
