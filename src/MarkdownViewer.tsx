@@ -391,9 +391,9 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
       )}
 
       {/* Main content with sidebar */}
-      <main className="flex-1 flex max-w-none w-full">
+      <main className="flex-1 flex max-w-none w-full lg:ml-80">
         {/* Desktop Table of Contents Sidebar - Typora style */}
-        <aside className="hidden lg:block w-80 flex-shrink-0 bg-white/50 border-r border-gray-200 h-screen">
+        <aside className="hidden lg:block fixed top-0 left-0 w-80 h-screen z-20 bg-white/50 border-r border-gray-200">
           <div className="h-full p-6 overflow-y-auto">
             <button 
               onClick={handleBackClick}
@@ -442,11 +442,11 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
         </aside>
 
         {/* Content area */}
-        <div className="flex-1 flex flex-col max-w-none">
+        <div className="flex-1 flex flex-col max-w-none min-w-0">
           <article className="w-full bg-white min-h-screen">
             {/* Content area with reduced margins */}
-            <div className="px-8 py-8 md:px-12 md:py-12" ref={contentRef}>
-              <div className="prose prose-lg prose-slate max-w-none preview">
+            <div className="px-8 py-8 md:px-12 md:py-12 overflow-x-hidden" ref={contentRef}>
+              <div className="prose prose-lg prose-slate max-w-none preview overflow-x-hidden">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkMath]}
                   rehypePlugins={[rehypeKatex]}
