@@ -20,26 +20,19 @@ A lightweight, cross-platform web server built with Node.js for file sharing, ma
    npm install
    ```
 
-3. **Compile native addon**
-   ```bash
-   cd native/search_feat
-   chmod +x build.sh
-   ./build.sh
-   cd ../..
-   ```
-   > Note that compiling native plugins requires a Rust compiler
+   > This project may require the installation of the rust compiler and Node.js (>=20)
 
-4. **Build the project**
+3. **Build the project**
    ```bash
-   npm run build
+   npm run build:all
    ```
 
-5. **Start the server**
+4. **Start the server**
    ```bash
    npm start
    ```
 
-6. **Access your server**
+5. **Access your server**
    - Open your browser and go to `http://localhost:80`
    - Or access from other devices using your local IP address
 
@@ -49,7 +42,8 @@ A lightweight, cross-platform web server built with Node.js for file sharing, ma
 |---------|-------------|
 | `npm start` | Start server on all interfaces (0.0.0.0) |
 | `npm run preview` | Start server on localhost only (127.0.0.1) |
-| `npm run build` | Full build (TypeScript + Webpack + CSS) |
+| `npm run build` | Node Full build (TypeScript + Webpack + CSS) |
+| `npm run build:all` | Full build (TypeScript + Webpack + CSS) + Native Addons |
 | `npm run build:server` | Compile Server only |
 | `npm run build:frontend` | Compile Frontend only |
 | `npm run build:css` | Build and watch Tailwind CSS |

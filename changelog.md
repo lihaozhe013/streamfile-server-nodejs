@@ -1,5 +1,8 @@
 # Changelog
 
+### v2.2.1
+- Fixed some bugs
+
 ### v2.2.0
 - now have file search feature
 
