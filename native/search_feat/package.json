@@ -7,7 +7,6 @@
     "build": "napi build --platform --release",
     "build-debug": "napi build --platform",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "node test.js",
     "artifacts": "napi artifacts"
   },
   "napi": {

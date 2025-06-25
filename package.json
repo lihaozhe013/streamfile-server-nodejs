@@ -6,9 +6,11 @@
     "start": "cross-env HOST=0.0.0.0 node dist/server.js",
     "preview": "cross-env HOST=127.0.0.1 node dist/server.js",
     "build": "npm run build:server && npm run build:frontend && npm run build:css",
+    "build:all": "npm run build:server && npm run build:frontend && npm run build:css && npm run build:search_feat",
     "build:server": "tsc",
     "build:frontend": "webpack",
     "build:css": "cp ./public/tailwind.js ./dist/tailwind.js",
+    "build:search_feat": "cd native/search_feat && npm install && npm run build && node build.js",
     "dev": "npm run build && npm run preview",
     "dev:server": "npm run build:server && npm run preview"
   },
