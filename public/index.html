@@ -57,7 +57,6 @@
     
     <script src="/dist/upload.js"></script>
     <script>
-    // 自定义上传区域点击和文件名显示
     const fileInput = document.getElementById('fileInput');
     const customUpload = document.getElementById('custom-upload');
     const fileChosen = document.getElementById('file-chosen');
@@ -72,7 +71,6 @@
             fileChosen.textContent = 'No file chosen';
         }
     });
-    // 拖拽高亮效果
     customUpload.addEventListener('dragover', e => {
         e.preventDefault();
         customUpload.classList.add('bg-blue-200');
