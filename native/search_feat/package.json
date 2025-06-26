@@ -1,6 +1,6 @@
 {
   "name": "file-search-rust-addon",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A Node.js native addon for file searching written in Rust",
   "main": "index.js",
   "scripts": {
