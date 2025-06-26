@@ -396,51 +396,58 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
       {/* Main content with sidebar */}
       <main className="flex-1 flex max-w-none w-full">
         {/* Desktop Table of Contents Sidebar - Typora style */}
-        <aside className="hidden lg:block w-80 flex-shrink-0 bg-white/50 border-r border-gray-200 h-screen">
-          <div className="h-full p-6 overflow-y-auto">
-            <button 
-              onClick={handleBackClick}
-              className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm hover:shadow-md"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </button>
+        <aside className="hidden lg:block w-80 flex-shrink-0 bg-white/50 border-r border-gray-200 h-screen sticky top-0">
+          <div className="h-full flex flex-col">
+            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+              <button 
+                onClick={handleBackClick}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+              
+              <h3 className="text-sm font-semibold text-gray-900 mt-4 uppercase tracking-wide">Outline</h3>
+            </div>
             
-            <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Outline</h3>
-            {headings.length > 0 ? (
-              <nav className="space-y-1">
-                {headings.map((heading) => (
-                                  <button
-                  key={`${heading.id}-${heading.level}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleTocClick(heading.id);
-                  }}
-                  className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
-                    activeHeading === heading.id
-                      ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                  style={{ 
-                    paddingLeft: `${Math.max(heading.level - 1, 0) * 16 + 12}px`,
-                    borderLeft: activeHeading === heading.id ? '3px solid #3b82f6' : '3px solid transparent'
-                  }}
-                  title={heading.text}
-                  data-heading-id={heading.id}
-                  data-heading-level={heading.level}
-                >
-                  <span className="block truncate">
-                    {heading.text}
-                  </span>
-                </button>
-                ))}
-              </nav>
-            ) : (
-              <p className="text-sm text-gray-500 italic">No headings found</p>
-            )}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6 pt-4">
+                {headings.length > 0 ? (
+                  <nav className="space-y-1">
+                    {headings.map((heading) => (
+                      <button
+                        key={`${heading.id}-${heading.level}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleTocClick(heading.id);
+                        }}
+                        className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
+                          activeHeading === heading.id
+                            ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                        style={{ 
+                          paddingLeft: `${Math.max(heading.level - 1, 0) * 16 + 12}px`,
+                          borderLeft: activeHeading === heading.id ? '3px solid #3b82f6' : '3px solid transparent'
+                        }}
+                        title={heading.text}
+                        data-heading-id={heading.id}
+                        data-heading-level={heading.level}
+                      >
+                        <span className="block truncate">
+                          {heading.text}
+                        </span>
+                      </button>
+                    ))}
+                  </nav>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No headings found</p>
+                )}
+              </div>
+            </div>
           </div>
         </aside>
 
