@@ -48,13 +48,13 @@ async function fetchFiles(path: string = ''): Promise<void> {
     if (up) upUrl += '/' + encodeURIComponent(up).replace(/%2F/g, '/');
     if (!upUrl.endsWith('/')) upUrl += '/';
     list.innerHTML += 
-      `<a href="${upUrl}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl">
+      `<a href="${upUrl}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
         <img src="/icons/icons8-folder-48.png" class="w-5 h-5 mr-3">
         (Go Back)
       </a>`;
   } else {
     list.innerHTML += 
-      `<a href="/" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl">
+      `<a href="/" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
         <img src="/icons/icons8-folder-48.png" class="w-5 h-5 mr-3">
         (Back to Home)
       </a>`;
@@ -72,14 +72,14 @@ async function fetchFiles(path: string = ''): Promise<void> {
     if (isDir) {
       const href: string = `/files/${encodedPath}/`;
       list.innerHTML += `
-        <a href="${href}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl">
+        <a href="${href}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
           <img src="/icons/icons8-folder-48.png" class="w-5 h-5 mr-3">
           ${displayName}
         </a>`;
     } else {
       const filePath: string = `/files/${encodedPath}`;
       list.innerHTML += `
-        <a href="${filePath}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-gray-800 bg-white no-underline rounded-xl">
+        <a href="${filePath}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-gray-900 bg-white no-underline rounded-xl transition-colors">
           <img src="/icons/file-icon.png" class="w-5 h-5 mr-3">
           ${displayName}
         </a>`;
@@ -128,12 +128,12 @@ async function searchFiles(fileName: string, currentDir: string = ''): Promise<v
     const data: SearchResponse = await response.json();
 
     if (data.error) {
-      searchList.innerHTML = `<div class="text-center p-4 text-red-600 bg-red-50 border border-red-200 rounded">Error: ${data.error}</div>`;
+      searchList.innerHTML = `<div class="text-center p-4 text-red-600 bg-red-50 border border-red-200 rounded-xl">Error: ${data.error}</div>`;
       return;
     }
 
     if (!data.results || data.count === 0) {
-      searchList.innerHTML = `<div class="text-center p-4 text-gray-500 italic bg-gray-50 rounded">No files found matching "${fileName}"</div>`;
+      searchList.innerHTML = `<div class="text-center p-4 text-gray-500 italic bg-gray-50 rounded-xl">No files found matching "${fileName}"</div>`;
       return;
     }
 
@@ -142,7 +142,7 @@ async function searchFiles(fileName: string, currentDir: string = ''): Promise<v
     data.results.forEach((result: SearchResult) => {
       const fileUrl = `/files/${result.relative_path}/${result.file_name}`;
       searchList.innerHTML += `
-        <a href="${fileUrl}" class="flex items-center p-3 border-l-4 border-blue-600 bg-gray-50 hover:bg-blue-50 mb-2 rounded-2xl transition">
+        <a href="${fileUrl}" class="flex items-center p-3 border-l-4 border-blue-600 bg-gray-50 hover:bg-blue-50 mb-2 rounded-2xl transition-colors">
           <img src="/icons/file-icon.png" class="w-5 h-5 mr-3">
           <div class="flex flex-col">
             <div class="font-medium text-gray-900">${result.file_name}</div>
@@ -159,7 +159,7 @@ async function searchFiles(fileName: string, currentDir: string = ''): Promise<v
 
   } catch (error) {
     console.error('Search error:', error);
-    searchList.innerHTML = '<div class="text-center p-4 text-red-600 bg-red-50 border border-red-200 rounded">Search failed. Please try again.</div>';
+    searchList.innerHTML = '<div class="text-center p-4 text-red-600 bg-red-50 border border-red-200 rounded-xl">Search failed. Please try again.</div>';
   } finally {
     searchBtn.disabled = false;
     searchBtn.textContent = 'Search';
