@@ -20,7 +20,7 @@ A lightweight, cross-platform web server built with Node.js for file sharing, ma
    npm install
    ```
 
-   > This project may require the installation of the rust compiler and Node.js (>=20)
+   > This project may require the installation of the rust compiler and Node.js (>=14)
 
 3. **Build the project**
    ```bash
@@ -54,7 +54,8 @@ A lightweight, cross-platform web server built with Node.js for file sharing, ma
 
 ```
 simple-server-nodejs/
-├── server.ts              # Main server file
+├── src/
+│   ├── server.ts          # Main server file
 ├── public/                # Static web assets
 │   ├── file-browser/      # File browser UI
 │   ├── markdown-viewer/   # Markdown preview components
@@ -112,12 +113,6 @@ Create secure, hard-to-guess URLs for sensitive files:
 4. Place in `files/private-files/`
 5. Share the direct URL: `http://yourserver:8000/private-files/B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.pdf`
 
-### Access Control Best Practices
-- Use `private-files/` for confidential documents
-- Create `index.html` warning pages in sensitive directories
-- Use secure, random filenames for sensitive content
-- Regularly audit file permissions and access logs
-
 ## 🛠️ Configuration
 
 ### Environment Variables
@@ -145,11 +140,3 @@ HOST=localhost PORT=80 npm run dev
 - Use `npm run preview` for localhost-only access
 - Consider using a reverse proxy (nginx) for production
 - Implement additional authentication if needed
-
-## 📄 License
-
-This project is open source. Please check the license file for details.
-
----
-
-**Version**: 2.2.0 | **Author**: lihaozhe | **Built with**: Node.js, TypeScript, Express, React, Rust
