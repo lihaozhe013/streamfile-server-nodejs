@@ -49,13 +49,13 @@ async function fetchFiles(path: string = ''): Promise<void> {
     if (!upUrl.endsWith('/')) upUrl += '/';
     list.innerHTML += 
       `<a href="${upUrl}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
-        <img src="/icons/icons8-folder-48.png" class="w-5 h-5 mr-3">
+        <img src="/icons/folder.svg" class="w-5 h-5 mr-3">
         (Go Back)
       </a>`;
   } else {
     list.innerHTML += 
       `<a href="/" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
-        <img src="/icons/icons8-folder-48.png" class="w-5 h-5 mr-3">
+        <img src="/icons/document.svg" class="w-5 h-5 mr-3">
         (Back to Home)
       </a>`;
   }
@@ -73,14 +73,27 @@ async function fetchFiles(path: string = ''): Promise<void> {
       const href: string = `/files/${encodedPath}/`;
       list.innerHTML += `
         <a href="${href}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
-          <img src="/icons/icons8-folder-48.png" class="w-5 h-5 mr-3">
+          <img src="/icons/folder.svg" class="w-5 h-5 mr-3">
           ${displayName}
         </a>`;
     } else {
+      const videoAudioExts = [
+        'mp4', 'mp3', 'wav', 'avi', 'mov', 'flac', 'ogg', 'm4a', 'webm', 'mkv', 'aac', 'wmv', '3gp', 'm4v', 'mpg', 'mpeg'
+      ];
+      const imageExts = [
+        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif', 'apng', 'avif', 'jfif', 'pjpeg', 'pjp', 'raw', 'heic', 'heif'
+      ];
+      const ext = displayName.split('.').pop()?.toLowerCase() || '';
+      let icon = '/icons/document.svg';
+      if (videoAudioExts.includes(ext)) {
+        icon = '/icons/play-circle.svg';
+      } else if (imageExts.includes(ext)) {
+        icon = '/icons/photo.svg';
+      }
       const filePath: string = `/files/${encodedPath}`;
       list.innerHTML += `
         <a href="${filePath}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-gray-900 bg-white no-underline rounded-xl transition-colors">
-          <img src="/icons/file-icon.png" class="w-5 h-5 mr-3">
+          <img src="${icon}" class="w-5 h-5 mr-3">
           ${displayName}
         </a>`;
     }
@@ -140,10 +153,23 @@ async function searchFiles(fileName: string, currentDir: string = ''): Promise<v
     // Display search results
     searchList.innerHTML = '';
     data.results.forEach((result: SearchResult) => {
+      const videoAudioExts = [
+        'mp4', 'mp3', 'wav', 'avi', 'mov', 'flac', 'ogg', 'm4a', 'webm', 'mkv', 'aac', 'wmv', '3gp', 'm4v', 'mpg', 'mpeg'
+      ];
+      const imageExts = [
+        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif', 'apng', 'avif', 'jfif', 'pjpeg', 'pjp', 'raw', 'heic', 'heif'
+      ];
+      const ext = result.file_name.split('.').pop()?.toLowerCase() || '';
+      let icon = '/icons/document.svg';
+      if (videoAudioExts.includes(ext)) {
+        icon = '/icons/play-circle.svg';
+      } else if (imageExts.includes(ext)) {
+        icon = '/icons/photo.svg';
+      }
       const fileUrl = `/files/${result.relative_path}/${result.file_name}`;
       searchList.innerHTML += `
         <a href="${fileUrl}" class="flex items-center p-3 border-l-4 border-blue-600 bg-gray-50 hover:bg-blue-50 mb-2 rounded-2xl transition-colors">
-          <img src="/icons/file-icon.png" class="w-5 h-5 mr-3">
+          <img src="${icon}" class="w-5 h-5 mr-3">
           <div class="flex flex-col">
             <div class="font-medium text-gray-900">${result.file_name}</div>
             <div class="text-xs text-gray-500">${result.relative_path}</div>
@@ -201,4 +227,4 @@ function initializeSearch(): void {
 
 // Initialize everything
 fetchFiles(getCurrentDirectoryPath());
-initializeSearch(); 
+initializeSearch();
