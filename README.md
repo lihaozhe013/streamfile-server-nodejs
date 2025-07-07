@@ -11,7 +11,7 @@ A lightweight, cross-platform web server built with Node.js for file sharing, ma
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/lihaozhe013/simple-server-nodejs.git
    cd simple-server-nodejs
    ```
 
