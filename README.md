@@ -1,4 +1,19 @@
 # Simple Server NodeJS
+
+## Maintenance Information
+
+This project has been rebuilt using Golang. The rebuilt project is no longer guaranteed to be maintained.
+
+We strongly recommend using the following Golang version of the project.
+
+Here's the Golang version project:
+
+[https://github.com/lihaozhe013/simple-server-go](https://github.com/lihaozhe013/simple-server-go)
+
+---
+
+## Introduction
+
 A lightweight, cross-platform web server built with Node.js for file sharing, markdown viewing, and secure file management. Perfect for organizations needing a simple file server with no database requirements.
 
 ## 🚀 Quick Start
