@@ -1,4 +1,4 @@
-# Simple Server NodeJS
+# StreamFile Server NodeJS
 
 ## Maintenance Information
 
@@ -8,7 +8,7 @@ We strongly recommend using the following Golang version of the project.
 
 Here's the Golang version project:
 
-[https://github.com/lihaozhe013/simple-server-go](https://github.com/lihaozhe013/simple-server-go)
+[https://github.com/lihaozhe013/streamfile-server-go](https://github.com/lihaozhe013/streamfile-server-go)
 
 ---
 
@@ -26,7 +26,7 @@ A lightweight, cross-platform web server built with Node.js for file sharing, ma
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/lihaozhe013/simple-server-nodejs.git
+   git clone https://github.com/lihaozhe013/streamfile-server-nodejs.git
    cd simple-server-nodejs
    ```
 
