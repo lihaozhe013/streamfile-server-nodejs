@@ -125,7 +125,7 @@ app.get(/^\/files\/.*$/, (req: Request, res: Response, next: NextFunction) => {
     fs.existsSync(filePath) &&
     path.extname(filePath).toLowerCase() === ".md"
   ) {
-    res.sendFile(path.join(PUBLIC_DIR, "markdown-viewer.html"));
+    res.sendFile(path.join(PUBLIC_DIR, "markdown-viewer/index.html"));
   } else {
     next();
   }

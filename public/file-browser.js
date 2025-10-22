@@ -70,7 +70,7 @@ async function fetchFiles(path = '') {
       } else if (imageExts.includes(ext)) {
         icon = '/public/icons/photo.svg';
       } else if (externalLinkExts.includes(ext)) {
-        icon = 'public/icons/external-link.svg';
+        icon = '/public/icons/external-link.svg';
       }
       const filePath = `/files/${encodedPath}`;
       list.innerHTML += `
