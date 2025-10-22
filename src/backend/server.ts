@@ -141,7 +141,7 @@ app.get('/api/markdown-content', (req: Request, res: Response) => {
 // setup static files (after the markdown interceptor)
 app.use('/files', express.static(UPLOAD_DIR));
 app.use(express.static(PUBLIC_DIR));
-app.use(express.static(DIST_DIR)); // Serve dist files (including output.css)
+app.use(express.static(DIST_DIR)); // Serve dist files (including styles.css)
 
 // Serve custom file browser UI for /files and all nested paths
 app.get('/files', (req: Request, res: Response) => {

@@ -1,1 +1,1 @@
-Icons provided by [Heroicons](https://heroicons.com/) – MIT Licensed.
+Icons provided by "Simple Design System (Community)" from figma.

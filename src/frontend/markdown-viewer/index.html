@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown Viewer</title>
+    <link rel="icon" href="/public/icons/book-open.svg" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Get the file path from the current URL
+      const currentPath = window.location.pathname;
+      // 正确解码URL路径，去除/files/前缀
+      const encodedFilePath = currentPath.replace('/files/', '');
+      const filePath = decodeURIComponent(encodedFilePath);
+      
+      console.log('Current path:', currentPath);
+      console.log('Encoded file path:', encodedFilePath);
+      console.log('Decoded file path:', filePath);
+      
+      // Show loading indicator
+      document.getElementById('root').innerHTML = '<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: #6b7280;">Loading markdown content...</div>';
+      
+      // Fetch markdown content from the API
+      fetch(`/api/markdown-content?path=${encodeURIComponent(filePath)}`)
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(err => {
+              throw new Error(err.error || 'Failed to fetch markdown content');
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Markdown content loaded:', data.filename);
+          // Set the markdown content on window object BEFORE React app loads
+          window.markdownContent = data.content;
+          document.title = data.filename;
+          
+          // Signal that content is ready
+          window.markdownContentReady = true;
+          
+          // Dispatch event for React to pick up
+          window.dispatchEvent(new CustomEvent('markdownContentLoaded', { detail: data }));
+        })
+        .catch(error => {
+          console.error('Error loading markdown content:', error);
+          document.getElementById('root').innerHTML = `<div style="padding: 1rem; color: #dc2626;">Error loading markdown content: ${error.message}</div>`;
+        });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

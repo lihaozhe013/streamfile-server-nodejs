@@ -1,17 +1,9 @@
-interface UploadElements {
-  uploadForm: HTMLFormElement;
-  fileInput: HTMLInputElement;
-  progressContainer: HTMLElement;
-  progressBar: HTMLElement;
-  progressText: HTMLElement;
-}
-
-function getUploadElements(): UploadElements | null {
-  const uploadForm = document.getElementById('uploadForm') as HTMLFormElement;
-  const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-  const progressContainer = document.getElementById('progressContainer') as HTMLElement;
-  const progressBar = document.getElementById('progressBar') as HTMLElement;
-  const progressText = document.getElementById('progressText') as HTMLElement;
+function getUploadElements() {
+  const uploadForm = document.getElementById('uploadForm');
+  const fileInput = document.getElementById('fileInput');
+  const progressContainer = document.getElementById('progressContainer');
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
 
   if (!uploadForm || !fileInput || !progressContainer || !progressBar || !progressText) {
     console.error('Required upload elements not found');
@@ -21,18 +13,18 @@ function getUploadElements(): UploadElements | null {
   return { uploadForm, fileInput, progressContainer, progressBar, progressText };
 }
 
-function resetProgressBar(elements: UploadElements): void {
+function resetProgressBar(elements) {
   elements.progressContainer.style.display = 'none';
   elements.progressBar.style.width = '0%';
   elements.progressText.textContent = '';
 }
 
-function updateProgress(elements: UploadElements, percent: number): void {
+function updateProgress(elements, percent) {
   elements.progressBar.style.width = `${percent}%`;
   elements.progressText.textContent = `${percent}%`;
 }
 
-function showProgressBar(elements: UploadElements): void {
+function showProgressBar(elements) {
   elements.progressContainer.style.display = 'block';
   elements.progressBar.style.width = '0%';
   elements.progressText.textContent = '0%';
@@ -40,7 +32,7 @@ function showProgressBar(elements: UploadElements): void {
   elements.progressText.style.padding = '0 8px';
 }
 
-function handleUpload(e: Event): void {
+function handleUpload(e) {
   e.preventDefault(); // Prevent the default form submission behavior
 
   const elements = getUploadElements();
@@ -59,25 +51,43 @@ function handleUpload(e: Event): void {
   showProgressBar(elements);
 
   // Listen for progress events
-  xhr.upload.addEventListener('progress', (event: ProgressEvent<XMLHttpRequestEventTarget>) => {
+  xhr.upload.addEventListener('progress', (event) => {
     if (event.lengthComputable) {
-      const percentComplete: number = Math.round((event.loaded / event.total) * 100);
+      const percentComplete = Math.round((event.loaded / event.total) * 100);
       updateProgress(elements, percentComplete);
     }
   });
 
   // Handle the completion of the request
-  xhr.onload = (): void => {
+  xhr.onload = () => {
     if (xhr.status === 200) {
-      alert('File uploaded successfully!');
+      try {
+        const response = JSON.parse(xhr.responseText);
+        if (response.message) {
+          alert(response.message);
+        } else {
+          alert('File uploaded successfully!');
+        }
+      } catch (e) {
+        alert('File uploaded successfully!');
+      }
     } else {
-      alert('Failed to upload file.');
+      try {
+        const response = JSON.parse(xhr.responseText);
+        if (response.error) {
+          alert('Upload failed: ' + response.error);
+        } else {
+          alert('Failed to upload file.');
+        }
+      } catch (e) {
+        alert('Failed to upload file.');
+      }
     }
     resetProgressBar(elements);
   };
 
   // Handle errors
-  xhr.onerror = (): void => {
+  xhr.onerror = () => {
     alert('An error occurred during the upload.');
     resetProgressBar(elements);
   };
@@ -92,4 +102,4 @@ document.addEventListener('DOMContentLoaded', () => {
   if (elements) {
     elements.uploadForm.addEventListener('submit', handleUpload);
   }
-}); 
+});

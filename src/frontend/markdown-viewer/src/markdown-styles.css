@@ -1,15 +1,18 @@
-/* Markdown content styles only - web page layout now uses Tailwind CSS */
+/* Markdown content styles only - web page layout uses Tailwind CSS */
 
 .preview {
-  font-family:
-  "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC",
-  "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR",
-  "Hiragino Sans", "Meiryo", "Noto Sans JP",
-  "Segoe UI", "Roboto", "Arial", "Helvetica Neue", "Helvetica",
-  sans-serif;
+  font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB",
+    "Noto Sans CJK SC", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR",
+    "Hiragino Sans", "Meiryo", "Noto Sans JP", "Segoe UI", "Roboto", "Arial",
+    "Helvetica Neue", "Helvetica", sans-serif;
 }
 
-.preview h1, .preview h2, .preview h3, .preview h4, .preview h5, .preview h6 {
+.preview h1,
+.preview h2,
+.preview h3,
+.preview h4,
+.preview h5,
+.preview h6 {
   margin-top: 24px;
   margin-bottom: 16px;
   font-weight: 600;
@@ -31,7 +34,7 @@
 .preview code {
   background-color: #f3f4f6;
   border-radius: 4px;
-  font-family: 'Fira Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-family: "Fira Mono", "Menlo", "Monaco", "Consolas", monospace;
   font-size: 15px;
   padding: 0.2em 0.5em;
   color: #d946ef;
@@ -46,7 +49,7 @@
   line-height: 1.6;
   font-size: 1em;
   margin: 1.5em 0;
-  box-shadow: 0 2px 8px 0 rgba(30,41,59,0.08);
+  box-shadow: 0 2px 8px 0 rgba(30, 41, 59, 0.08);
 }
 
 .preview pre code {
@@ -64,7 +67,7 @@
   border-radius: 0 0.5em 0.5em 0;
   font-style: italic;
   font-size: 1.1em;
-  box-shadow: 0 1px 4px 0 rgba(60,72,88,0.04);
+  box-shadow: 0 1px 4px 0 rgba(60, 72, 88, 0.04);
 }
 
 .preview a {
@@ -78,7 +81,8 @@
   text-decoration: underline wavy;
 }
 
-.preview ul, .preview ol {
+.preview ul,
+.preview ol {
   margin: 1em 0 1em 1.5em;
   padding: 0;
 }
@@ -93,7 +97,7 @@
   margin: 2em auto;
   max-width: 100%;
   border-radius: 1em;
-  box-shadow: 0 2px 8px 0 rgba(30,41,59,0.10);
+  box-shadow: 0 2px 8px 0 rgba(30, 41, 59, 0.1);
   border: 1px solid #e5e7eb;
 }
 
@@ -105,10 +109,11 @@
   background: #f9fafb;
   border-radius: 0.5em;
   overflow: hidden;
-  box-shadow: 0 1px 4px 0 rgba(60,72,88,0.04);
+  box-shadow: 0 1px 4px 0 rgba(60, 72, 88, 0.04);
 }
 
-.preview table th, .preview table td {
+.preview table th,
+.preview table td {
   padding: 10px 16px;
   border: 1px solid #e5e7eb;
 }

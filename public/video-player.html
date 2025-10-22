@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Media Player</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" href="/public/icons/play-circle.svg" />
+    <!-- <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" /> -->
+    <link href="/public/libs/video-js.css" rel="stylesheet" />
+    <style>
+      #app-container {
+        position: relative;
+      }
+      .player-chrome {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(17, 17, 17, 0.40) 20%,
+          rgba(17, 17, 17, 0.40) 60%
+        );
+        /* box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2); */
+        /* backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px); */
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        z-index: 30;
+      }
+
+      .player-chrome svg {
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+      }
+
+      .vjs-control-bar {
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+
+      #app-container[data-chrome="hidden"] .vjs-control-bar {
+        opacity: 0;
+        transform: translateY(100%);
+        pointer-events: none;
+      }
+
+      #app-container[data-chrome="visible"] .vjs-control-bar {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      @media (hover: hover) {
+        #app-container[data-chrome="hidden"] .player-chrome {
+          opacity: 0;
+          transform: translateY(-100%);
+          pointer-events: none;
+        }
+
+        #app-container[data-chrome="hidden"],
+        #app-container[data-chrome="hidden"] #player-container {
+          cursor: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="m-0 p-0 font-sans bg-neutral-900 text-neutral-200">
+    <div
+      id="app-container"
+      class="flex flex-col h-screen w-screen"
+      data-chrome="visible"
+      style="height: 100dvh; width: 100vw"
+    >
+      <header
+        id="playerHeader"
+        class="player-chrome py-[10px] px-4 flex items-center gap-3"
+      >
+        <h1 id="fileTitle" class="text-base font-medium truncate m-0">
+          Loading...
+        </h1>
+        <button
+          id="openNativeBtn"
+          class="px-4 py-2 text-sm bg-neutral-700 hover:bg-neutral-600 text-neutral-200 hover:text-white rounded-lg border border-neutral-600 hover:border-neutral-500 transition-all duration-200 flex-shrink-0 shadow-sm hover:shadow-md"
+          title="Open in browser's native player"
+          style="min-width: 140px"
+        >
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="" viewBox="0 0 48 48">
+              <path
+                d="M36 26V38C36 39.0609 35.5786 40.0783 34.8284 40.8284C34.0783 41.5786 33.0609 42 32 42H10C8.93913 42 7.92172 41.5786 7.17157 40.8284C6.42143 40.0783 6 39.0609 6 38V16C6 14.9391 6.42143 13.9217 7.17157 13.1716C7.92172 12.4214 8.93913 12 10 12H22M30 6H42M42 6V18M42 6L20 28"
+                stroke="#FFFFFF"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Native Player
+          </span>
+        </button>
+        <div class="text-xs opacity-60 ml-auto hidden sm:block">
+          ← / → Skip 5s • Space Pause/Play • F Fullscreen
+        </div>
+      </header>
+      <div
+        id="player-container"
+        class="flex-1 relative min-h-0 overflow-hidden"
+      >
+        <video
+          id="videoPlayer"
+          class="video-js vjs-theme-ss vjs-big-play-centered text-sm absolute top-0 left-0"
+          style="width: 100%; height: 100%; object-fit: contain"
+          controls
+          preload="auto"
+        ></video>
+      </div>
+    </div>
+    <!-- <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script> -->
+    <script src="/public/libs/video.min.js"></script>
+    <link href="/public/styles.css" rel="stylesheet" />
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <script>
+      // CSS var --vh for better mobile viewport handling
+      function setVhVar() {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty("--vh", `${vh}px`);
+        const app = document.getElementById("app-container");
+        if (app) {
+          app.style.height = `calc(var(--vh, 1vh) * 100)`;
+        }
+      }
+      setVhVar();
+      window.addEventListener("resize", setVhVar);
+      window.addEventListener("orientationchange", setVhVar);
+    </script>
+    <script src="/public/video-player.js"></script>
+  </body>
+</html>
