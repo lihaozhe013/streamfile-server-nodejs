@@ -9,8 +9,8 @@
     "build:frontend": "cd src/frontend/markdown-viewer && npm run build && cd ../../.. && node scripts/markdown-post-build.cjs",
     "build": "npm run build:server && npm run build:frontend && npm run build:css && cp -r public/ dist/",
     "build:server": "esbuild src/backend/server.ts --bundle --platform=node --format=esm --target=es2024 --outdir=dist --sourcemap --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
-  "build:server:watch": "esbuild src/backend/server.ts --bundle --platform=node --format=esm --target=es2024 --outdir=dist --sourcemap --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\" --watch",
-  "dev": "cross-env PORT=8080 HOST=127.0.0.1 tsx watch src/backend/server.ts",
+    "build:server:watch": "esbuild src/backend/server.ts --bundle --platform=node --format=esm --target=es2024 --outdir=dist --sourcemap --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\" --watch",
+    "dev": "cross-env PORT=8080 HOST=127.0.0.1 tsx watch src/backend/server.ts",
     "build:css": "postcss ./src/input.css -o ./public/styles.css",
     "dev:css": "postcss ./src/input.css -o ./styles.css --watch"
   },
