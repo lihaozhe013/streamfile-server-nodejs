@@ -1,9 +1,17 @@
 import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-const { searchFilesInPath, searchFilesStructured } = require('../dist/search_feat.node');
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+import type { FileEntry } from '@backend/types';
+
+// ESM-compatible __filename/__dirname and CommonJS require
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const cjsRequire = createRequire(import.meta.url);
+const { searchFilesInPath, searchFilesStructured } = cjsRequire('../dist/search_feat.node');
 
 const app = express();
 const HOST = process.env.HOST || '0.0.0.0';
@@ -148,10 +156,7 @@ app.get('/files', (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '../public/file-browser.html'));
 });
 
-interface FileEntry {
-    name: string;
-    isDirectory: boolean;
-}
+// FileEntry interface imported from @backend/types
 
 // List files in subdirectories of files
 app.get('/api/list-files', (req: Request, res: Response) => {

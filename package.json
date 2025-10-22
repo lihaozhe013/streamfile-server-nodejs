@@ -1,17 +1,20 @@
 {
   "name": "streamfile-server-nodejs",
   "version": "0.1.0",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "install:all": "npm i && cd src/frontend && npm i",
     "start": "cross-env HOST=0.0.0.0 node dist/server.js",
-    "preview": "cross-env HOST=127.0.0.1 tsx watch server.ts",
+    "preview": "npm run dev:server",
     "build": "npm run build:server && npm run build:frontend && npm run build:css",
+    "build:frontend": "cd src/frontend/markdown-viewer && npm run build && cd ../../.. && node scripts/markdown-post-build.cjs",
     "build:all": "npm run build:server && npm run build:frontend && npm run build:css && npm run build:search_feat",
-    "build:server": "tsc",
+    "build:server": "esbuild src/backend/server.ts --bundle --platform=node --format=esm --target=es2024 --packages=external --outdir=dist --sourcemap",
+    "build:server:watch": "esbuild src/backend/server.ts --bundle --platform=node --format=esm --target=es2024 --packages=external --outdir=dist --sourcemap --watch",
     "build:search_feat": "cd native/search_feat && npm install && npm run build && node build.js",
     "dev": "npm run build && npm run preview",
-    "dev:server": "npm run build:server && npm run preview",
+    "dev:server": "npm run build:server:watch & nodemon -q --watch dist/server.js dist/server.js",
     "build:css": "npx tailwindcss -i ./src/input.css -o ./styles.css --watch"
   },
   "author": {
@@ -29,6 +32,7 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.9.0",
     "@types/serve-index": "^1.9.4",
+    "esbuild": "^0.24.0",
     "cross-env": "^7.0.3",
     "nodemon": "3.1.10",
     "tailwindcss": "^4.1.15",
