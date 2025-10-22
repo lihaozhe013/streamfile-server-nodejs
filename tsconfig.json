@@ -10,6 +10,7 @@
     "outDir": "dist",
     "sourceMap": true,
     "resolveJsonModule": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@backend/*": ["src/backend/*"],

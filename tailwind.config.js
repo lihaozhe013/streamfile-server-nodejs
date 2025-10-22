@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./public/**/*.{html,js}",
     "!./src/frontend/markdown-viewer/**"
