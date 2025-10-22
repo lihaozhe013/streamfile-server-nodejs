@@ -22,8 +22,8 @@ const PRIVATE_DIR = path.join(__dirname, '../files/private-files');
 function resolvePublicDir(): string {
     const candidates = [
         path.join(__dirname, './public'), // dist/public (build artifact base)
-        path.join(__dirname, '../public'), // project/public
-        path.join(__dirname, '../../public'), // optional extra fallback
+        path.join(__dirname, '../../public'), // project/public
+        path.join(__dirname, '../public'), // optional extra fallback
     ];
     for (const p of candidates) {
         try {
@@ -83,7 +83,7 @@ if (!fs.existsSync(privateIndexPath)) {
 // Serve private files directly by URL (but don't list them in browser)
 app.use('/private-files', express.static(PRIVATE_DIR));
 
-app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
+app.get(/^\/files\/.*$/, (req: Request, res: Response, next: NextFunction) => {
     const decodedPath = decodeURIComponent(req.path.substring(7));
     const filePath = path.join(UPLOAD_DIR, decodedPath);
 
@@ -109,7 +109,7 @@ app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Intercept requests for markdown files
-app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
+app.get(/^\/files\/.*$/, (req: Request, res: Response, next: NextFunction) => {
     // Decode the URL component to get the actual filename
     const decodedPath = decodeURIComponent(req.path.substring(7)); // Remove '/files/' prefix
     const filePath = path.join(UPLOAD_DIR, decodedPath);
@@ -228,9 +228,9 @@ app.post('/upload', upload.single('file'), (req: Request, res: Response) => {
     res.send({ message: 'File uploaded successfully!', file: req.file });
 });
 
-app.get("/api/search_feat/file_name=:fileName/current_dir=*", (req: Request, res: Response) => {
-    const fileName = req.params.fileName;
-    const currentDir = req.params[0] || '';
+app.get(/^\/api\/search_feat\/file_name=([^/]+)\/current_dir=(.*)$/, (req: Request, res: Response) => {
+    const fileName = (req.params as any)[0];
+    const currentDir = ((req.params as any)[1] || '').toString();
     
     if (!fileName) {
         return res.json({error: "file_name parameter is required"});
