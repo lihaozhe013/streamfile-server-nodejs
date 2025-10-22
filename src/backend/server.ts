@@ -11,31 +11,33 @@ import { searchFilesInPath } from '@backend/utils/search-files';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Resolve project root robustly for both built and tsx-dev runs
+const ROOT_DIR = path.resolve(process.cwd());
+
 const app = express();
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = parseInt(process.env.PORT || '80', 10);
-const UPLOAD_DIR = path.join(__dirname, '../files');
-const INCOMING_DIR = path.join(__dirname, '../files/incoming');
-const PRIVATE_DIR = path.join(__dirname, '../files/private-files');
+const UPLOAD_DIR = path.join(ROOT_DIR, 'files');
+const INCOMING_DIR = path.join(ROOT_DIR, 'files/incoming');
+const PRIVATE_DIR = path.join(ROOT_DIR, 'files/private-files');
 
 // Resolve public dir with build-first base './public' (dist/public), and fallbacks for dev
 function resolvePublicDir(): string {
     const candidates = [
-        path.join(__dirname, './public'), // dist/public (build artifact base)
-        path.join(__dirname, '../../public'), // project/public
-        path.join(__dirname, '../public'), // optional extra fallback
+        path.join(ROOT_DIR, 'dist/public'), // build artifact base
+        path.join(ROOT_DIR, 'public'), // project/public
     ];
     for (const p of candidates) {
         try {
             if (fs.existsSync(p)) return p;
         } catch {}
     }
-    // default to '../public' for backward compatibility
-    return path.join(__dirname, '../public');
+    // default to project/public
+    return path.join(ROOT_DIR, 'public');
 }
 
 const PUBLIC_DIR = resolvePublicDir();
-const DIST_DIR = path.join(__dirname, '..');
+const DIST_DIR = path.join(ROOT_DIR, 'dist');
 
 function getLocalIP(): string {
     const interfaces = os.networkInterfaces();
