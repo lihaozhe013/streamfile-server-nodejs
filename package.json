@@ -6,14 +6,10 @@
   "scripts": {
     "install:all": "npm i && cd src/frontend && npm i",
     "start": "cross-env HOST=0.0.0.0 node dist/server.js",
-    "preview": "npm run dev:server",
-    "build": "npm run build:server && npm run build:frontend && npm run build:css",
     "build:frontend": "cd src/frontend/markdown-viewer && npm run build && cd ../../.. && node scripts/markdown-post-build.cjs",
-    "build:all": "npm run build:server && npm run build:frontend && npm run build:css && npm run build:search_feat",
+    "build": "npm run build:server && npm run build:frontend && npm run build:css && cp -r public/ dist/",
     "build:server": "esbuild src/backend/server.ts --bundle --platform=node --format=esm --target=es2024 --packages=external --outdir=dist --sourcemap",
     "build:server:watch": "esbuild src/backend/server.ts --bundle --platform=node --format=esm --target=es2024 --packages=external --outdir=dist --sourcemap --watch",
-    "build:search_feat": "cd native/search_feat && npm install && npm run build && node build.js",
-    "dev": "npm run build && npm run preview",
     "dev:server": "npm run build:server:watch & nodemon -q --watch dist/server.js dist/server.js",
     "build:css": "postcss ./src/input.css -o ./public/styles.css",
     "dev:css": "postcss ./src/input.css -o ./styles.css --watch"
@@ -24,6 +20,7 @@
   "description": "StreamFile Server",
   "dependencies": {
     "express": "^5.1.0",
+    "fast-glob": "^3.3.2",
     "multer": "^2.0.2",
     "serve-index": "^1.9.1"
   },

@@ -4,14 +4,12 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
 import type { FileEntry } from '@backend/types';
+import { searchFilesInPath } from '@backend/utils/search-files';
 
-// ESM-compatible __filename/__dirname and CommonJS require
+// ESM-compatible __filename/__dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const cjsRequire = createRequire(import.meta.url);
-const { searchFilesInPath, searchFilesStructured } = cjsRequire('../dist/search_feat.node');
 
 const app = express();
 const HOST = process.env.HOST || '0.0.0.0';
@@ -19,7 +17,24 @@ const PORT = parseInt(process.env.PORT || '80', 10);
 const UPLOAD_DIR = path.join(__dirname, '../files');
 const INCOMING_DIR = path.join(__dirname, '../files/incoming');
 const PRIVATE_DIR = path.join(__dirname, '../files/private-files');
-const PUBLIC_DIR = path.join(__dirname, '../public');
+
+// Resolve public dir with build-first base './public' (dist/public), and fallbacks for dev
+function resolvePublicDir(): string {
+    const candidates = [
+        path.join(__dirname, './public'), // dist/public (build artifact base)
+        path.join(__dirname, '../public'), // project/public
+        path.join(__dirname, '../../public'), // optional extra fallback
+    ];
+    for (const p of candidates) {
+        try {
+            if (fs.existsSync(p)) return p;
+        } catch {}
+    }
+    // default to '../public' for backward compatibility
+    return path.join(__dirname, '../public');
+}
+
+const PUBLIC_DIR = resolvePublicDir();
 const DIST_DIR = path.join(__dirname, '..');
 
 function getLocalIP(): string {
@@ -55,7 +70,7 @@ if (!fs.existsSync(PRIVATE_DIR)) {
 // Add 404 index.html to INCOMING_DIR and PRIVATE_DIR if they don't have one
 const incomingIndexPath = path.join(INCOMING_DIR, 'index.html');
 const privateIndexPath = path.join(PRIVATE_DIR, 'index.html');
-const source404Path = path.join(__dirname, '../public/404-index.html');
+const source404Path = path.join(PUBLIC_DIR, '404-index.html');
 
 if (!fs.existsSync(incomingIndexPath)) {
     fs.copyFileSync(source404Path, incomingIndexPath);
@@ -84,7 +99,7 @@ app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
                 if (!err) {
                     return res.sendFile(indexHtmlPath);
                 } else {
-                    return res.sendFile(path.join(__dirname, '../public/file-browser.html'));
+                    return res.sendFile(path.join(PUBLIC_DIR, 'file-browser.html'));
                 }
             });
         } else {
@@ -105,7 +120,7 @@ app.get('/files/*', (req: Request, res: Response, next: NextFunction) => {
     }
     
     if (fs.existsSync(filePath) && path.extname(filePath).toLowerCase() === '.md') {
-        res.sendFile(path.join(__dirname, '../public/markdown-viewer.html'));
+        res.sendFile(path.join(PUBLIC_DIR, 'markdown-viewer.html'));
     } else {
         next();
     }
@@ -153,7 +168,7 @@ app.use(express.static(DIST_DIR)); // Serve dist files (including styles.css)
 
 // Serve custom file browser UI for /files and all nested paths
 app.get('/files', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../public/file-browser.html'));
+    res.sendFile(path.join(PUBLIC_DIR, 'file-browser.html'));
 });
 
 // FileEntry interface imported from @backend/types
