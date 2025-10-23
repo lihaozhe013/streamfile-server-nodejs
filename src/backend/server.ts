@@ -4,8 +4,8 @@ import path from "path";
 import fs from "fs";
 import os from "os";
 import { fileURLToPath } from "url";
-import type { FileEntry } from "@backend/types";
-import { searchFilesInPath } from "@backend/utils/search-files";
+import type { FileEntry } from "@/backend/types/index";
+import { searchFilesInPath } from "@/backend/utils/search-files";
 
 // ESM-compatible __filename/__dirname
 const __filename = fileURLToPath(import.meta.url);

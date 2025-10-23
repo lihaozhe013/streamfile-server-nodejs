@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2024",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -10,13 +10,10 @@
     "outDir": "dist",
     "sourceMap": true,
     "resolveJsonModule": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
-      "@backend/*": ["src/backend/*"],
-      "@backend/types": ["src/backend/types/index.ts"]
+      "@/backend/*": ["./src/backend/*"],
     }
   },
-  "include": ["src/backend/**/*.ts"],
+  "include": ["src/backend"],
   "exclude": ["node_modules", "dist", "src/frontend/**/*"]
 }
