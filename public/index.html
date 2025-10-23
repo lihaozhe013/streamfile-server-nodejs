@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Server</title>
-    <script src="/dist/tailwind.js"></script>
+    <title>StreamFile Server</title>
+    <link rel="icon" href="/public/icons/server.svg" />
+    <link href="/public/styles.css" rel="stylesheet">
 </head>
 <body class="bg-white min-h-screen font-sans text-gray-900">
     <div class="max-w-2xl mx-auto px-4">
-        <h1 class="text-center text-3xl font-bold mt-8 mb-2">Simple Server</h1>
-        <h2 class="text-center mb-6 font-medium text-blue-400">A Light Weighted Server System</h2>
+        <h1 class="text-center text-3xl font-bold mt-8 mb-2">StreamFile Server</h1>
+        <h2 class="text-center mb-6 font-medium text-blue-400">A Light Weighted StreamFile System</h2>
         
         <div class="max-w-md mx-auto">
             <div class="mb-6 bg-white border border-gray-200 rounded-3xl shadow-xl p-8">
@@ -34,28 +35,28 @@
             <div class="mb-6 bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
                 <h2 class="mb-3 text-xl font-semibold">Drive</h2>
                 <div class="flex items-center gap-3">
-                    <img src="/icons/folder.svg" class="w-8 h-8">
+                    <img src="/public/icons/folder.svg" class="w-8 h-8">
                     <a href="/files" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full font-medium transition">Browse Files Here</a>
                 </div>
             </div>
             
-            <div class="mb-6 bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+            <!-- <div class="mb-6 bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
                 <blockquote class="italic text-gray-600">
                     This is the main page of Simple Server.
                 </blockquote>
-            </div>
+            </div> -->
             
             <div class="text-center mb-6">
-                <img src="avatar.jpeg" id="avatar-img" class="w-20 h-20 rounded-2xl mx-auto shadow-md"/>
+                <img src="/public/avatar.svg" id="avatar-img" class="w-20 h-20 rounded-2xl mx-auto shadow-md"/>
             </div>
             
             <div class="text-center text-sm mb-4 text-gray-500">
-                <p>Developed by <a href="https://github.com/lihaozhe013/simple-NAS-nodejs" target="_blank" class="text-blue-500 hover:underline">lihaozhe013</a></p>
+                <p>Developed by <a href="https://github.com/lihaozhe013/streamfile-server-go" target="_blank" class="text-blue-500 hover:underline">lihaozhe013</a></p>
             </div>
         </div>
     </div>
-    
-    <script src="/dist/upload.js"></script>
+
+    <script src="/public/upload.js"></script>
     <script>
     const fileInput = document.getElementById('fileInput');
     const customUpload = document.getElementById('custom-upload');

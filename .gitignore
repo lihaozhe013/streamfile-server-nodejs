@@ -7,3 +7,6 @@ native/search_feat/node_modules/
 native/search_feat/*.node
 native/search_feat/index.d.ts
 native/search_feat/index.js
+
+public/markdown-viewer
+public/styles.css
