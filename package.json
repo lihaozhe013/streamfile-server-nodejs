@@ -19,21 +19,21 @@
   },
   "description": "StreamFile Server",
   "dependencies": {
-    "express": "^5.1.0",
-    "fast-glob": "^3.3.2",
+    "express": "^5.2.1",
+    "fast-glob": "^3.3.3",
     "multer": "^2.0.2",
     "serve-index": "^1.9.1"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.1.15",
-    "@tailwindcss/postcss": "^4.1.15",
-    "@types/express": "^5.0.3",
+    "@tailwindcss/cli": "^4.1.17",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
-    "@types/node": "^24.9.0",
+    "@types/node": "^24.10.1",
     "@types/serve-index": "^1.9.4",
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.4.22",
     "cross-env": "^10.1.0",
-    "esbuild": "^0.25.11",
+    "esbuild": "^0.25.12",
     "fs-extra": "11.3.2",
     "nodemon": "3.1.10",
     "postcss": "^8.5.6",
@@ -41,9 +41,9 @@
     "tailwindcss": "^4.1.16",
     "ts-loader": "^9.5.4",
     "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.20.6",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "webpack": "^5.102.1",
+    "webpack": "^5.103.0",
     "webpack-cli": "^6.0.1"
   }
 }
