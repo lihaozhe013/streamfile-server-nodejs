@@ -1,0 +1,13 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .container/Dockerfile
+    image: streamfile-server
+    container_name: streamfile-server-instance
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ../files:/app/files
+    ports:
+      - "3000:3000"
+    command: node server.js
