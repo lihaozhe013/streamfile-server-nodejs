@@ -24,9 +24,10 @@ config = yaml.load(fileContents) as Config;
 
 const HOST = config.server.host;
 const PORT = config.server.port;
-const UPLOAD_DIR = path.join(ROOT_DIR, config.directories.upload);
+const FILES_DIR = path.join(ROOT_DIR, config.directories.upload);
 const INCOMING_DIR = path.join(ROOT_DIR, config.directories.incoming);
 const PRIVATE_DIR = path.join(ROOT_DIR, config.directories.private);
+const PUBLIC_DIR = path.join(ROOT_DIR, config.directories.public);
 
 // Resolve public dir with build-first base './public' (dist/public), and fallbacks for dev
 function resolvePublicDir(): string {
@@ -42,9 +43,6 @@ function resolvePublicDir(): string {
   // default to project/public
   return path.join(ROOT_DIR, 'public');
 }
-
-const PUBLIC_DIR = resolvePublicDir();
-const DIST_DIR = path.join(ROOT_DIR, 'dist');
 
 function getLocalIP(): string {
   const interfaces = os.networkInterfaces();
@@ -64,8 +62,8 @@ function getLocalIP(): string {
 const LOCAL_IP = getLocalIP();
 
 // create folders if dne
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+if (!fs.existsSync(FILES_DIR)) {
+  fs.mkdirSync(FILES_DIR, { recursive: true });
 }
 
 if (!fs.existsSync(INCOMING_DIR)) {
@@ -89,4 +87,4 @@ if (!fs.existsSync(privateIndexPath)) {
   fs.copyFileSync(source404Path, privateIndexPath);
 }
 
-export { PRIVATE_DIR, UPLOAD_DIR, INCOMING_DIR, PUBLIC_DIR, DIST_DIR, HOST, PORT, LOCAL_IP, __dirname }
+export { PRIVATE_DIR, FILES_DIR, INCOMING_DIR, PUBLIC_DIR, HOST, PORT, LOCAL_IP, __dirname }

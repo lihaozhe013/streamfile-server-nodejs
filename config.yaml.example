@@ -3,6 +3,7 @@ server:
   port: 3000
 
 directories:
+  public: "public"
   upload: "files"
   incoming: "files/incoming"
   private: "files/private-files"

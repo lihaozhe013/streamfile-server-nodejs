@@ -1,7 +1,7 @@
 import path from 'path';
 import fg from 'fast-glob';
 import { Request, Response } from 'express';
-import { UPLOAD_DIR } from './paths';
+import { FILES_DIR } from './paths';
 
 type RawSearchItem = {
   path: string;
@@ -17,9 +17,9 @@ export const handleSearchRequest = (req: Request, res: Response) => {
   }
 
   const safeCurrentDir = path.normalize(currentDir).replace(/^(\.\.(\/|\\|$))+/, '');
-  const searchPath = path.join(UPLOAD_DIR, safeCurrentDir);
+  const searchPath = path.join(FILES_DIR, safeCurrentDir);
 
-  if (!searchPath.startsWith(UPLOAD_DIR)) {
+  if (!searchPath.startsWith(FILES_DIR)) {
     return res.json({ error: 'Invalid search path' });
   }
 
@@ -28,7 +28,7 @@ export const handleSearchRequest = (req: Request, res: Response) => {
     const files = JSON.parse(jsonResult);
 
     const filteredFiles = files.filter((file: { path: string; full_file_name: string }) => {
-      const relativePath = path.relative(UPLOAD_DIR, file.path);
+      const relativePath = path.relative(FILES_DIR, file.path);
       return (
         !relativePath.startsWith('private-files') &&
         !relativePath.startsWith('incoming') &&
@@ -40,7 +40,7 @@ export const handleSearchRequest = (req: Request, res: Response) => {
       return {
         file_name: file.full_file_name,
         file_path: file.path,
-        relative_path: path.relative(UPLOAD_DIR, file.path),
+        relative_path: path.relative(FILES_DIR, file.path),
       };
     });
 

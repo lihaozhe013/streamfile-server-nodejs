@@ -7,15 +7,19 @@ import { handleSearchRequest } from '@/backend/utils/fileSearch';
 import { isMediaExtension } from '@/backend/utils/isMediaExtension';
 import {
   PRIVATE_DIR,
-  UPLOAD_DIR,
+  FILES_DIR,
   INCOMING_DIR,
   PUBLIC_DIR,
-  DIST_DIR,
   HOST,
   PORT,
   LOCAL_IP,
   __dirname,
 } from '@/backend/utils/paths';
+
+console.log("FILES_DIR:", FILES_DIR);
+console.log("INCOMING_DIR:", INCOMING_DIR);
+console.log("PRIVATE_DIR:", PRIVATE_DIR);
+console.log("PUBLIC_DIR:", PUBLIC_DIR);
 
 const app = express();
 
@@ -32,10 +36,10 @@ app.get(/^\/files(\/.*)?$/, (req: Request, res: Response, next: NextFunction) =>
 
   // Clean path to prevent directory traversal
   const safePath = path.normalize(decodedPath).replace(/^(\.\.(\/|\\|$))+/, '');
-  const fullPath = path.join(UPLOAD_DIR, safePath);
+  const fullPath = path.join(FILES_DIR, safePath);
 
   // Security check: ensure path is within upload directory
-  if (!fullPath.startsWith(UPLOAD_DIR)) {
+  if (!fullPath.startsWith(FILES_DIR)) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
@@ -88,7 +92,7 @@ app.get(/^\/files(\/.*)?$/, (req: Request, res: Response, next: NextFunction) =>
 });
 
 app.use(express.static(PUBLIC_DIR));
-app.use(express.static(DIST_DIR)); // Serve dist files (including styles.css)
+app.use('/public', express.static(PUBLIC_DIR));
 
 // API endpoint to get markdown content (kept as is for the viewer to fetch content)
 app.get('/api/markdown-content', (req: Request, res: Response) => {
@@ -98,14 +102,14 @@ app.get('/api/markdown-content', (req: Request, res: Response) => {
   }
 
   const decodedPath = decodeURIComponent(filePath);
-  const fullPath = path.join(UPLOAD_DIR, decodedPath);
+  const fullPath = path.join(FILES_DIR, decodedPath);
 
   // Block access to the incoming directory
   if (fullPath.startsWith(INCOMING_DIR)) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
-  if (!fullPath.startsWith(UPLOAD_DIR)) {
+  if (!fullPath.startsWith(FILES_DIR)) {
     return res.status(400).json({ error: 'Invalid path' });
   }
 
@@ -129,9 +133,9 @@ app.get('/api/markdown-content', (req: Request, res: Response) => {
 app.get('/api/list-files', (req: Request, res: Response) => {
   const relativePath = (req.query.path as string) || '';
   const safeRelativePath = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, '');
-  const fullPath = path.join(UPLOAD_DIR, safeRelativePath);
+  const fullPath = path.join(FILES_DIR, safeRelativePath);
 
-  if (!fullPath.startsWith(UPLOAD_DIR)) {
+  if (!fullPath.startsWith(FILES_DIR)) {
     return res.status(400).json({ error: 'Invalid path' });
   }
 

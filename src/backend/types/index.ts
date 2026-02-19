@@ -9,6 +9,7 @@ export interface Config {
     port: number;
   };
   directories: {
+    public: string;
     upload: string;
     incoming: string;
     private: string;
