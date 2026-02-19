@@ -4,22 +4,31 @@ const root = path.resolve(__dirname, "..");
 const r = (...p) => path.resolve(root, ...p);
 
 try {
-    fs.rmSync(r("simple-server"));
+    fs.removeSync(r("dist"));
 }
 catch {}
 
 try {
-    fs.rmSync(r("simple-server.exe"));
+    fs.removeSync(r("simple-server"));
 }
 catch {}
 
 try {
-    fs.rmSync(r("public/markdown-viewer"), { recursive: true });
+    fs.removeSync(r("simple-server.exe"));
 }
 catch {}
 
 try {
-    fs.rmSync(r("public/styles.css"));
+    fs.removeSync(r("public/markdown-viewer"));
 }
 catch {}
 
+try {
+    fs.removeSync(r("public/styles.css"));
+}
+catch{}
+
+try {
+    fs.removeSync(r("src/frontend/markdown-viewer/markdown-viewer"));
+}
+catch {}

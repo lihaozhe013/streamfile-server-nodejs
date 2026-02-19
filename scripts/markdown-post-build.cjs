@@ -8,7 +8,11 @@ try {
 }
 catch {}
 
-fs.renameSync(r("src/frontend/markdown-viewer/dist"), r("src/frontend/markdown-viewer/markdown-viewer"));
+try {
+    fs.renameSync(r("src/frontend/markdown-viewer/dist"), r("src/frontend/markdown-viewer/markdown-viewer"));
+}
+catch {}
+
 try {
     fs.removeSync(r("public/markdown-viewer"));
     console.log("Removed old markdown-viewer");
