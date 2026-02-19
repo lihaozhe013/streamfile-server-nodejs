@@ -7,7 +7,7 @@ services:
     container_name: streamfile-server-instance
     volumes:
       - ./config.yaml:/app/config.yaml
-      - ../files:/app/files
+      - ./files:/app/files
     ports:
       - "3000:3000"
     command: node server.js

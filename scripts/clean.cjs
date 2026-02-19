@@ -3,10 +3,7 @@ const path = require("path");
 const root = path.resolve(__dirname, "..");
 const r = (...p) => path.resolve(root, ...p);
 
-try {
-    fs.removeSync(r("dist"));
-}
-catch {}
+fs.removeSync(r("dist"));
 
 try {
     fs.removeSync(r("simple-server"));
@@ -18,17 +15,8 @@ try {
 }
 catch {}
 
-try {
-    fs.removeSync(r("public/markdown-viewer"));
-}
-catch {}
+fs.removeSync(r("public/markdown-viewer"));
 
-try {
-    fs.removeSync(r("public/styles.css"));
-}
-catch{}
+fs.removeSync(r("public/styles.css"));
 
-try {
-    fs.removeSync(r("src/frontend/markdown-viewer/markdown-viewer"));
-}
-catch {}
+fs.removeSync(r("src/frontend/markdown-viewer/markdown-viewer"));
