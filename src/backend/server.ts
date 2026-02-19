@@ -16,14 +16,8 @@ import {
   __dirname,
 } from '@/backend/utils/paths';
 
-console.log("FILES_DIR:", FILES_DIR);
-console.log("INCOMING_DIR:", INCOMING_DIR);
-console.log("PRIVATE_DIR:", PRIVATE_DIR);
-console.log("PUBLIC_DIR:", PUBLIC_DIR);
-
 const app = express();
 
-app.use('/private-files', express.static(PRIVATE_DIR));
 
 app.get(/^\/files(\/.*)?$/, (req: Request, res: Response, next: NextFunction) => {
   // Decode the URL component to get the actual path
