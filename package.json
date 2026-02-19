@@ -5,12 +5,12 @@
   "main": "dist/server.js",
   "scripts": {
     "install:all": "npm i && cd src/frontend/markdown-viewer && npm i",
-    "start": "cross-env HOST=0.0.0.0 node dist/server.js",
+    "start": "node dist/server.js",
     "build:frontend": "cd src/frontend/markdown-viewer && npm run build && cd ../../.. && node scripts/markdown-post-build.cjs",
     "build": "npm run build:server && npm run build:frontend && npm run build:css && cp -r public/ dist/",
     "build:server": "esbuild src/backend/server.ts --bundle --platform=node --format=esm --target=es2024 --outdir=dist --sourcemap --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
     "build:server:watch": "esbuild src/backend/server.ts --bundle --platform=node --format=esm --target=es2024 --outdir=dist --sourcemap --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\" --watch",
-    "dev": "cross-env PORT=8080 HOST=127.0.0.1 tsx watch src/backend/server.ts",
+    "dev": "tsx watch src/backend/server.ts",
     "build:css": "postcss ./src/input.css -o ./public/styles.css",
     "dev:css": "postcss ./src/input.css -o ./styles.css --watch"
   },
@@ -21,6 +21,7 @@
   "dependencies": {
     "express": "^5.2.1",
     "fast-glob": "^3.3.3",
+    "js-yaml": "^4.1.1",
     "multer": "^2.0.2",
     "serve-index": "^1.9.2"
   },
@@ -28,6 +29,7 @@
     "@tailwindcss/cli": "^4.1.18",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/express": "^5.0.6",
+    "@types/js-yaml": "^4.0.9",
     "@types/multer": "^2.0.0",
     "@types/node": "^25.2.2",
     "@types/serve-index": "^1.9.4",

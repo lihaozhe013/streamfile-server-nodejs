@@ -10,3 +10,4 @@ native/search_feat/index.js
 
 public/markdown-viewer
 public/styles.css
+config.yaml
