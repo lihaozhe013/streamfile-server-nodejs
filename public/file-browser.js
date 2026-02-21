@@ -140,20 +140,20 @@ async function searchFiles(fileName, currentDir = '') {
       const imageExts = [
         'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif', 'apng', 'avif', 'jfif', 'pjpeg', 'pjp', 'raw', 'heic', 'heif'
       ];
-      const ext = result.fileName.split('.').pop()?.toLowerCase() || '';
+      const ext = result.file_name.split('.').pop()?.toLowerCase() || '';
       let icon = '/public/icons/document.svg';
       if (videoAudioExts.includes(ext)) {
         icon = '/public/icons/play-circle.svg';
       } else if (imageExts.includes(ext)) {
         icon = '/public/icons/photo.svg';
       }
-      const fileUrl = `/files/${result.relativePath}`;
+      const fileUrl = `/files/${result.relative_path}`;
       searchList.innerHTML += `
         <a href="${fileUrl}" class="flex items-center p-3 border-l-4 border-blue-600 bg-gray-50 hover:bg-blue-50 mb-2 rounded-2xl transition-colors">
           <img src="${icon}" class="w-5 h-5 mr-3">
           <div class="flex flex-col">
-            <div class="font-medium text-gray-900">${result.fileName}</div>
-            <div class="text-xs text-gray-500">${result.relativePath}</div>
+            <div class="font-medium text-gray-900">${result.file_name}</div>
+            <div class="text-xs text-gray-500">${result.relative_path}</div>
           </div>
         </a>`;
     });

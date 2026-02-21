@@ -181,7 +181,9 @@ app.post('/upload', upload.single('file'), (req: Request, res: Response) => {
   res.send({ message: 'File uploaded successfully!', file: req.file });
 });
 
-app.get(/^\/api\/search_feat\/file_name=([^/]+)\/current_dir=(.*)$/, handleSearchRequest);
+// Search API
+app.get('/api/search', handleSearchRequest);
+app.get(/^\/api\/search\/file_name=([^/]+)\/current_dir=(.*)$/, handleSearchRequest);
 
 // Main Page
 app.get('/', (req: Request, res: Response) => {

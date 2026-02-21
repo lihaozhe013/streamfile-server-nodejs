@@ -9,11 +9,12 @@ type RawSearchItem = {
 };
 
 export const handleSearchRequest = (req: Request, res: Response) => {
-  const fileName = (req.params as any)[0];
-  const currentDir = ((req.params as any)[1] || '').toString();
+  // Support both query params (standard) and regex capturing groups (legacy)
+  const fileName = (req.query.q as string) || (req.params as any)[0];
+  const currentDir = (req.query.dir as string) || ((req.params as any)[1] || '').toString();
 
   if (!fileName) {
-    return res.json({ error: 'file_name parameter is required' });
+    return res.status(400).json({ error: 'file_name parameter is required' });
   }
 
   const safeCurrentDir = path.normalize(currentDir).replace(/^(\.\.(\/|\\|$))+/, '');
