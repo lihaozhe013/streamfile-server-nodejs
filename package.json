@@ -6,13 +6,8 @@
   "scripts": {
     "install:all": "npm i && cd src/frontend/markdown-viewer && npm i",
     "start": "node dist/server.js",
-    "build:frontend": "cd src/frontend/markdown-viewer && npm run build && cd ../../.. && node scripts/markdown-post-build.cjs",
-    "build": "node scripts/clean.cjs && npm run build:server && npm run build:frontend && npm run build:css && node scripts/post-build-prod.cjs",
-    "build:server": "node scripts/bundle-backend.cjs",
-    "build:server:watch": "node scripts/bundle-backend.cjs --watch",
-    "dev": "tsx watch src/backend/server.ts",
-    "build:css": "postcss ./src/input.css -o ./public/styles.css",
-    "dev:css": "postcss ./src/input.css -o ./styles.css --watch"
+    "build": "python build.py",
+    "dev": "tsx watch src/backend/server.ts"
   },
   "author": {
     "name": "lihaozhe013"
