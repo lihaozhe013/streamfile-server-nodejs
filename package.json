@@ -6,7 +6,7 @@
   "scripts": {
     "install:all": "npm i && cd src/frontend/markdown-viewer && npm i",
     "start": "node dist/server.js",
-    "build": "python build.py",
+    "build": "uv run build.py",
     "dev": "tsx watch src/backend/server.ts"
   },
   "author": {

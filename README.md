@@ -43,7 +43,9 @@ cd streamfile-server-nodejs
 npm run install:all
 ```
 
-### Dev
+### Build
+
+> Note: I use uv run instead of python because the python command is incompatible across different systems. It is strongly recommended to use uv. If you prefer not to use uv, you can modify the npm run build command yourself to python build.py or python3 build.py.
 
 1. **Build the project**
 
