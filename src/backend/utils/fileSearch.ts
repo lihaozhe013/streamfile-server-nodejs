@@ -10,8 +10,8 @@ type RawSearchItem = {
 
 export const handleSearchRequest = (req: Request, res: Response) => {
   // Support both query params (standard) and regex capturing groups (legacy)
-  const fileName = (req.query.q as string) || (req.params as any)[0];
-  const currentDir = (req.query.dir as string) || ((req.params as any)[1] || '').toString();
+  const fileName = (req.query.q as string) || (req.params as Record<string, string>)[0];
+  const currentDir = (req.query.dir as string) || ((req.params as Record<string, string>)[1] || '').toString();
 
   if (!fileName) {
     return res.status(400).json({ error: 'file_name parameter is required' });
@@ -61,18 +61,6 @@ export const handleSearchRequest = (req: Request, res: Response) => {
   }
 };
 
-async function searchFilesStructured(
-  fileName: string,
-  searchPath: string,
-): Promise<Array<{ file_name: string; file_path: string; relative_path: string }>> {
-  const results = await searchFilesCore(fileName, searchPath);
-  return results.map((r) => ({
-    file_name: r.full_file_name,
-    file_path: r.path,
-    relative_path: path.relative(searchPath, r.path),
-  }));
-}
-
 function searchFilesInPath(fileName: string, searchPath: string): string {
   // Provide a sync-like wrapper that returns JSON string to match previous native addon API
   // We'll block using deasync-like behavior by leveraging fast-glob's sync API for simplicity
@@ -82,30 +70,10 @@ function searchFilesInPath(fileName: string, searchPath: string): string {
 
 function buildCandidates(fileName: string) {
   // Escape glob special chars lightly; fast-glob treats [] and {} specially
-  const escaped = fileName.replace(/[\\{}\[\]\(\)\?\+\^\$\.]/g, '\\$&');
+  const escaped = fileName.replace(/[\\{}[\]()?+^$.]/g, '\\$&');
   return [
     `**/*${escaped}*`, // contains
   ];
-}
-
-async function searchFilesCore(fileName: string, searchPath: string): Promise<RawSearchItem[]> {
-  const patterns = buildCandidates(fileName);
-  const entries: string[] = await fg(patterns, {
-    cwd: searchPath,
-    absolute: true,
-    onlyFiles: true,
-    dot: false, // skip dotfiles
-    followSymbolicLinks: true,
-    ignore: ['**/incoming/**', '**/private-files/**'],
-    unique: true,
-    suppressErrors: true,
-    // We handle case-insensitive match by filtering post-glob
-  });
-
-  const q = fileName.toLowerCase();
-  return (entries as string[])
-    .filter((abs: string) => path.basename(abs).toLowerCase().includes(q))
-    .map((abs: string) => ({ path: abs, full_file_name: path.basename(abs) }));
 }
 
 function searchFilesCoreSync(fileName: string, searchPath: string): RawSearchItem[] {

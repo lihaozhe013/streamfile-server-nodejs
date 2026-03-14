@@ -6,21 +6,31 @@ import yaml from 'js-yaml';
 import type { Config } from '@/backend/types/index';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Resolve project root robustly for both built and tsx-dev runs
 const ROOT_DIR = path.resolve(process.cwd());
-const CONFIG_PATH = path.join(ROOT_DIR, 'config.yaml');
 
-let config: Config;
+function getPath(file_name: string) {
+  const candidatePaths = [
+    path.join(ROOT_DIR, file_name),
+    path.join(ROOT_DIR, '..', file_name),
+    path.join(ROOT_DIR, '..', '..', file_name),
+  ];
+  for (const configPath of candidatePaths) {
+    if (!configPath) continue;
+    if (fs.existsSync(configPath)) {
+      return configPath
+    }
+  }
+}
 
-if (!fs.existsSync(CONFIG_PATH)) {
+const CONFIG_PATH = getPath('config.yaml');
+
+if (!CONFIG_PATH || !fs.existsSync(CONFIG_PATH)) {
   console.error(`Config file not found at ${CONFIG_PATH}`);
   process.exit(1);
 }
 
 const fileContents = fs.readFileSync(CONFIG_PATH, 'utf8');
-config = yaml.load(fileContents) as Config;
-
+const config = yaml.load(fileContents) as Config;
 
 const HOST = config.server.host;
 const PORT = config.server.port;
@@ -28,21 +38,6 @@ const FILES_DIR = path.join(ROOT_DIR, config.directories.upload);
 const INCOMING_DIR = path.join(ROOT_DIR, config.directories.incoming);
 const PRIVATE_DIR = path.join(ROOT_DIR, config.directories.private);
 const PUBLIC_DIR = path.join(ROOT_DIR, config.directories.public);
-
-// Resolve public dir with build-first base './public' (dist/public), and fallbacks for dev
-function resolvePublicDir(): string {
-  const candidates = [
-    path.join(ROOT_DIR, 'dist/public'), // build artifact base
-    path.join(ROOT_DIR, 'public'), // project/public
-  ];
-  for (const p of candidates) {
-    try {
-      if (fs.existsSync(p)) return p;
-    } catch {}
-  }
-  // default to project/public
-  return path.join(ROOT_DIR, 'public');
-}
 
 function getLocalIP(): string {
   const interfaces = os.networkInterfaces();
@@ -87,4 +82,4 @@ if (!fs.existsSync(privateIndexPath)) {
   fs.copyFileSync(source404Path, privateIndexPath);
 }
 
-export { PRIVATE_DIR, FILES_DIR, INCOMING_DIR, PUBLIC_DIR, HOST, PORT, LOCAL_IP, __dirname }
+export { PRIVATE_DIR, FILES_DIR, INCOMING_DIR, PUBLIC_DIR, HOST, PORT, LOCAL_IP, __dirname };

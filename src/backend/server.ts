@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -6,7 +6,6 @@ import type { FileEntry } from '@/backend/types/index';
 import { handleSearchRequest } from '@/backend/utils/fileSearch';
 import { isMediaExtension } from '@/backend/utils/isMediaExtension';
 import {
-  PRIVATE_DIR,
   FILES_DIR,
   INCOMING_DIR,
   PUBLIC_DIR,
@@ -19,7 +18,7 @@ import {
 const app = express();
 
 
-app.get(/^\/files(\/.*)?$/, (req: Request, res: Response, next: NextFunction) => {
+app.get(/^\/files(\/.*)?$/, (req: Request, res: Response) => {
   // Decode the URL component to get the actual path
   const prefix = '/files';
   let relativePath = req.path;
@@ -145,7 +144,7 @@ app.get('/api/list-files', (req: Request, res: Response) => {
         try {
           const stat = await fs.promises.stat(entryPath); // Follows symlinks
           isDirectory = stat.isDirectory();
-        } catch (e) {
+        } catch {
           // If error (broken link), assume not a directory
         }
         return {
