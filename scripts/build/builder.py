@@ -5,7 +5,7 @@ def build(base_dir):
     frontend_dir = base_dir / 'src' / 'frontend'
     backend_dir = base_dir / 'src' / 'backend'
     markdown_viewer_dir = frontend_dir / 'markdown-viewer'
-    public_dir = base_dir / "public"
+    public_dir = base_dir / 'src' / 'frontend' / "public"
     dist_dir = base_dir / "dist"
 
     clean_list = [
@@ -27,7 +27,7 @@ def build(base_dir):
     builder.move(markdown_viewer_dir / 'dist', public_dir / 'markdown-viewer')
 
     # build css
-    builder.run(base_dir, 'npx postcss ./src/input.css -o ./public/styles.css')
+    builder.run(base_dir, 'npx postcss ./src/input.css -o ./src/frontend/public/styles.css')
 
     # post build
     builder.copy(public_dir, dist_dir / 'public')

@@ -3,13 +3,8 @@
 node_modules/
 .DS_Store
 dist/
-native/search_feat/target/
-native/search_feat/node_modules/
-native/search_feat/*.node
-native/search_feat/index.d.ts
-native/search_feat/index.js
-public/markdown-viewer
-public/styles.css
+/src/frontend/public/markdown-viewer
+/src/frontend/public/styles.css
 config.yaml
 /.container/config.yaml
 /.container/files/
