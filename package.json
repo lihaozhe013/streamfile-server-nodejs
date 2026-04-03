@@ -5,10 +5,9 @@
   "scripts": {
     "install:all": "npm i && cd src/backend && npm i && cd ../frontend/markdown-viewer && npm i"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@tailwindcss/cli": "^4.2.1",
-    "@tailwindcss/postcss": "^4.2.1",
+    "@tailwindcss/cli": "^4.2.2",
+    "@tailwindcss/postcss": "^4.2.2",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "postcss-cli": "^11.0.1",
