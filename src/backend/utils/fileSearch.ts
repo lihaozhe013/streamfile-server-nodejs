@@ -11,7 +11,8 @@ type RawSearchItem = {
 export const handleSearchRequest = (req: Request, res: Response) => {
   // Support both query params (standard) and regex capturing groups (legacy)
   const fileName = (req.query.q as string) || (req.params as Record<string, string>)[0];
-  const currentDir = (req.query.dir as string) || ((req.params as Record<string, string>)[1] || '').toString();
+  const currentDir =
+    (req.query.dir as string) || ((req.params as Record<string, string>)[1] || '').toString();
 
   if (!fileName) {
     return res.status(400).json({ error: 'file_name parameter is required' });

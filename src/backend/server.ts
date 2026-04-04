@@ -2,9 +2,9 @@ import express, { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import type { FileEntry } from '@/backend/types/index';
-import { handleSearchRequest } from '@/backend/utils/fileSearch';
-import { isMediaExtension } from '@/backend/utils/isMediaExtension';
+import type { FileEntry } from '@/types/index';
+import { handleSearchRequest } from '@/utils/fileSearch';
+import { isMediaExtension } from '@/utils/isMediaExtension';
 import {
   FILES_DIR,
   INCOMING_DIR,
@@ -13,10 +13,9 @@ import {
   PORT,
   LOCAL_IP,
   __dirname,
-} from '@/backend/utils/paths';
+} from '@/utils/paths';
 
 const app = express();
-
 
 app.get(/^\/files(\/.*)?$/, (req: Request, res: Response) => {
   // Decode the URL component to get the actual path

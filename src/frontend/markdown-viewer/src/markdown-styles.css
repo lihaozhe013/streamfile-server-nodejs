@@ -1,10 +1,10 @@
 /* Markdown content styles only - web page layout uses Tailwind CSS */
 
 .preview {
-  font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB",
-    "Noto Sans CJK SC", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR",
-    "Hiragino Sans", "Meiryo", "Noto Sans JP", "Segoe UI", "Roboto", "Arial",
-    "Helvetica Neue", "Helvetica", sans-serif;
+  font-family:
+    'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Apple SD Gothic Neo',
+    'Malgun Gothic', 'Noto Sans KR', 'Hiragino Sans', 'Meiryo', 'Noto Sans JP', 'Segoe UI',
+    'Roboto', 'Arial', 'Helvetica Neue', 'Helvetica', sans-serif;
 }
 
 .preview h1,
@@ -34,7 +34,7 @@
 .preview code {
   background-color: #f3f4f6;
   border-radius: 4px;
-  font-family: "Fira Mono", "Menlo", "Monaco", "Consolas", monospace;
+  font-family: 'Fira Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
   font-size: 15px;
   padding: 0.2em 0.5em;
   color: #d946ef;

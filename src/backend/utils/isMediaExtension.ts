@@ -1,4 +1,3 @@
-
 export function isMediaExtension(ext: string): boolean {
   switch (ext.toLowerCase()) {
     // Video

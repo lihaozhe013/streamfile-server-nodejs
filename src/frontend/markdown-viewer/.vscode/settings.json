@@ -4,9 +4,7 @@
   "scss.validate": false,
   "less.validate": false,
   "tailwindCSS.emmetCompletions": true,
-  "tailwindCSS.experimental.classRegex": [
-    ["className\\s*=\\s*[\"']([^\"']*)[\"']", "([^\"']*)"]
-  ],
+  "tailwindCSS.experimental.classRegex": [["className\\s*=\\s*[\"']([^\"']*)[\"']", "([^\"']*)"]],
   "editor.quickSuggestions": {
     "strings": true
   },

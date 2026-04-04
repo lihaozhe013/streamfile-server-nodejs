@@ -88,13 +88,13 @@ cd dist && node server.js
 
 ## Supported File Types
 
-| Category      | File Types                             | Preview Support              |
-| ------------- | -------------------------------------- | ---------------------------- |
-| **Documents** | `.md`, `.html`, `.pdf`                 | ✅ Markdown, ✅ HTML, ✅ PDF |
-| **Media**     | `.mp4`, `.mp3`, `.jpg`, `.png`, `.gif` | ✅ Video.js + Native Browser Support    |
-| **Archives**  | `.zip`, `.tar`, `.gz`                  | ❌ Download only             |
-| **Office**    | `.docx`, `.xlsx`, `.pptx`              | ❌ Download only             |
-| **Code**      | `.js`, `.ts`, `.py`, `.css`, etc.      | ✅ Syntax highlighting       |
+| Category      | File Types                             | Preview Support                      |
+| ------------- | -------------------------------------- | ------------------------------------ |
+| **Documents** | `.md`, `.html`, `.pdf`                 | ✅ Markdown, ✅ HTML, ✅ PDF         |
+| **Media**     | `.mp4`, `.mp3`, `.jpg`, `.png`, `.gif` | ✅ Video.js + Native Browser Support |
+| **Archives**  | `.zip`, `.tar`, `.gz`                  | ❌ Download only                     |
+| **Office**    | `.docx`, `.xlsx`, `.pptx`              | ❌ Download only                     |
+| **Code**      | `.js`, `.ts`, `.py`, `.css`, etc.      | ✅ Syntax highlighting               |
 
 ### Special Features
 

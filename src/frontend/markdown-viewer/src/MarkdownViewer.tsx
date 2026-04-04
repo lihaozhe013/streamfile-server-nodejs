@@ -1,28 +1,26 @@
-import React, { useState, useEffect, useRef } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
-import rehypeRaw from "rehype-raw";
-import "katex/dist/katex.min.css";
+import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
+import 'katex/dist/katex.min.css';
 
-import type { MarkdownViewerProps, Heading } from "@/types";
+import type { MarkdownViewerProps, Heading } from '@/types';
 import {
   cleanMarkdownText,
   generateHeadingId,
   extractTextContent,
   processRelativePaths,
   extractHeadings,
-} from "@/utils/markdown";
-import DevToolsPanel from "@/components/DevToolsPanel";
+} from '@/utils/markdown';
+import DevToolsPanel from '@/components/DevToolsPanel';
 
 const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   // Get markdown content from window object (passed from server)
-  const [markdownText, setMarkdownText] = useState<string>(
-    window.markdownContent || ""
-  );
+  const [markdownText, setMarkdownText] = useState<string>(window.markdownContent || '');
   const [headings, setHeadings] = useState<Heading[]>([]);
-  const [activeHeading, setActiveHeading] = useState<string>("");
+  const [activeHeading, setActiveHeading] = useState<string>('');
   const [isTocOpen, setIsTocOpen] = useState<boolean>(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const usedIds = useRef<Set<string>>(new Set());
@@ -30,11 +28,10 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   // Extract headings from markdown content
   useEffect(() => {
     if (markdownText) {
-      const { headings: extractedHeadings, usedIds: newUsedIds } =
-        extractHeadings(markdownText);
+      const { headings: extractedHeadings, usedIds: newUsedIds } = extractHeadings(markdownText);
       usedIds.current = newUsedIds;
       setHeadings(extractedHeadings);
-      setActiveHeading("");
+      setActiveHeading('');
     }
   }, [markdownText]);
 
@@ -44,7 +41,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
       if (headings.length === 0) return;
 
       const scrollPosition = window.scrollY + 120; // Offset for header
-      let currentActiveHeading = "";
+      let currentActiveHeading = '';
 
       // Find the heading that's currently in view
       for (let i = 0; i < headings.length; i++) {
@@ -62,7 +59,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
 
       // If no heading found and we're at the top, clear active heading
       if (!currentActiveHeading && scrollPosition < 200) {
-        currentActiveHeading = "";
+        currentActiveHeading = '';
       }
 
       if (currentActiveHeading !== activeHeading) {
@@ -70,10 +67,10 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Initial check
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [headings, activeHeading]);
 
   // Handle relative paths in markdown content
@@ -81,7 +78,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
     if (window.markdownContent) {
       const processedContent = processRelativePaths(
         window.markdownContent,
-        window.location.pathname
+        window.location.pathname,
       );
       setMarkdownText(processedContent);
     }
@@ -90,12 +87,12 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   // Handle back button click
   const handleBackClick = () => {
     const currentPath = window.location.pathname;
-    const lastSlashIndex = currentPath.lastIndexOf("/");
+    const lastSlashIndex = currentPath.lastIndexOf('/');
     if (lastSlashIndex > 0) {
       const parentPath = currentPath.substring(0, lastSlashIndex);
       window.location.href = parentPath;
     } else {
-      window.location.href = "/";
+      window.location.href = '/';
     }
   };
 
@@ -109,19 +106,19 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
 
       window.scrollTo({
         top: elementPosition,
-        behavior: "smooth",
+        behavior: 'smooth',
       });
 
       setActiveHeading(headingId);
     } else {
-      console.warn("Heading element not found for ID:", headingId);
+      console.warn('Heading element not found for ID:', headingId);
       // Fallback: try to find by text content
-      const allHeadings = document.querySelectorAll("h1, h2, h3, h4, h5, h6");
+      const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
       const targetHeading = headings.find((h) => h.id === headingId);
 
       if (targetHeading) {
         const fallbackElement = Array.from(allHeadings).find((el) => {
-          const elementText = el.textContent?.trim() || "";
+          const elementText = el.textContent?.trim() || '';
           return (
             elementText === targetHeading.text ||
             cleanMarkdownText(elementText) === targetHeading.text ||
@@ -132,13 +129,11 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
         if (fallbackElement) {
           const headerOffset = 80;
           const elementPosition =
-            fallbackElement.getBoundingClientRect().top +
-            window.scrollY -
-            headerOffset;
+            fallbackElement.getBoundingClientRect().top + window.scrollY - headerOffset;
 
           window.scrollTo({
             top: elementPosition,
-            behavior: "smooth",
+            behavior: 'smooth',
           });
 
           setActiveHeading(headingId);
@@ -152,20 +147,13 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
     return ({ children, ...props }: any) => {
       const renderedText = extractTextContent(children);
 
-      const matchingHeading = headings.find(
-        (h) => h.text === renderedText && h.level === level
-      );
+      const matchingHeading = headings.find((h) => h.text === renderedText && h.level === level);
       const fallbackHeading = !matchingHeading
-        ? headings.find(
-            (h) =>
-              cleanMarkdownText(h.text) === renderedText && h.level === level
-          )
+        ? headings.find((h) => cleanMarkdownText(h.text) === renderedText && h.level === level)
         : null;
 
       const finalHeading = matchingHeading || fallbackHeading;
-      const id = finalHeading
-        ? finalHeading.id
-        : generateHeadingId(renderedText, usedIds.current);
+      const id = finalHeading ? finalHeading.id : generateHeadingId(renderedText, usedIds.current);
 
       const headingProps = { id, ...props };
 
@@ -218,7 +206,8 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = '#f9fafb';
               e.currentTarget.style.color = '#111827';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)';
+              e.currentTarget.style.boxShadow =
+                '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = '#ffffff';
@@ -256,19 +245,12 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Table of Contents
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900">Table of Contents</h3>
               <button
                 onClick={() => setIsTocOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -290,17 +272,13 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                   }}
                   className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
                     activeHeading === heading.id
-                      ? "bg-blue-50 text-blue-700 font-medium shadow-sm"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                   style={{
-                    paddingLeft: `${
-                      Math.max(heading.level - 1, 0) * 16 + 12
-                    }px`,
+                    paddingLeft: `${Math.max(heading.level - 1, 0) * 16 + 12}px`,
                     borderLeft:
-                      activeHeading === heading.id
-                        ? "3px solid #3b82f6"
-                        : "3px solid transparent",
+                      activeHeading === heading.id ? '3px solid #3b82f6' : '3px solid transparent',
                   }}
                   title={heading.text}
                   data-heading-id={heading.id}
@@ -324,12 +302,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                 onClick={handleBackClick}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -359,17 +332,15 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                         }}
                         className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
                           activeHeading === heading.id
-                            ? "bg-blue-50 text-blue-700 font-medium shadow-sm"
-                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                            ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }`}
                         style={{
-                          paddingLeft: `${
-                            Math.max(heading.level - 1, 0) * 16 + 12
-                          }px`,
+                          paddingLeft: `${Math.max(heading.level - 1, 0) * 16 + 12}px`,
                           borderLeft:
                             activeHeading === heading.id
-                              ? "3px solid #3b82f6"
-                              : "3px solid transparent",
+                              ? '3px solid #3b82f6'
+                              : '3px solid transparent',
                         }}
                         title={heading.text}
                         data-heading-id={heading.id}
@@ -380,9 +351,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                     ))}
                   </nav>
                 ) : (
-                  <p className="text-sm text-gray-500 italic">
-                    No headings found
-                  </p>
+                  <p className="text-sm text-gray-500 italic">No headings found</p>
                 )}
               </div>
             </div>

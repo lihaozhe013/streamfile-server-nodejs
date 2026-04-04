@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
+    "format": "pnpm prettier --write .",
     "install:all": "npm i && cd src/backend && npm i && cd ../frontend/markdown-viewer && npm i"
   },
   "devDependencies": {
@@ -12,6 +13,7 @@
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "postcss-cli": "^11.0.1",
+    "prettier": "3.8.1",
     "tailwindcss": "^4.1.16"
   }
 }

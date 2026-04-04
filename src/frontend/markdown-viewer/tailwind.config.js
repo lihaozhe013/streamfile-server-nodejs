@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       fontFamily: {
@@ -25,13 +22,7 @@ export default {
           'Helvetica',
           'sans-serif',
         ],
-        mono: [
-          '"Fira Mono"',
-          'Menlo',
-          'Monaco',
-          'Consolas',
-          'monospace',
-        ],
+        mono: ['"Fira Mono"', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
     },
   },

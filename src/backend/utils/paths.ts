@@ -3,7 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
-import type { Config } from '@/backend/types/index';
+import type { Config } from '@/types/index';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(process.cwd());
@@ -17,7 +17,7 @@ function getPath(file_name: string) {
   for (const configPath of candidatePaths) {
     if (!configPath) continue;
     if (fs.existsSync(configPath)) {
-      return configPath
+      return configPath;
     }
   }
 }

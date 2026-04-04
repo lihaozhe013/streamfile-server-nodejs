@@ -11,9 +11,8 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "paths": {
-      "@/backend/*": ["./src/backend/*"],
+      "@/*": ["./*"]
     }
   },
-  "include": ["src/backend"],
-  "exclude": ["node_modules", "dist", "src/frontend/**/*"]
+  "exclude": ["node_modules", "dist"]
 }

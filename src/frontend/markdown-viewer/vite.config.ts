@@ -19,7 +19,7 @@ export default defineConfig({
     cssCodeSplit: false,
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html')
+        main: path.resolve(__dirname, 'index.html'),
       },
       output: {
         // Single bundle output
@@ -33,11 +33,11 @@ export default defineConfig({
           return '[name].[ext]';
         },
         // Inline all assets and create a single bundle
-        inlineDynamicImports: true
-      }
+        inlineDynamicImports: true,
+      },
     },
     // Increase chunk size warning limit since we're bundling everything
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
   },
   resolve: {
     alias: {
@@ -45,7 +45,7 @@ export default defineConfig({
       '@/types': path.resolve(__dirname, './src/types'),
       '@/utils': path.resolve(__dirname, './src/utils'),
       '@/components': path.resolve(__dirname, './src/components'),
-      '@/test': path.resolve(__dirname, './src/test')
-    }
-  }
+      '@/test': path.resolve(__dirname, './src/test'),
+    },
+  },
 });
