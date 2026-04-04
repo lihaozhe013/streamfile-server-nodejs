@@ -4,6 +4,7 @@
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "dev": "tsx watch server.ts"
   },
   "dependencies": {

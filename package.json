@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "install:all": "npm i && cd src/backend && npm i && cd ../frontend/markdown-viewer && npm i"
   },
   "devDependencies": {

@@ -23,11 +23,11 @@ def build(base_dir):
     builder.run(base_dir, 'node src/backend/build/bundle-backend.cjs')
     
     # build frontend
-    builder.run(markdown_viewer_dir, 'npx tsc && npx vite build')
+    builder.run(markdown_viewer_dir, 'pnpm tsc && pnpm vite build')
     builder.move(markdown_viewer_dir / 'dist', public_dir / 'markdown-viewer')
 
     # build css
-    builder.run(base_dir, 'npx postcss ./src/input.css -o ./src/frontend/public/styles.css')
+    builder.run(base_dir, 'pnpm postcss ./src/input.css -o ./src/frontend/public/styles.css')
 
     # post build
     builder.copy(public_dir, dist_dir / 'public')
