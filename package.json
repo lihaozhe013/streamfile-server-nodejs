@@ -5,7 +5,7 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "format": "pnpm prettier --write .",
-    "install:all": "npm i && cd src/backend && npm i && cd ../frontend/markdown-viewer && npm i"
+    "install:all": "pnpm i && cd src/backend && pnpm i && cd ../frontend/markdown-viewer && pnpm i"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.2",

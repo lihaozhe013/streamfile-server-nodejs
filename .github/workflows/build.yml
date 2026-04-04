@@ -10,15 +10,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Use Node.js 24.x
         uses: actions/setup-node@v4
         with:
           node-version: 24.x
-          cache: 'npm'
+          cache: 'pnpm'
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            src/backend/pnpm-lock.yaml
+            src/frontend/markdown-viewer/pnpm-lock.yaml
 
       - name: Install dependencies and build project
         run: |
-          npm run install:all
+          pnpm install:all
           python build.py
 
       - name: Read version from file
