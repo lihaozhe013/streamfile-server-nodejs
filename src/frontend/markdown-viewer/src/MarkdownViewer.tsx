@@ -162,7 +162,7 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-gray-100 flex flex-col font-sans">
       {/* Header */}
       <header
         style={{
@@ -295,9 +295,9 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
       {/* Main content with sidebar */}
       <main className="flex-1 flex max-w-none w-full">
         {/* Desktop Table of Contents Sidebar - Typora style */}
-        <aside className="hidden lg:block w-80 flex-shrink-0 bg-white/50 border-r border-gray-200 h-screen sticky top-0">
+        <aside className="hidden lg:block w-80 shrink-0 bg-white/50 border-r border-gray-200 h-screen sticky top-0">
           <div className="h-full flex flex-col">
-            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+            <div className="p-6 border-b border-gray-200 shrink-0">
               <button
                 onClick={handleBackClick}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm hover:shadow-md"
