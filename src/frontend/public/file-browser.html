@@ -1,42 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>File Browser</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/public/icons/hard-drive.svg"" />
-  <link href="/public/styles.css" rel="stylesheet">
-</head>
-<body class="bg-gray-50 min-h-screen font-sans text-gray-900">
-  <!-- Top header with search -->
-  <div class="w-full bg-white shadow-sm py-4 mb-6 border-b border-gray-200">
-    <div class="max-w-3xl mx-auto px-4">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 class="text-2xl font-bold tracking-tight text-gray-900">File Browser</h1>
-        <div class="flex gap-2 items-center">
-          <input type="text" id="search-input" placeholder="Search files..." class="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition w-48 bg-white">
-          <button id="search-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition shadow-sm">Search</button>
-          <button id="clear-search-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-xl font-medium transition border border-gray-300">Clear</button>
+  <head>
+    <meta charset="UTF-8" />
+    <title>File Browser</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/public/icons/hard-drive.svg" />
+    <link href="/public/styles.css" rel="stylesheet" />
+  </head>
+  <body class="bg-gray-50 min-h-screen font-sans text-gray-900">
+    <!-- Top header with search -->
+    <div class="w-full bg-white shadow-sm py-4 mb-6 border-b border-gray-200">
+      <div class="max-w-3xl mx-auto px-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 class="text-2xl font-bold tracking-tight text-gray-900">File Browser</h1>
+          <div class="flex gap-2 items-center">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search files..."
+              class="border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition w-48 bg-white"
+            />
+            <button
+              id="search-btn"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition shadow-sm"
+            >
+              Search
+            </button>
+            <button
+              id="clear-search-btn"
+              class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-xl font-medium transition border border-gray-300"
+            >
+              Clear
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="max-w-3xl mx-auto px-4">
-    <!-- Search Results Section -->
-    <div id="search-results" class="bg-white border border-gray-200 rounded-2xl p-4 mb-4 shadow-sm" style="display: none;">
-      <h4 class="text-lg font-semibold mb-2 text-gray-900">Search Results:</h4>
-      <div id="search-list"></div>
-    </div>
-    
-    <!-- File List -->
-    <div id="file-list" class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">Loading...</div>
-    
-    <div class="text-center mt-6">
-      <a href="/" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-medium transition shadow-sm">Back to Home</a>
-    </div>
-  </div>
+    <div class="max-w-3xl mx-auto px-4">
+      <!-- Search Results Section -->
+      <div
+        id="search-results"
+        class="bg-white border border-gray-200 rounded-2xl p-4 mb-4 shadow-sm"
+        style="display: none"
+      >
+        <h4 class="text-lg font-semibold mb-2 text-gray-900">Search Results:</h4>
+        <div id="search-list"></div>
+      </div>
 
-  <script src="/public/file-browser.js"></script>
-</body>
+      <!-- File List -->
+      <div id="file-list" class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        Loading...
+      </div>
+
+      <div class="text-center mt-6">
+        <a
+          href="/"
+          class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-medium transition shadow-sm"
+          >Back to Home</a
+        >
+      </div>
+    </div>
+
+    <script src="/public/file-browser.js"></script>
+  </body>
 </html>

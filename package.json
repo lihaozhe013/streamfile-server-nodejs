@@ -5,7 +5,8 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "format": "pnpm prettier --write .",
-    "install:all": "pnpm i && cd src/backend && pnpm i && cd ../frontend/markdown-viewer && pnpm i"
+    "install:all": "pnpm i && cd src/backend && pnpm i && cd ../frontend/markdown-viewer && pnpm i",
+    "build": "uv run build.py"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.2",

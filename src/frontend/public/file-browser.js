@@ -17,7 +17,7 @@ async function fetchFiles(path = '') {
 
   const list = document.getElementById('file-list');
   if (!list) return;
-  
+
   list.innerHTML = '';
 
   // Navigation row
@@ -26,14 +26,12 @@ async function fetchFiles(path = '') {
     let upUrl = '/files';
     if (up) upUrl += '/' + encodeURIComponent(up).replace(/%2F/g, '/');
     if (!upUrl.endsWith('/')) upUrl += '/';
-    list.innerHTML += 
-      `<a href="${upUrl}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
+    list.innerHTML += `<a href="${upUrl}" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
         <img src="/public/icons/folder.svg" class="w-5 h-5 mr-3">
         (Go Back)
       </a>`;
   } else {
-    list.innerHTML += 
-      `<a href="/" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
+    list.innerHTML += `<a href="/" class="flex items-center p-3 border-b border-gray-200 hover:bg-gray-50 text-blue-600 bg-white no-underline rounded-xl transition-colors">
         <img src="/public/icons/document.svg" class="w-5 h-5 mr-3">
         (Back to Home)
       </a>`;
@@ -57,10 +55,42 @@ async function fetchFiles(path = '') {
         </a>`;
     } else {
       const videoAudioExts = [
-        'mp4', 'mp3', 'wav', 'avi', 'mov', 'flac', 'ogg', 'm4a', 'webm', 'mkv', 'aac', 'wmv', '3gp', 'm4v', 'mpg', 'mpeg'
+        'mp4',
+        'mp3',
+        'wav',
+        'avi',
+        'mov',
+        'flac',
+        'ogg',
+        'm4a',
+        'webm',
+        'mkv',
+        'aac',
+        'wmv',
+        '3gp',
+        'm4v',
+        'mpg',
+        'mpeg',
       ];
       const imageExts = [
-        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif', 'apng', 'avif', 'jfif', 'pjpeg', 'pjp', 'raw', 'heic', 'heif'
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'bmp',
+        'webp',
+        'svg',
+        'ico',
+        'tiff',
+        'tif',
+        'apng',
+        'avif',
+        'jfif',
+        'pjpeg',
+        'pjp',
+        'raw',
+        'heic',
+        'heif',
       ];
       const externalLinkExts = ['html'];
       const ext = displayName.split('.').pop()?.toLowerCase() || '';
@@ -111,13 +141,14 @@ async function searchFiles(fileName, currentDir = '') {
   searchBtn.disabled = true;
   searchBtn.textContent = 'Searching...';
   searchResults.style.display = 'block';
-  searchList.innerHTML = '<div class="text-center p-4 text-gray-500 italic">Searching files...</div>';
+  searchList.innerHTML =
+    '<div class="text-center p-4 text-gray-500 italic">Searching files...</div>';
 
   try {
     const encodedFileName = encodeURIComponent(fileName);
     const encodedCurrentDir = encodeURIComponent(currentDir);
     const url = `/api/search?q=${encodedFileName}&dir=${encodedCurrentDir}`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
 
@@ -135,10 +166,42 @@ async function searchFiles(fileName, currentDir = '') {
     searchList.innerHTML = '';
     data.results.forEach((result) => {
       const videoAudioExts = [
-        'mp4', 'mp3', 'wav', 'avi', 'mov', 'flac', 'ogg', 'm4a', 'webm', 'mkv', 'aac', 'wmv', '3gp', 'm4v', 'mpg', 'mpeg'
+        'mp4',
+        'mp3',
+        'wav',
+        'avi',
+        'mov',
+        'flac',
+        'ogg',
+        'm4a',
+        'webm',
+        'mkv',
+        'aac',
+        'wmv',
+        '3gp',
+        'm4v',
+        'mpg',
+        'mpeg',
       ];
       const imageExts = [
-        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif', 'apng', 'avif', 'jfif', 'pjpeg', 'pjp', 'raw', 'heic', 'heif'
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'bmp',
+        'webp',
+        'svg',
+        'ico',
+        'tiff',
+        'tif',
+        'apng',
+        'avif',
+        'jfif',
+        'pjpeg',
+        'pjp',
+        'raw',
+        'heic',
+        'heif',
       ];
       const ext = result.file_name.split('.').pop()?.toLowerCase() || '';
       let icon = '/public/icons/document.svg';
@@ -163,10 +226,10 @@ async function searchFiles(fileName, currentDir = '') {
     if (resultsHeader && data.count !== undefined) {
       resultsHeader.textContent = `Search Results (${data.count} found):`;
     }
-
   } catch (error) {
     console.error('Search error:', error);
-    searchList.innerHTML = '<div class="text-center p-4 text-red-600 bg-red-50 border border-red-200 rounded-xl">Search failed. Please try again.</div>';
+    searchList.innerHTML =
+      '<div class="text-center p-4 text-red-600 bg-red-50 border border-red-200 rounded-xl">Search failed. Please try again.</div>';
   } finally {
     searchBtn.disabled = false;
     searchBtn.textContent = 'Search';
@@ -176,7 +239,7 @@ async function searchFiles(fileName, currentDir = '') {
 function clearSearch() {
   const searchInput = document.getElementById('search-input');
   const searchResults = document.getElementById('search-results');
-  
+
   searchInput.value = '';
   searchResults.style.display = 'none';
 }
