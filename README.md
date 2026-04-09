@@ -8,7 +8,7 @@ A lightweight, cross-platform web server built with Node.js for file sharing, ma
 
 ### Docker
 
-Use the following `compose.yaml` to quick start the server
+Use the following `compose.yaml` to quickly start the server
 
 ```yaml
 services:
@@ -26,7 +26,7 @@ services:
 ### Prerequisites
 
 - Node.js (v24 or higher)
-- npm
+- pnpm
 
 ### Installation
 
@@ -40,17 +40,17 @@ cd streamfile-server-nodejs
 2. **Install dependencies**
 
 ```bash
-npm run install:all
+pnpm install:all
 ```
 
 ### Build
 
-> Note: I use uv run instead of python because the python command is incompatible across different systems. It is strongly recommended to use uv. If you prefer not to use uv, you can modify the npm run build command yourself to python build.py or python3 build.py.
+> Note: I use uv run instead of Python because the Python command is incompatible across different systems. It is strongly recommended to use uv. If you prefer not to use uv, you can modify the npm run build command yourself to python build.py or python3 build.py.
 
 1. **Build the project**
 
 ```bash
-npm run build
+pnpm build
 ```
 
 2. **Start the server**
@@ -98,7 +98,7 @@ cd dist && node server.js
 
 ### Special Features
 
-- **Markdown Files**: Full preview with KaTeX math rendering, GitHub Flavored Markdown
+- **Markdown Files**: Full preview with KaTeX math rendering, GitHub Flavoured Markdown
 - **Directory Index**: Automatic `index.html` serving for folders
 - **Chinese Characters**: Full support for Unicode filenames
 
