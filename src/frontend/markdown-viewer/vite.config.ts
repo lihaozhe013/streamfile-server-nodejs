@@ -33,7 +33,7 @@ export default defineConfig({
           return '[name].[ext]';
         },
         // Inline all assets and create a single bundle
-        inlineDynamicImports: true,
+        codeSplitting: false,
       },
     },
     // Increase chunk size warning limit since we're bundling everything
