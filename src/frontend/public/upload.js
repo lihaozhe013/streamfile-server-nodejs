@@ -5,12 +5,24 @@ function getUploadElements() {
   const progressBar = document.getElementById('progressBar');
   const progressText = document.getElementById('progressText');
 
-  if (!uploadForm || !fileInput || !progressContainer || !progressBar || !progressText) {
+  if (
+    !uploadForm ||
+    !fileInput ||
+    !progressContainer ||
+    !progressBar ||
+    !progressText
+  ) {
     console.error('Required upload elements not found');
     return null;
   }
 
-  return { uploadForm, fileInput, progressContainer, progressBar, progressText };
+  return {
+    uploadForm,
+    fileInput,
+    progressContainer,
+    progressBar,
+    progressText,
+  };
 }
 
 function resetProgressBar(elements) {

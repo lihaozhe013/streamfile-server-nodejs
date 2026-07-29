@@ -9,12 +9,12 @@
     "build": "uv run build.py"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.2.2",
-    "@tailwindcss/postcss": "^4.2.2",
-    "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.8",
+    "@tailwindcss/cli": "^4.3.3",
+    "@tailwindcss/postcss": "^4.3.3",
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.24",
     "postcss-cli": "^11.0.1",
-    "prettier": "3.8.1",
-    "tailwindcss": "^4.1.16"
+    "prettier": "3.9.6",
+    "tailwindcss": "^4.3.3"
   }
 }

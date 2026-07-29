@@ -82,4 +82,13 @@ if (!fs.existsSync(privateIndexPath)) {
   fs.copyFileSync(source404Path, privateIndexPath);
 }
 
-export { PRIVATE_DIR, FILES_DIR, INCOMING_DIR, PUBLIC_DIR, HOST, PORT, LOCAL_IP, __dirname };
+export {
+  PRIVATE_DIR,
+  FILES_DIR,
+  INCOMING_DIR,
+  PUBLIC_DIR,
+  HOST,
+  PORT,
+  LOCAL_IP,
+  __dirname,
+};

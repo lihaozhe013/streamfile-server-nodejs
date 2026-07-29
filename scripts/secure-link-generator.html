@@ -34,7 +34,8 @@
       }
 
       function generateRandomString(length) {
-        const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
+        const charset =
+          'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
         let result = '';
         const array = new Uint8Array(length);
         crypto.getRandomValues(array); // secure random values

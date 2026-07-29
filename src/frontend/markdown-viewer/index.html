@@ -43,7 +43,9 @@
           window.markdownContentReady = true;
 
           // Dispatch event for React to pick up
-          window.dispatchEvent(new CustomEvent('markdownContentLoaded', { detail: data }));
+          window.dispatchEvent(
+            new CustomEvent('markdownContentLoaded', { detail: data }),
+          );
         })
         .catch((error) => {
           console.error('Error loading markdown content:', error);

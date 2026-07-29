@@ -18,7 +18,9 @@ import DevToolsPanel from '@/components/DevToolsPanel';
 
 const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   // Get markdown content from window object (passed from server)
-  const [markdownText, setMarkdownText] = useState<string>(window.markdownContent || '');
+  const [markdownText, setMarkdownText] = useState<string>(
+    window.markdownContent || '',
+  );
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [activeHeading, setActiveHeading] = useState<string>('');
   const [isTocOpen, setIsTocOpen] = useState<boolean>(false);
@@ -28,7 +30,8 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
   // Extract headings from markdown content
   useEffect(() => {
     if (markdownText) {
-      const { headings: extractedHeadings, usedIds: newUsedIds } = extractHeadings(markdownText);
+      const { headings: extractedHeadings, usedIds: newUsedIds } =
+        extractHeadings(markdownText);
       usedIds.current = newUsedIds;
       setHeadings(extractedHeadings);
       setActiveHeading('');
@@ -129,7 +132,9 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
         if (fallbackElement) {
           const headerOffset = 80;
           const elementPosition =
-            fallbackElement.getBoundingClientRect().top + window.scrollY - headerOffset;
+            fallbackElement.getBoundingClientRect().top +
+            window.scrollY -
+            headerOffset;
 
           window.scrollTo({
             top: elementPosition,
@@ -147,13 +152,20 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
     return ({ children, ...props }: any) => {
       const renderedText = extractTextContent(children);
 
-      const matchingHeading = headings.find((h) => h.text === renderedText && h.level === level);
+      const matchingHeading = headings.find(
+        (h) => h.text === renderedText && h.level === level,
+      );
       const fallbackHeading = !matchingHeading
-        ? headings.find((h) => cleanMarkdownText(h.text) === renderedText && h.level === level)
+        ? headings.find(
+            (h) =>
+              cleanMarkdownText(h.text) === renderedText && h.level === level,
+          )
         : null;
 
       const finalHeading = matchingHeading || fallbackHeading;
-      const id = finalHeading ? finalHeading.id : generateHeadingId(renderedText, usedIds.current);
+      const id = finalHeading
+        ? finalHeading.id
+        : generateHeadingId(renderedText, usedIds.current);
 
       const headingProps = { id, ...props };
 
@@ -212,7 +224,8 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = '#ffffff';
               e.currentTarget.style.color = '#374151';
-              e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
+              e.currentTarget.style.boxShadow =
+                '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
             }}
             className="lg:hidden"
           >
@@ -245,12 +258,19 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Table of Contents</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Table of Contents
+              </h3>
               <button
                 onClick={() => setIsTocOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -278,7 +298,9 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                   style={{
                     paddingLeft: `${Math.max(heading.level - 1, 0) * 16 + 12}px`,
                     borderLeft:
-                      activeHeading === heading.id ? '3px solid #3b82f6' : '3px solid transparent',
+                      activeHeading === heading.id
+                        ? '3px solid #3b82f6'
+                        : '3px solid transparent',
                   }}
                   title={heading.text}
                   data-heading-id={heading.id}
@@ -302,7 +324,12 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                 onClick={handleBackClick}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -351,7 +378,9 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = () => {
                     ))}
                   </nav>
                 ) : (
-                  <p className="text-sm text-gray-500 italic">No headings found</p>
+                  <p className="text-sm text-gray-500 italic">
+                    No headings found
+                  </p>
                 )}
               </div>
             </div>

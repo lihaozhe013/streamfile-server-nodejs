@@ -16,7 +16,11 @@
         left: 0;
         right: 0;
         top: 0;
-        background: linear-gradient(180deg, rgba(17, 17, 17, 0.4) 20%, rgba(17, 17, 17, 0.4) 60%);
+        background: linear-gradient(
+          180deg,
+          rgba(17, 17, 17, 0.4) 20%,
+          rgba(17, 17, 17, 0.4) 60%
+        );
         /* box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2); */
         /* backdrop-filter: blur(2px);
         -webkit-backdrop-filter: blur(2px); */
@@ -69,8 +73,13 @@
       data-chrome="visible"
       style="height: 100dvh; width: 100vw"
     >
-      <header id="playerHeader" class="player-chrome py-[10px] px-4 flex items-center gap-3">
-        <h1 id="fileTitle" class="text-base font-medium truncate m-0">Loading...</h1>
+      <header
+        id="playerHeader"
+        class="player-chrome py-[10px] px-4 flex items-center gap-3"
+      >
+        <h1 id="fileTitle" class="text-base font-medium truncate m-0">
+          Loading...
+        </h1>
         <button
           id="openNativeBtn"
           class="px-4 py-2 text-sm bg-neutral-700 hover:bg-neutral-600 text-neutral-200 hover:text-white rounded-lg border border-neutral-600 hover:border-neutral-500 transition-all duration-200 flex-shrink-0 shadow-sm hover:shadow-md"
@@ -94,7 +103,10 @@
           ← / → Skip 5s • Space Pause/Play • F Fullscreen
         </div>
       </header>
-      <div id="player-container" class="flex-1 relative min-h-0 overflow-hidden">
+      <div
+        id="player-container"
+        class="flex-1 relative min-h-0 overflow-hidden"
+      >
         <video
           id="videoPlayer"
           class="video-js vjs-theme-ss vjs-big-play-centered text-sm absolute top-0 left-0"

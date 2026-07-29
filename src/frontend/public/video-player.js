@@ -15,7 +15,9 @@
   const appContainer = document.getElementById('app-container');
   const headerEl = document.getElementById('playerHeader');
   const supportsHover =
-    typeof window.matchMedia === 'function' ? window.matchMedia('(hover: hover)').matches : true;
+    typeof window.matchMedia === 'function'
+      ? window.matchMedia('(hover: hover)').matches
+      : true;
 
   if (fileTitleEl) fileTitleEl.textContent = relPath || 'Media';
   document.title = relPath || 'Media';
@@ -24,7 +26,8 @@
     appContainer.dataset.chrome = 'visible';
   }
 
-  const mediaUrl = '/files/' + relPath + (relPath.includes('?') ? '&' : '?') + 'raw=1';
+  const mediaUrl =
+    '/files/' + relPath + (relPath.includes('?') ? '&' : '?') + 'raw=1';
 
   const lower = relPath.toLowerCase();
   const isAudio = /\.(mp3|wav|ogg|m4a|flac|aac)$/.test(lower);
@@ -129,7 +132,10 @@
         setChromeVisible();
         nudgePlayerActive();
         player.currentTime(
-          Math.min(player.duration() || Infinity, player.currentTime() + seekStep),
+          Math.min(
+            player.duration() || Infinity,
+            player.currentTime() + seekStep,
+          ),
         );
         flashSeek('+' + seekStep + 's');
         break;
@@ -205,7 +211,8 @@
         e.stopPropagation();
 
         const originalText = openNativeBtn.innerHTML;
-        openNativeBtn.innerHTML = '<span class="flex items-center gap-2">Opening...</span>';
+        openNativeBtn.innerHTML =
+          '<span class="flex items-center gap-2">Opening...</span>';
 
         setTimeout(function () {
           window.location.href = mediaUrl;

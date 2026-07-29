@@ -105,7 +105,10 @@ app.get('/api/markdown-content', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Invalid path' });
   }
 
-  if (fs.existsSync(fullPath) && path.extname(fullPath).toLowerCase() === '.md') {
+  if (
+    fs.existsSync(fullPath) &&
+    path.extname(fullPath).toLowerCase() === '.md'
+  ) {
     fs.readFile(fullPath, 'utf8', (err, data) => {
       if (err) {
         return res.status(500).json({ error: 'Failed to read file' });
@@ -124,7 +127,9 @@ app.get('/api/markdown-content', (req: Request, res: Response) => {
 // List files in subdirectories of files
 app.get('/api/list-files', (req: Request, res: Response) => {
   const relativePath = (req.query.path as string) || '';
-  const safeRelativePath = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, '');
+  const safeRelativePath = path
+    .normalize(relativePath)
+    .replace(/^(\.\.(\/|\\|$))+/, '');
   const fullPath = path.join(FILES_DIR, safeRelativePath);
 
   if (!fullPath.startsWith(FILES_DIR)) {
@@ -157,7 +162,9 @@ app.get('/api/list-files', (req: Request, res: Response) => {
     // Also filter out files and directories that start with '.'
     const filteredFiles = files.filter(
       (file) =>
-        file.name !== 'incoming' && file.name !== 'private-files' && !file.name.startsWith('.'),
+        file.name !== 'incoming' &&
+        file.name !== 'private-files' &&
+        !file.name.startsWith('.'),
     );
 
     res.json(filteredFiles);
@@ -181,7 +188,10 @@ app.post('/upload', upload.single('file'), (req: Request, res: Response) => {
 
 // Search API
 app.get('/api/search', handleSearchRequest);
-app.get(/^\/api\/search\/file_name=([^/]+)\/current_dir=(.*)$/, handleSearchRequest);
+app.get(
+  /^\/api\/search\/file_name=([^/]+)\/current_dir=(.*)$/,
+  handleSearchRequest,
+);
 
 // Main Page
 app.get('/', (req: Request, res: Response) => {
@@ -190,5 +200,7 @@ app.get('/', (req: Request, res: Response) => {
 
 // start
 app.listen(PORT, HOST, () => {
-  console.log(`Server Started: http://${HOST === '0.0.0.0' ? LOCAL_IP : HOST}:${PORT}`);
+  console.log(
+    `Server Started: http://${HOST === '0.0.0.0' ? LOCAL_IP : HOST}:${PORT}`,
+  );
 });

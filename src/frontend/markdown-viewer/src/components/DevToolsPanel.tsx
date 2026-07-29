@@ -5,7 +5,10 @@ interface DevToolsPanelProps {
   onLoadShort: () => void;
 }
 
-const DevToolsPanel: React.FC<DevToolsPanelProps> = ({ onLoadTest, onLoadShort }) => {
+const DevToolsPanel: React.FC<DevToolsPanelProps> = ({
+  onLoadTest,
+  onLoadShort,
+}) => {
   return (
     <div className="fixed bottom-4 right-4 bg-gray-800 text-white p-4 rounded-lg shadow-2xl z-50 border border-gray-700">
       <h3 className="text-sm font-bold mb-2 text-green-400">🛠️ Dev Tools</h3>

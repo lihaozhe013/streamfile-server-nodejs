@@ -37,7 +37,10 @@ export const cleanMarkdownText = (text: string): string => {
 /**
  * Generate consistent heading IDs from text
  */
-export const generateHeadingId = (text: string, existingIds: Set<string> = new Set()): string => {
+export const generateHeadingId = (
+  text: string,
+  existingIds: Set<string> = new Set(),
+): string => {
   if (!text || typeof text !== 'string') {
     return `heading-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
@@ -97,7 +100,10 @@ export const extractTextContent = (node: any): string => {
 /**
  * Process markdown content to handle relative paths
  */
-export const processRelativePaths = (content: string, currentPath: string): string => {
+export const processRelativePaths = (
+  content: string,
+  currentPath: string,
+): string => {
   const pathSegments = currentPath.split('/');
 
   // Remove '/files/' prefix and get the directory path
@@ -119,7 +125,9 @@ export const processRelativePaths = (content: string, currentPath: string): stri
         return match;
       }
       // Convert relative path to absolute path
-      const absolutePath = dirPath ? `/files/${dirPath}/${src}` : `/files/${src}`;
+      const absolutePath = dirPath
+        ? `/files/${dirPath}/${src}`
+        : `/files/${src}`;
       return `![${alt}](${absolutePath})`;
     },
   );
@@ -129,11 +137,17 @@ export const processRelativePaths = (content: string, currentPath: string): stri
     /\[([^\]]*)\]\((?!https?:\/\/)([^)]+)\)/g,
     (match, text, href) => {
       // Skip if it's already an absolute path or starts with /
-      if (href.startsWith('/') || href.startsWith('http') || href.startsWith('#')) {
+      if (
+        href.startsWith('/') ||
+        href.startsWith('http') ||
+        href.startsWith('#')
+      ) {
         return match;
       }
       // Convert relative path to absolute path
-      const absolutePath = dirPath ? `/files/${dirPath}/${href}` : `/files/${href}`;
+      const absolutePath = dirPath
+        ? `/files/${dirPath}/${href}`
+        : `/files/${href}`;
       return `[${text}](${absolutePath})`;
     },
   );
