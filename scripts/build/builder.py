@@ -5,20 +5,16 @@ def build(base_dir):
     frontend_dir = base_dir / 'src' / 'frontend'
     backend_dir = base_dir / 'src' / 'backend'
     frontend_app_dir = frontend_dir / 'app'
-    public_dir = base_dir / 'src' / 'frontend' / "public"
     dist_dir = base_dir / "dist"
 
-    clean_list = [
-        dist_dir,
-        public_dir / 'assets',
-    ]
+    clean_list = [dist_dir / 'public']
 
     builder = DirectoryManager()
 
     # clean old distributions
     builder.clean(clean_list)
-    builder.delete(public_dir / 'index.html')
-    builder.delete(public_dir / 'styles.css')
+    builder.delete(dist_dir / 'server.js')
+    builder.delete(dist_dir / 'default.yaml')
 
     # type-check backend before bundling
     builder.run(backend_dir, 'pnpm typecheck')
@@ -29,5 +25,11 @@ def build(base_dir):
     # build frontend
     builder.run(frontend_app_dir, 'pnpm typecheck && pnpm vite build')
 
-    # post build
-    builder.copy(public_dir, dist_dir / 'public')
+    # verify the self-contained build output without touching runtime-owned files
+    for required_file in [
+        dist_dir / 'server.js',
+        dist_dir / 'default.yaml',
+        dist_dir / 'public' / 'index.html',
+        dist_dir / 'public' / '404-index.html',
+    ]:
+        builder.check_exists(required_file)

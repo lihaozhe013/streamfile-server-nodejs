@@ -33,11 +33,13 @@ async function createFixture(): Promise<Fixture> {
   };
 
   await fs.mkdir(publicDir, { recursive: true });
+  await fs.mkdir(path.join(publicDir, 'icons'), { recursive: true });
   await fs.mkdir(path.join(filesDir, 'folder', 'custom'), { recursive: true });
   await fs.mkdir(path.join(filesDir, 'incoming-evil'), { recursive: true });
   await fs.mkdir(path.join(filesDir, 'private-files'), { recursive: true });
   await fs.writeFile(paths.spaShellPath, '<!doctype html><title>SPA</title>');
   await fs.writeFile(paths.notFoundPath, '<!doctype html><title>404</title>');
+  await fs.writeFile(path.join(publicDir, 'icons', 'server.svg'), '<svg />');
   await fs.writeFile(
     path.join(filesDir, 'folder', 'hello world.md'),
     '# Hello world\n',
@@ -104,6 +106,16 @@ test('lists public files and serves SPA, raw, custom, and private URLs', async (
     const names = entries.map((entry) => entry.name);
     assert.deepEqual(names.sort(), ['folder', 'incoming-evil']);
 
+    const rootIconResponse = await fetch(`${baseUrl}/icons/server.svg`);
+    assert.equal(rootIconResponse.status, 200);
+    assert.equal(await rootIconResponse.text(), '<svg />');
+
+    const publicIconResponse = await fetch(
+      `${baseUrl}/public/icons/server.svg`,
+    );
+    assert.equal(publicIconResponse.status, 200);
+    assert.equal(await publicIconResponse.text(), '<svg />');
+
     const markdownResponse = await fetch(
       `${baseUrl}/files/folder/hello%20world.md`,
     );
@@ -138,6 +150,19 @@ test('lists public files and serves SPA, raw, custom, and private URLs', async (
     const missingResponse = await fetch(`${baseUrl}/files/missing.txt`);
     assert.equal(missingResponse.status, 404);
     assert.match(await missingResponse.text(), /<title>404<\/title>/);
+  });
+});
+
+test('reports a clear error when the SPA shell is missing', async () => {
+  await withServer(async (baseUrl, fixture) => {
+    await fs.unlink(fixture.paths.spaShellPath);
+
+    const response = await fetch(`${baseUrl}/`);
+    assert.equal(response.status, 500);
+    assert.match(
+      (await response.json()).error,
+      /SPA shell is missing.*Run pnpm build/,
+    );
   });
 });
 

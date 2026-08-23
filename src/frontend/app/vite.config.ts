@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const staticPublicDir = path.resolve(__dirname, '../public');
+const productionPublicDir = path.resolve(__dirname, '../../../dist/public');
 const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:3000';
 
 const backendProxy = {
@@ -15,6 +17,7 @@ const backendProxy = {
 export default defineConfig({
   root: __dirname,
   base: '/',
+  publicDir: staticPublicDir,
   plugins: [react()],
   css: {
     postcss: path.resolve(__dirname, 'postcss.config.js'),
@@ -42,8 +45,8 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: path.resolve(__dirname, '../public'),
-    emptyOutDir: false,
+    outDir: productionPublicDir,
+    emptyOutDir: true,
     modulePreload: false,
     cssCodeSplit: true,
     chunkSizeWarningLimit: 800,

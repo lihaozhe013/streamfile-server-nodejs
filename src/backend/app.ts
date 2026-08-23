@@ -2,7 +2,7 @@ import express, { type Express } from 'express';
 import type { RuntimeConfig } from '@/types/index';
 import { errorHandler } from '@/middleware/errors';
 import { createApiRouter } from '@/routes/api';
-import { createFilesRouter, sendFile } from '@/routes/files';
+import { createFilesRouter, sendSpaShell } from '@/routes/files';
 import { createUploadRouter } from '@/routes/upload';
 
 export function createApp(runtime: RuntimeConfig): Express {
@@ -22,7 +22,7 @@ export function createApp(runtime: RuntimeConfig): Express {
     }
 
     try {
-      await sendFile(response, runtime.paths.spaShellPath);
+      await sendSpaShell(response, runtime);
     } catch (error) {
       next(error);
     }

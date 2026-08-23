@@ -19,9 +19,9 @@ pnpm install:all
 The backend creates `config.yaml` and the configured runtime directories on
 first startup when they do not exist. The generated defaults use port 3000,
 `files/` for uploads, and `public/` for the production SPA. The development
-launcher sets the repository-root public directory automatically. To customize
-the values before starting, copy `config.yaml.example` to `config.yaml` and
-edit it. The local file is intentionally ignored by Git.
+launcher sets the repository root explicitly. To customize development values,
+copy `config.yaml.example` to the repository root as `config.yaml`. The local
+file is intentionally ignored by Git.
 
 ## Development
 
@@ -57,7 +57,9 @@ pnpm build
 
 `pnpm test` runs backend integration tests and frontend unit tests. The browser
 test suite uses Playwright. `pnpm build` type-checks and bundles the backend,
-builds the Vite SPA, and copies runtime assets into `dist/public`.
+builds the Vite SPA directly into `dist/public`, and verifies the required
+production files. The build preserves runtime-owned files in `dist`, including
+`config.yaml`, `files/`, and `debug.log`.
 
 ## Production
 
@@ -67,14 +69,17 @@ cd dist
 node server.js
 ```
 
-The production server listens on the host and port configured in `config.yaml`.
-If the file is absent, it is generated in `dist/` with port 3000 and the SPA is
-served from `dist/public`.
+The production server uses the directory containing `server.js` as its runtime
+root, regardless of the current working directory. It reads `dist/config.yaml`
+and serves the SPA from `dist/public`. If `dist/config.yaml` is absent, it is
+generated from the packaged defaults with port 3000. The build does not remove
+the generated configuration, uploaded files, or `debug.log`.
 
 ## Configuration
 
 `config.yaml` contains the server bind address and runtime directory paths. The
-example file documents the supported fields:
+file is resolved from the runtime root: the repository root during development
+and `dist/` in production. The example file documents the supported fields:
 
 ```yaml
 server:
@@ -94,6 +99,9 @@ directories are created after a valid configuration is loaded. Generated
 configuration events are recorded in the untracked `debug.log` file when it is
 possible to write that file. The backend fallback template is maintained at
 `src/backend/config/default.yaml` and is packaged with production builds.
+
+Production does not search parent directories for configuration. To customize
+the production server, copy `config.yaml.example` to `dist/config.yaml`.
 
 ## Supported Scope
 

@@ -67,7 +67,7 @@ async function handleFileRequest(
       return;
     }
 
-    await sendFile(response, runtime.paths.spaShellPath);
+    await sendSpaShell(response, runtime);
     return;
   }
 
@@ -87,7 +87,7 @@ async function handleFileRequest(
 
   const extension = path.extname(fullPath).toLowerCase();
   if (extension === '.md' || isMediaExtension(extension)) {
-    await sendFile(response, runtime.paths.spaShellPath);
+    await sendSpaShell(response, runtime);
     return;
   }
 
@@ -101,4 +101,18 @@ export function sendFile(response: Response, filePath: string): Promise<void> {
       else resolve();
     });
   });
+}
+
+export async function sendSpaShell(
+  response: Response,
+  runtime: RuntimeConfig,
+): Promise<void> {
+  try {
+    await fs.access(runtime.paths.spaShellPath);
+  } catch {
+    throw new Error(
+      `SPA shell is missing at ${runtime.paths.spaShellPath}. Run pnpm build before starting the production server.`,
+    );
+  }
+  await sendFile(response, runtime.paths.spaShellPath);
 }

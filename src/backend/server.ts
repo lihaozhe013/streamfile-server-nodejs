@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createApp } from '@/app';
 import {
   ensureRuntimeDirectories,
@@ -6,7 +8,10 @@ import {
 } from '@/config';
 import { appendDebugLog } from '@/utils/logger';
 
-const runtime = await loadRuntimeConfig();
+const runtimeRoot = path.dirname(fileURLToPath(import.meta.url));
+const runtime = await loadRuntimeConfig({
+  rootDir: process.env.STREAMFILE_ROOT_DIR ?? runtimeRoot,
+});
 await ensureRuntimeDirectories(runtime);
 
 const app = createApp(runtime);

@@ -21,21 +21,21 @@ async function pathExists(candidatePath: string): Promise<boolean> {
 test('generates a default config and runtime directories when missing', async () => {
   const rootDir = await createTempRoot();
   try {
-    const sourcePublicDir = path.join(rootDir, 'src/frontend/public');
-    await fs.mkdir(sourcePublicDir, { recursive: true });
+    const publicDir = path.join(rootDir, 'public');
+    await fs.mkdir(publicDir, { recursive: true });
     await fs.writeFile(
-      path.join(sourcePublicDir, 'index.html'),
+      path.join(publicDir, 'index.html'),
       '<!doctype html><title>SPA</title>',
     );
     await fs.writeFile(
-      path.join(sourcePublicDir, '404-index.html'),
+      path.join(publicDir, '404-index.html'),
       '<!doctype html><title>404</title>',
     );
 
     const runtime = await loadRuntimeConfig({ rootDir });
     assert.equal(runtime.configPath, path.join(rootDir, 'config.yaml'));
     assert.equal(runtime.server.port, 3000);
-    assert.equal(runtime.paths.publicDir, sourcePublicDir);
+    assert.equal(runtime.paths.publicDir, publicDir);
     assert.match(
       await fs.readFile(runtime.configPath, 'utf8'),
       /directories:\n  public: "public"/,
@@ -57,6 +57,43 @@ test('generates a default config and runtime directories when missing', async ()
     );
   } finally {
     await fs.rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test('does not load configuration from a parent directory', async () => {
+  const parentDir = await createTempRoot();
+  const runtimeDir = path.join(parentDir, 'dist');
+  try {
+    await fs.mkdir(path.join(runtimeDir, 'public'), { recursive: true });
+    await fs.writeFile(
+      path.join(runtimeDir, 'public', 'index.html'),
+      '<!doctype html><title>SPA</title>',
+    );
+    await fs.writeFile(
+      path.join(runtimeDir, 'public', '404-index.html'),
+      '<!doctype html><title>404</title>',
+    );
+    await fs.writeFile(
+      path.join(parentDir, 'config.yaml'),
+      `server:
+  host: "127.0.0.1"
+  port: 4310
+
+directories:
+  public: "source-public"
+  upload: "source-files"
+  incoming: "source-files/incoming"
+  private: "source-files/private-files"
+`,
+    );
+
+    const runtime = await loadRuntimeConfig({ rootDir: runtimeDir });
+    assert.equal(runtime.configPath, path.join(runtimeDir, 'config.yaml'));
+    assert.equal(runtime.server.port, 3000);
+    assert.equal(runtime.paths.publicDir, path.join(runtimeDir, 'public'));
+    assert.equal(await pathExists(path.join(runtimeDir, 'config.yaml')), true);
+  } finally {
+    await fs.rm(parentDir, { recursive: true, force: true });
   }
 });
 

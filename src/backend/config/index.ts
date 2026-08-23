@@ -58,25 +58,6 @@ function parseConfig(value: unknown): Config {
   };
 }
 
-export async function findConfigPath(
-  startDir = process.cwd(),
-): Promise<string | undefined> {
-  const candidates = [
-    path.resolve(startDir, 'config.yaml'),
-    path.resolve(startDir, '..', 'config.yaml'),
-    path.resolve(startDir, '..', '..', 'config.yaml'),
-  ];
-  for (const candidate of candidates) {
-    try {
-      await fsPromises.access(candidate);
-      return candidate;
-    } catch {
-      // Continue searching parent directories.
-    }
-  }
-  return undefined;
-}
-
 function resolveDirectory(rootDir: string, directory: string): string {
   return path.resolve(rootDir, directory);
 }
@@ -90,30 +71,11 @@ async function pathExists(candidatePath: string): Promise<boolean> {
   }
 }
 
-async function resolvePublicDirectory(
-  rootDir: string,
-  configuredDirectory: string,
-): Promise<string> {
-  const configuredPublicDir = resolveDirectory(rootDir, configuredDirectory);
-  if (configuredDirectory !== 'public') return configuredPublicDir;
-  if (await pathExists(path.join(configuredPublicDir, 'index.html'))) {
-    return configuredPublicDir;
-  }
-
-  const sourcePublicDir = resolveDirectory(rootDir, 'src/frontend/public');
-  return (await pathExists(path.join(sourcePublicDir, 'index.html')))
-    ? sourcePublicDir
-    : configuredPublicDir;
-}
-
 async function toRuntimePaths(
   rootDir: string,
   config: Config,
 ): Promise<RuntimePaths> {
-  const publicDir = await resolvePublicDirectory(
-    rootDir,
-    config.directories.public,
-  );
+  const publicDir = resolveDirectory(rootDir, config.directories.public);
   const filesDir = resolveDirectory(rootDir, config.directories.upload);
   const incomingDir = resolveDirectory(rootDir, config.directories.incoming);
   const privateDir = resolveDirectory(rootDir, config.directories.private);
@@ -133,9 +95,7 @@ async function ensureConfigFile(
   rootDir: string,
   requestedPath?: string,
 ): Promise<string> {
-  const configPath = path.resolve(
-    requestedPath ?? path.join(rootDir, 'config.yaml'),
-  );
+  const configPath = path.resolve(rootDir, requestedPath ?? 'config.yaml');
   if (await pathExists(configPath)) return configPath;
 
   try {
@@ -170,14 +130,10 @@ function isFileExistsError(error: unknown): boolean {
 export async function loadRuntimeConfig(
   options: LoadConfigOptions = {},
 ): Promise<RuntimeConfig> {
-  const searchDir = path.resolve(
+  const rootDir = path.resolve(
     options.rootDir ?? process.env.STREAMFILE_ROOT_DIR ?? process.cwd(),
   );
-  const configPath = await ensureConfigFile(
-    searchDir,
-    options.configPath ?? (await findConfigPath(searchDir)),
-  );
-  const rootDir = searchDir;
+  const configPath = await ensureConfigFile(rootDir, options.configPath);
   const fileContents = await fsPromises.readFile(configPath, 'utf8');
   const config = parseConfig(yaml.load(fileContents));
 
@@ -193,7 +149,6 @@ export async function ensureRuntimeDirectories(
 ): Promise<void> {
   const { paths } = runtime;
   await Promise.all([
-    fsPromises.mkdir(paths.publicDir, { recursive: true }),
     fsPromises.mkdir(paths.filesDir, { recursive: true }),
     fsPromises.mkdir(paths.incomingDir, { recursive: true }),
     fsPromises.mkdir(paths.privateDir, { recursive: true }),

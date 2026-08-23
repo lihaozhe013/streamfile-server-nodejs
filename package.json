@@ -7,7 +7,7 @@
     "format": "pnpm prettier --write .",
     "install:all": "pnpm i && cd src/backend && pnpm i && cd ../frontend/app && pnpm i",
     "dev": "node scripts/dev.mjs",
-    "dev:backend": "pnpm --dir src/backend dev",
+    "dev:backend": "node scripts/dev-backend.mjs",
     "dev:frontend": "pnpm --dir src/frontend/app dev",
     "typecheck": "pnpm --dir src/backend typecheck && pnpm --dir src/frontend/app typecheck",
     "test": "pnpm --dir src/backend test && pnpm --dir src/frontend/app test",

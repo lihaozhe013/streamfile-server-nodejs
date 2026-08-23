@@ -146,8 +146,11 @@ pnpm build
 pnpm format
 ```
 
-Local runtime configuration belongs in the ignored `config.yaml`; use
-`config.yaml.example` as the committed template. If the file is missing, the
-backend generates it with defaults and creates the configured runtime
-directories after successful validation. Production builds are generated in
-`dist/` and run with `node server.js` from that directory.
+Local development configuration belongs in the ignored repository-root
+`config.yaml`; use `config.yaml.example` as the committed template. Production
+configuration belongs in the ignored `dist/config.yaml`. If the configuration
+file is missing from the active runtime root, the backend generates it with
+defaults and creates the configured runtime directories after successful
+validation. Production builds contain only the build-owned files in `dist/`
+and run with `node server.js` from that directory; `config.yaml`, `files/`, and
+`debug.log` are runtime-owned and preserved by builds.
