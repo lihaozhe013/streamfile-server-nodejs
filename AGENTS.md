@@ -147,5 +147,7 @@ pnpm format
 ```
 
 Local runtime configuration belongs in the ignored `config.yaml`; use
-`config.yaml.example` as the committed template. Production builds are
-generated in `dist/` and run with `node server.js` from that directory.
+`config.yaml.example` as the committed template. If the file is missing, the
+backend generates it with defaults and creates the configured runtime
+directories after successful validation. Production builds are generated in
+`dist/` and run with `node server.js` from that directory.

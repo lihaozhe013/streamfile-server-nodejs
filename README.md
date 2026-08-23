@@ -14,13 +14,14 @@ local filesystem and does not require a database or authentication service.
 
 ```bash
 pnpm install:all
-cp config.yaml.example config.yaml
 ```
 
-`config.yaml` is local configuration and is intentionally ignored by Git. For
-repository-root development, set `directories.public` to
-`src/frontend/public`. The committed example uses `public`, which is the
-correct path when the server runs from `dist/`.
+The backend creates `config.yaml` and the configured runtime directories on
+first startup when they do not exist. The generated defaults use port 3000,
+`files/` for uploads, and `public/` for the production SPA. The development
+launcher sets the repository-root public directory automatically. To customize
+the values before starting, copy `config.yaml.example` to `config.yaml` and
+edit it. The local file is intentionally ignored by Git.
 
 ## Development
 
@@ -62,14 +63,37 @@ builds the Vite SPA, and copies runtime assets into `dist/public`.
 
 ```bash
 pnpm build
-cp config.yaml.example dist/config.yaml
 cd dist
 node server.js
 ```
 
 The production server listens on the host and port configured in `config.yaml`.
-The default template uses port 3000 and serves the generated SPA from
-`dist/public`.
+If the file is absent, it is generated in `dist/` with port 3000 and the SPA is
+served from `dist/public`.
+
+## Configuration
+
+`config.yaml` contains the server bind address and runtime directory paths. The
+example file documents the supported fields:
+
+```yaml
+server:
+  host: '0.0.0.0'
+  port: 3000
+
+directories:
+  public: 'public'
+  upload: 'files'
+  incoming: 'files/incoming'
+  private: 'files/private-files'
+```
+
+An existing configuration is never overwritten, including when it is invalid.
+The backend reports the validation error so the file can be corrected. Runtime
+directories are created after a valid configuration is loaded. Generated
+configuration events are recorded in the untracked `debug.log` file when it is
+possible to write that file. The backend fallback template is maintained at
+`src/backend/config/default.yaml` and is packaged with production builds.
 
 ## Supported Scope
 
