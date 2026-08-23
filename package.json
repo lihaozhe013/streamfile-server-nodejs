@@ -5,16 +5,13 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "format": "pnpm prettier --write .",
-    "install:all": "pnpm i && cd src/backend && pnpm i && cd ../frontend/markdown-viewer && pnpm i",
+    "install:all": "pnpm i && cd src/backend && pnpm i && cd ../frontend/app && pnpm i",
+    "typecheck": "pnpm --dir src/backend exec tsc --noEmit && pnpm --dir src/frontend/app typecheck",
+    "test": "pnpm --dir src/frontend/app test",
+    "test:e2e": "pnpm --dir src/frontend/app test:e2e",
     "build": "uv run build.py"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.3.3",
-    "@tailwindcss/postcss": "^4.3.3",
-    "autoprefixer": "^10.5.4",
-    "postcss": "^8.5.24",
-    "postcss-cli": "^11.0.1",
-    "prettier": "3.9.6",
-    "tailwindcss": "^4.3.3"
+    "prettier": "3.9.6"
   }
 }

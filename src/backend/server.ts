@@ -8,14 +8,30 @@ import { isMediaExtension } from '@/utils/isMediaExtension';
 import {
   FILES_DIR,
   INCOMING_DIR,
+  PRIVATE_DIR,
   PUBLIC_DIR,
   HOST,
   PORT,
   LOCAL_IP,
-  __dirname,
 } from '@/utils/paths';
 
 const app = express();
+const SPA_SHELL = path.join(PUBLIC_DIR, 'index.html');
+
+function isWithinDirectory(
+  baseDirectory: string,
+  candidatePath: string,
+): boolean {
+  const relativePath = path.relative(baseDirectory, candidatePath);
+  return (
+    relativePath === '' ||
+    (!relativePath.startsWith('..') && !path.isAbsolute(relativePath))
+  );
+}
+
+function sendSpaShell(res: Response) {
+  return res.sendFile(SPA_SHELL);
+}
 
 app.get(/^\/files(\/.*)?$/, (req: Request, res: Response) => {
   // Decode the URL component to get the actual path
@@ -31,7 +47,7 @@ app.get(/^\/files(\/.*)?$/, (req: Request, res: Response) => {
   const fullPath = path.join(FILES_DIR, safePath);
 
   // Security check: ensure path is within upload directory
-  if (!fullPath.startsWith(FILES_DIR)) {
+  if (!isWithinDirectory(FILES_DIR, fullPath)) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
@@ -53,8 +69,8 @@ app.get(/^\/files(\/.*)?$/, (req: Request, res: Response) => {
         if (!err) {
           return res.sendFile(indexHtmlPath);
         } else {
-          // Otherwise return file browser
-          return res.sendFile(path.join(PUBLIC_DIR, 'file-browser.html'));
+          // Otherwise return the SPA file browser
+          return sendSpaShell(res);
         }
       });
       return;
@@ -70,12 +86,12 @@ app.get(/^\/files(\/.*)?$/, (req: Request, res: Response) => {
 
     // Markdown viewer
     if (ext === '.md') {
-      return res.sendFile(path.join(PUBLIC_DIR, 'markdown-viewer/index.html'));
+      return sendSpaShell(res);
     }
 
     // Media player (video / audio)
     if (isMediaExtension(ext)) {
-      return res.sendFile(path.join(PUBLIC_DIR, 'video-player.html'));
+      return sendSpaShell(res);
     }
 
     // Directly serve other files
@@ -101,7 +117,7 @@ app.get('/api/markdown-content', (req: Request, res: Response) => {
     return res.status(403).json({ error: 'Access denied' });
   }
 
-  if (!fullPath.startsWith(FILES_DIR)) {
+  if (!isWithinDirectory(FILES_DIR, fullPath)) {
     return res.status(400).json({ error: 'Invalid path' });
   }
 
@@ -132,8 +148,15 @@ app.get('/api/list-files', (req: Request, res: Response) => {
     .replace(/^(\.\.(\/|\\|$))+/, '');
   const fullPath = path.join(FILES_DIR, safeRelativePath);
 
-  if (!fullPath.startsWith(FILES_DIR)) {
+  if (!isWithinDirectory(FILES_DIR, fullPath)) {
     return res.status(400).json({ error: 'Invalid path' });
+  }
+
+  if (
+    isWithinDirectory(INCOMING_DIR, fullPath) ||
+    isWithinDirectory(PRIVATE_DIR, fullPath)
+  ) {
+    return res.status(403).json({ error: 'Access denied' });
   }
 
   // NOTE: fs.readdir is async, but using callback style here as per original
@@ -193,9 +216,12 @@ app.get(
   handleSearchRequest,
 );
 
-// Main Page
-app.get('/', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+// SPA fallback. API routes intentionally remain JSON endpoints instead of serving the app shell.
+app.get('/{*splat}', (req: Request, res: Response) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  return sendSpaShell(res);
 });
 
 // start

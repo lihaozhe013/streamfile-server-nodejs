@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import type { Config } from '@/types/index';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

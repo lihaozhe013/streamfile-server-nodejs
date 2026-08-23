@@ -64,6 +64,24 @@ cd dist && node server.js
 - Open your browser and go to `http://your-ip-address:3000`
 - Or access from other devices using your local IP address
 
+### Frontend development and validation
+
+The frontend is a single React SPA using React Router, Vite 8, and TypeScript 7.
+
+```bash
+# Type-check backend and frontend
+pnpm typecheck
+
+# Run frontend unit tests
+pnpm test
+
+# Start the frontend development server
+cd src/frontend/app && pnpm dev
+```
+
+The Express server serves the built SPA shell for application routes while
+direct file URLs and `/files/<path>?raw=1` continue to serve original files.
+
 ## File Access Levels
 
 ### 1. **Public Files** (`files/`)

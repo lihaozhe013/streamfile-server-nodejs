@@ -4,30 +4,30 @@ from scripts.build.directory_manager import DirectoryManager
 def build(base_dir):
     frontend_dir = base_dir / 'src' / 'frontend'
     backend_dir = base_dir / 'src' / 'backend'
-    markdown_viewer_dir = frontend_dir / 'markdown-viewer'
+    frontend_app_dir = frontend_dir / 'app'
     public_dir = base_dir / 'src' / 'frontend' / "public"
     dist_dir = base_dir / "dist"
 
     clean_list = [
         dist_dir,
-        public_dir / 'markdown-viewer',
-        public_dir / 'styles.css'
+        public_dir / 'assets',
     ]
 
     builder = DirectoryManager()
 
     # clean old distributions
     builder.clean(clean_list)
+    builder.delete(public_dir / 'index.html')
+    builder.delete(public_dir / 'styles.css')
+
+    # type-check backend before bundling
+    builder.run(backend_dir, 'pnpm tsc --noEmit')
 
     # build backend
     builder.run(base_dir, 'node src/backend/build/bundle-backend.cjs')
     
     # build frontend
-    builder.run(markdown_viewer_dir, 'pnpm tsc && pnpm vite build')
-    builder.move(markdown_viewer_dir / 'dist', public_dir / 'markdown-viewer')
-
-    # build css
-    builder.run(base_dir, 'pnpm postcss ./src/input.css -o ./src/frontend/public/styles.css')
+    builder.run(frontend_app_dir, 'pnpm typecheck && pnpm vite build')
 
     # post build
     builder.copy(public_dir, dist_dir / 'public')
