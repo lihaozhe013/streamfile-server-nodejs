@@ -1,149 +1,107 @@
 # StreamFile Server NodeJS
 
-## Introduction
+StreamFile Server is a small Node.js file server with a React SPA for browsing
+files, uploading content, viewing Markdown, and playing media. It uses the
+local filesystem and does not require a database or authentication service.
 
-A lightweight, cross-platform web server built with Node.js for file sharing, markdown viewing, and secure file management. Perfect for organizations needing a simple file server with no database requirements.
+## Requirements
 
-## Quick Start
-
-### Docker
-
-Use the following `compose.yaml` to quickly start the server
-
-```yaml
-services:
-  app:
-    image: lihaozhe013/streamfile-server:latest
-    container_name: streamfile-server-instance
-    volumes:
-      - ./config.yaml:/app/config.yaml
-      - ./files:/app/files
-    ports:
-      - '3000:3000'
-    command: node server.js
-```
-
-### Prerequisites
-
-- Node.js (v24 or higher)
+- Node.js 24 or newer
 - pnpm
+- uv for the default production build command
 
-### Installation
-
-1. **Clone the repository**
-
-```bash
-git clone https://github.com/lihaozhe013/streamfile-server-nodejs.git
-cd streamfile-server-nodejs
-```
-
-2. **Install dependencies**
+## Install
 
 ```bash
 pnpm install:all
+cp config.yaml.example config.yaml
 ```
 
-### Build
+`config.yaml` is local configuration and is intentionally ignored by Git. For
+repository-root development, set `directories.public` to
+`src/frontend/public`. The committed example uses `public`, which is the
+correct path when the server runs from `dist/`.
 
-> Note: I use uv run instead of Python because the Python command is incompatible across different systems. It is strongly recommended to use uv. If you prefer not to use uv, you can modify the npm run build command yourself to python build.py or python3 build.py.
+## Development
 
-1. **Build the project**
+Start the backend and Vite together:
 
 ```bash
+pnpm dev
+```
+
+Open `http://127.0.0.1:5173`. The development server proxies `/api`, `/upload`,
+and raw `/files` requests to the backend on port 3000. Override the proxy target
+with `BACKEND_URL`:
+
+```bash
+BACKEND_URL=http://127.0.0.1:3001 pnpm dev
+```
+
+Run either side separately when needed:
+
+```bash
+pnpm dev:backend
+pnpm dev:frontend
+```
+
+## Validation
+
+```bash
+pnpm typecheck
+pnpm test
+pnpm test:e2e
 pnpm build
 ```
 
-2. **Start the server**
+`pnpm test` runs backend integration tests and frontend unit tests. The browser
+test suite uses Playwright. `pnpm build` type-checks and bundles the backend,
+builds the Vite SPA, and copies runtime assets into `dist/public`.
+
+## Production
 
 ```bash
-cd dist && node server.js
+pnpm build
+cp config.yaml.example dist/config.yaml
+cd dist
+node server.js
 ```
 
-3. **Access your server**
+The production server listens on the host and port configured in `config.yaml`.
+The default template uses port 3000 and serves the generated SPA from
+`dist/public`.
 
-- Open your browser and go to `http://your-ip-address:3000`
-- Or access from other devices using your local IP address
+## Supported Scope
 
-### Frontend development and validation
+The SPA provides:
 
-The project is a React SPA using React Router, Vite 8, and TypeScript 7. Start
-the backend and Vite development server together from the repository root:
+- Home page and upload flow with progress reporting.
+- Directory browsing, breadcrumbs, search, and browser history navigation.
+- Markdown rendering with GFM, math, KaTeX, sanitized HTML, relative assets,
+  and a table of contents.
+- Audio and video playback with Video.js, playback rates, seeking, fullscreen,
+  and keyboard controls.
+- Direct raw-file access through `/files/<path>?raw=1`.
 
-```bash
-# Start backend and frontend with prefixed logs
-pnpm dev
+Public routes include `/`, `/files/`, nested `/files/<path>/` directories,
+Markdown files at `/files/<path>.md`, and media files at `/files/<media>`.
 
-# Type-check backend and frontend
-pnpm typecheck
+## File Access
 
-# Run backend integration and frontend unit tests
-pnpm test
+| Directory              | Listing | Direct access                 |
+| ---------------------- | ------- | ----------------------------- |
+| `files/`               | Public  | Allowed                       |
+| `files/private-files/` | Hidden  | Allowed when the URL is known |
+| `files/incoming/`      | Blocked | Not allowed                   |
 
-# Run browser tests
-pnpm test:e2e
-```
+The server rejects traversal and symlink paths that escape the configured file
+root. Hidden files are excluded from listings and search results.
 
-Vite runs on `http://127.0.0.1:5173` and proxies `/api`, `/upload`, and raw
-`/files` requests to the backend at `http://127.0.0.1:3000`. Override the
-target with `BACKEND_URL` when using a custom backend port.
+## API
 
-The Express server serves the built SPA shell for application routes while
-direct file URLs and `/files/<path>?raw=1` continue to serve original files.
+- `GET /api/list-files?path=<path>`
+- `GET /api/search?q=<name>&dir=<directory>`
+- `GET /api/markdown-content?path=<path>`
+- `POST /upload` with a multipart `file` field
 
-## File Access Levels
-
-### 1. **Public Files** (`files/`)
-
-- ✅ Visible in file browser
-- ✅ Accessible via web interface
-- ✅ Can be browsed and downloaded by anyone
-
-### 2. **Private Files** (`files/private-files/`)
-
-- ❌ Hidden from file browser
-- ✅ Accessible via direct URL if known
-- 🔗 Perfect for sharing specific files with direct links
-- **Example**: `http://yourserver:8000/private-files/secret-folder/document.pdf`
-
-### 3. **Incoming Files** (`files/incoming/`)
-
-- ❌ Completely hidden from web access
-- ❌ Not accessible via any URL
-- 📤 Used for file upload staging
-- 🔒 Maximum security for sensitive files
-
-## Supported File Types
-
-| Category      | File Types                             | Preview Support                      |
-| ------------- | -------------------------------------- | ------------------------------------ |
-| **Documents** | `.md`, `.html`, `.pdf`                 | ✅ Markdown, ✅ HTML, ✅ PDF         |
-| **Media**     | `.mp4`, `.mp3`, `.jpg`, `.png`, `.gif` | ✅ Video.js + Native Browser Support |
-| **Archives**  | `.zip`, `.tar`, `.gz`                  | ❌ Download only                     |
-| **Office**    | `.docx`, `.xlsx`, `.pptx`              | ❌ Download only                     |
-| **Code**      | `.js`, `.ts`, `.py`, `.css`, etc.      | ✅ Syntax highlighting               |
-
-### Special Features
-
-- **Markdown Files**: Full preview with KaTeX math rendering, GitHub Flavoured Markdown
-- **Directory Index**: Automatic `index.html` serving for folders
-- **Chinese Characters**: Full support for Unicode filenames
-
-## Security Features
-
-### Secure Link Generation
-
-Create secure, hard-to-guess URLs for sensitive files:
-
-1. Use the built-in secure link generator (if available)
-2. Generate a secure filename: `B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES`
-3. Rename your file: `secret-document.pdf` → `B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.pdf`
-4. Place in `files/private-files/`
-5. Share the direct URL: `http://yourserver:8000/private-files/B9bx7ZbkDJvxn96I84uwP6RKY5HR1GES.pdf`
-
-## Configuration
-
-You can customize the configuration in `config.yaml`.
-
-```bash
-cp config.yaml.example config.yaml
-```
+API routes return JSON errors and are not handled by the SPA fallback.

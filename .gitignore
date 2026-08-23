@@ -15,3 +15,4 @@ config.yaml
 /.container/files/
 /.container/files
 *.pyc
+*.log

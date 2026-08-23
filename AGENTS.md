@@ -1,112 +1,151 @@
-# Agents
+# AGENTS.md
 
-Documentation for agents working on this codebase.
+This repository is a pnpm-managed Node.js application with an Express file
+server and a React/Vite single-page frontend. Keep the implementation focused
+on file browsing, uploads, Markdown viewing, media playback, and the existing
+public HTTP interfaces.
 
-## Project Overview
+## 1. Language
 
-**StreamFile Server NodeJS** is a lightweight, cross-platform file server with
-file browsing, uploads, Markdown previews, and media playback. It has no
-database.
+- All source-code comments, doc comments, commit messages, and newly created or
+  updated documentation MUST be written in English.
+- Chinese text MUST NOT be added to comments or engineering documentation. When
+  touching existing non-English comments or documentation, translate the
+  affected text to English in the same change.
+- Localized user-facing strings are exempt. Keep localization content separate
+  from engineering documentation whenever practical.
+- Names and prose MUST clearly explain intent. Do not add comments that merely
+  restate the code.
 
-- **Packages**: `src/backend` and `src/frontend/app`
-- **Package manager**: pnpm
-- **TypeScript**: 7.x
-- **Runtime**: Node.js 24+; Vite 8 requires Node.js 20.19+ or 22.12+
+## 2. Tooling and Commands
 
-## Project Structure
+- Use pnpm for JavaScript and TypeScript dependencies and scripts.
+- Prefer `rg` and `fd` for repository searches. Use `uv run` for Python build
+  entry points.
+- Use `apply_patch` for source and documentation edits.
+- Keep TypeScript 7, Node.js 24+, React, Vite, and the existing package
+  boundaries unless the task explicitly changes them.
+- Run Prettier on changed files and use `tsc --noEmit` for type validation.
+- Do not add ESLint or another linter unless the task explicitly requires one.
 
-```text
-streamfile-server-nodejs/
-├── src/backend/                 # Express server and file APIs
-│   ├── server.ts                # Runtime startup and shutdown
-│   ├── app.ts                   # Testable Express app factory
-│   ├── config/                  # YAML loading and runtime paths
-│   ├── routes/                  # Files, APIs, and uploads
-│   ├── services/                # Safe file access and async search
-│   ├── middleware/              # Shared error handling
-│   ├── build/                   # esbuild bundle script
-│   └── tests/                   # Backend integration tests
-├── src/frontend/app/            # Unified React SPA
-│   ├── src/components/          # Shell, navigation, shared UI
-│   ├── src/lib/                 # Typed API and path/Markdown helpers
-│   ├── src/routes/               # Home, files, Markdown, media routes
-│   ├── src/styles/              # Tailwind/PostCSS application styles
-│   ├── tests/                   # Vitest unit tests
-│   └── e2e/                     # Playwright browser tests
-├── src/frontend/public/         # Runtime static assets and Vite output
-├── scripts/build/               # Python build orchestration
-├── dist/                        # Production output
-├── build.py                     # Root build entry
-└── config.yaml                  # Local runtime configuration
-```
+## 3. Compatibility and Safety
 
-## Build and Development
+- Preserve existing public URLs, API paths, response shapes, file access tiers,
+  and the `?raw=1` direct-file behavior unless a task explicitly authorizes a
+  breaking change.
+- Keep `files/private-files/` hidden from listings but available through known
+  direct URLs. Keep `files/incoming/` inaccessible through browsing, APIs, and
+  direct downloads.
+- Never weaken path traversal, symlink, upload, or SPA fallback protections.
+- Do not read, print, commit, or hard-code credentials, tokens, private keys,
+  or local secrets.
+- Do not use destructive commands against broad paths. Prefer recoverable
+  operations and verify exact targets first.
+
+## 4. Testing and Verification
+
+- Backend changes require backend type checks and integration tests.
+- Frontend changes require frontend type checks and relevant unit or browser
+  tests.
+- The standard validation commands are:
+
+  ```bash
+  pnpm typecheck
+  pnpm test
+  pnpm test:e2e
+  pnpm build
+  ```
+
+- Test Unicode names, spaces, nested paths, deep SPA refreshes, API failures,
+  raw files, uploads, and protected directories when those behaviors are
+  affected.
+
+## 5. Logging and Debugging
+
+- Application logs MUST be written to `debug.log` by default. Running the
+  application MUST NOT require stdout or stderr redirection to capture logs.
+- Normal application logging MUST NOT write to the terminal. Startup must
+  remain resilient if the log file cannot be created.
+- `LOG_LEVEL` may be used as an optional log-level override, but the
+  application MUST provide a useful default without it.
+- Never log passwords, tokens, private keys, credentials, local secrets, or
+  complete user-provided paths when they may contain sensitive information.
+- Logs added for a feature or investigation MUST use a stable prefix such as
+  `[backend_server]` or `[global_dev]` so they can be filtered reliably.
+- When handing off a debugging workflow, provide a ready-to-run command that
+  exercises the relevant flow and filters `debug.log` into a focused log file.
+  For example:
+
+  ```bash
+  pnpm dev &
+  dev_pid=$!
+  trap 'kill "$dev_pid"' EXIT
+  curl -fsS http://127.0.0.1:5173/
+  rg "\[backend_server\]" debug.log > backend-server-debug.log
+  ```
+
+- Generated `*.log` files MUST remain untracked and MUST NOT be included in
+  commits or release archives.
+
+## 6. Code Changes and Git
+
+- Preserve existing structure and formatting unless the requested change is a
+  refactor.
+- Keep commits focused and use Conventional Commits when creating commits.
+- Do not amend or rewrite existing commits unless explicitly requested.
+- Review `git diff`, `git diff --check`, and the final status before handoff.
+- Do not include generated build output, local configuration, test reports, or
+  log files in commits.
+
+## 7. Code Organization and File Size
+
+- Every source file over 1,000 lines MUST trigger an explicit design review
+  before more responsibilities are added. Evaluate cohesion, dependency
+  direction, state ownership, and whether behavior can move to focused modules.
+- Do not allow a file to cross the 1,000-line threshold without recording the
+  assessment in the change summary or commit body.
+- When modifying an existing file that already exceeds 1,000 lines, avoid
+  increasing its scope. Split a clear boundary during the change when safe; if
+  an immediate split is riskier, document the reason and intended module.
+- New modules MUST have one clear responsibility. Keep `server.ts`, `app.ts`,
+  build entry points, and route coordinators thin.
+- Prefer Prettier-standard JavaScript and TypeScript, explicit type-only
+  imports, typed error handling, and async error propagation.
+- Do not add emojis or unnecessary comments to source, documentation, or commit
+  messages.
+
+## 8. Documentation and Dependencies
+
+- Keep dependencies in the package that uses them. Remove unused dependencies
+  when a refactor makes them obsolete.
+- Keep detailed design decisions, migration notes, release notes, historical
+  investigations, and manual test procedures in dedicated English documents
+  under `docs/`.
+- Do not recreate removed legacy documents or maintain stale checklists of
+  completed work.
+
+## 9. Documentation and Task Tracking
+
+- `README.md` contains the product overview, supported scope, configuration,
+  and developer entry points.
+- Documentation MUST describe actual behavior. Clearly label planned behavior,
+  unsupported input, experimental features, and platform-specific limitations.
+- Remove completed pending entries from planning documents when a task is done.
+
+## Common Commands
 
 ```bash
 pnpm install:all
+pnpm dev
+pnpm dev:backend
+pnpm dev:frontend
 pnpm typecheck
 pnpm test
+pnpm test:e2e
 pnpm build
-cd dist && node server.js
+pnpm format
 ```
 
-Development servers:
-
-```bash
-pnpm dev
-```
-
-The global dev command starts the backend on port 3000 and the Vite server on
-port 5173. Vite proxies API and raw file requests to the backend. Use
-`BACKEND_URL=http://127.0.0.1:3001 pnpm dev` when the backend uses a different
-port, or run `pnpm dev:backend` and `pnpm dev:frontend` separately.
-
-`pnpm build` runs backend type checking, bundles the backend, type checks and
-builds the SPA with Vite, then copies `src/frontend/public` to `dist/public`.
-The SPA build uses route-level chunks; Markdown and Video.js are not loaded on
-the home page.
-
-## Frontend Architecture
-
-The app uses React Router Data Mode with a browser history and keeps the public
-URL surface:
-
-- `/` — home and upload
-- `/files/` — directory browser
-- `/files/<path>/` — nested directory browser
-- `/files/<path>.md` — Markdown viewer
-- `/files/<media>` — media player
-
-The React app fetches data from `/api/list-files`, `/api/search`, and
-`/api/markdown-content`. Uploads use `POST /upload` with XHR so progress events
-remain available.
-
-Express serves the built SPA shell for UI routes. It still serves direct files,
-custom directory `index.html` files, and `/files/<path>?raw=1` without routing
-them through React. API paths must remain JSON endpoints and must not be caught
-by the SPA fallback.
-
-## Validation
-
-- `pnpm typecheck` runs TypeScript 7 `tsc --noEmit` for backend and frontend.
-- `pnpm test` runs backend integration tests and frontend Vitest tests.
-- `pnpm test:e2e` runs Playwright browser tests.
-- ESLint is intentionally not used; the repository relies on TypeScript checks
-  and automated tests.
-
-## File Access Tiers
-
-| Directory              | Visibility           | Access                        |
-| ---------------------- | -------------------- | ----------------------------- |
-| `files/`               | Public               | Browser, direct URL, and APIs |
-| `files/private-files/` | Hidden from listings | Direct URL only               |
-| `files/incoming/`      | Blocked              | Upload staging only           |
-
-Do not weaken these boundaries while changing routing or the SPA fallback.
-
-## Formatting and Dependencies
-
-Use pnpm and keep code comments and documentation in English. Run
-`pnpm format` for Prettier formatting. Frontend dependencies include React 19,
-React Router 8, Vite 8, TypeScript 7, Tailwind CSS 4, React Markdown, KaTeX,
-Video.js, Vitest, and Playwright.
+Local runtime configuration belongs in the ignored `config.yaml`; use
+`config.yaml.example` as the committed template. Production builds are
+generated in `dist/` and run with `node server.js` from that directory.
