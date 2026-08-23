@@ -119,7 +119,12 @@ Markdown files at `/files/<path>.md`, and media files at `/files/<media>`.
 | `files/incoming/`      | Blocked | Not allowed                   |
 
 The server rejects traversal and symlink paths that escape the configured file
-root. Hidden files are excluded from listings and search results.
+root by default. Regular-file symlinks located under `files/` are an explicit
+exception: they are listed and served, including when their targets are
+outside the configured file root. Symlinked directories, broken links, and
+links to files inside `incoming/` remain inaccessible. Do not create links to
+secrets or other sensitive local files. Hidden files are excluded from listings
+and search results.
 
 ## API
 

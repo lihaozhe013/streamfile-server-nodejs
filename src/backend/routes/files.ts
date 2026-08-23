@@ -5,6 +5,7 @@ import type { Request, Response, Router } from 'express';
 import type { RuntimeConfig } from '@/types/index';
 import {
   decodeRoutePath,
+  isAccessibleFilePath,
   isIncomingPath,
   isSafeExistingPath,
   resolveWithinDirectory,
@@ -48,13 +49,18 @@ async function handleFileRequest(
     return;
   }
 
-  if (!(await isSafeExistingPath(runtime.paths.filesDir, fullPath))) {
+  const stats = await fs.stat(fullPath).catch(() => null);
+  if (!stats) {
     response.status(404).sendFile(runtime.paths.notFoundPath);
     return;
   }
 
-  const stats = await fs.stat(fullPath);
   if (stats.isDirectory()) {
+    if (!(await isSafeExistingPath(runtime.paths.filesDir, fullPath))) {
+      response.status(404).sendFile(runtime.paths.notFoundPath);
+      return;
+    }
+
     const customIndexPath = path.join(fullPath, 'index.html');
     if (await isSafeExistingPath(runtime.paths.filesDir, customIndexPath)) {
       await sendFile(response, customIndexPath);
@@ -62,6 +68,15 @@ async function handleFileRequest(
     }
 
     await sendFile(response, runtime.paths.spaShellPath);
+    return;
+  }
+
+  if (
+    !(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, [
+      runtime.paths.incomingDir,
+    ]))
+  ) {
+    response.status(404).sendFile(runtime.paths.notFoundPath);
     return;
   }
 

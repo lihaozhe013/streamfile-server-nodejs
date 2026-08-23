@@ -3,6 +3,7 @@ import path from 'node:path';
 import express, { type Request, type Response } from 'express';
 import type { RuntimeConfig } from '@/types/index';
 import {
+  isAccessibleFilePath,
   isIncomingPath,
   isPrivatePath,
   isSafeExistingPath,
@@ -32,13 +33,6 @@ export function createApiRouter(runtime: RuntimeConfig) {
         response.status(403).json({ error: 'Access denied' });
         return;
       }
-      if (!(await isSafeExistingPath(runtime.paths.filesDir, fullPath))) {
-        response
-          .status(404)
-          .json({ error: 'File not found or not a markdown file' });
-        return;
-      }
-
       if (path.extname(fullPath).toLowerCase() !== '.md') {
         response
           .status(404)
@@ -46,8 +40,11 @@ export function createApiRouter(runtime: RuntimeConfig) {
         return;
       }
 
-      const stats = await fs.stat(fullPath);
-      if (!stats.isFile()) {
+      if (
+        !(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, [
+          runtime.paths.incomingDir,
+        ]))
+      ) {
         response
           .status(404)
           .json({ error: 'File not found or not a markdown file' });

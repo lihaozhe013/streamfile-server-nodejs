@@ -1,7 +1,12 @@
 import path from 'node:path';
 import fg from 'fast-glob';
 import type { RuntimePaths, SearchResult } from '@/types/index';
-import { isWithinDirectory } from '@/services/files';
+import {
+  isAccessibleFilePath,
+  isIncomingPath,
+  isPrivatePath,
+  isWithinDirectory,
+} from '@/services/files';
 
 function buildCandidates(fileName: string): string[] {
   const escaped = fileName.replace(/[\\{}[\]()?+^$.]/g, '\\$&');
@@ -16,7 +21,7 @@ export async function searchFilesInPath(
   const entries = await fg(buildCandidates(fileName), {
     cwd: searchPath,
     absolute: true,
-    onlyFiles: true,
+    onlyFiles: false,
     dot: false,
     followSymbolicLinks: false,
     ignore: ['**/incoming/**', '**/private-files/**'],
@@ -25,7 +30,7 @@ export async function searchFilesInPath(
   });
 
   const query = fileName.toLowerCase();
-  return entries
+  const candidates = entries
     .filter((absolutePath) =>
       path.basename(absolutePath).toLowerCase().includes(query),
     )
@@ -33,17 +38,32 @@ export async function searchFilesInPath(
       const relativePath = path.relative(paths.filesDir, absolutePath);
       return (
         isWithinDirectory(paths.filesDir, absolutePath) &&
-        !isWithinDirectory(paths.privateDir, absolutePath) &&
-        !isWithinDirectory(paths.incomingDir, absolutePath) &&
+        !isPrivatePath(paths, absolutePath) &&
+        !isIncomingPath(paths, absolutePath) &&
         !relativePath.split(path.sep).some((segment) => segment.startsWith('.'))
       );
-    })
-    .map((absolutePath) => ({
-      file_name: path.basename(absolutePath),
-      file_path: absolutePath,
-      relative_path: path
-        .relative(paths.filesDir, absolutePath)
-        .split(path.sep)
-        .join('/'),
-    }));
+    });
+
+  const results = await Promise.all(
+    candidates.map(async (absolutePath) => {
+      if (
+        !(await isAccessibleFilePath(paths.filesDir, absolutePath, [
+          paths.incomingDir,
+        ]))
+      ) {
+        return null;
+      }
+
+      return {
+        file_name: path.basename(absolutePath),
+        file_path: absolutePath,
+        relative_path: path
+          .relative(paths.filesDir, absolutePath)
+          .split(path.sep)
+          .join('/'),
+      };
+    }),
+  );
+
+  return results.filter((result): result is SearchResult => result !== null);
 }

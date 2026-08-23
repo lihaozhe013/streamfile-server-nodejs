@@ -185,7 +185,7 @@ test('supports nested paths, markdown API, and legacy search URLs', async () => 
   });
 });
 
-test('rejects traversal, protected listings, and symlink escapes', async (t) => {
+test('supports file symlinks without following directory symlinks', async (t) => {
   await withServer(async (baseUrl, fixture) => {
     const traversalResponse = await fetch(
       `${baseUrl}/api/list-files?path=${encodeURIComponent('../outside')}`,
@@ -202,18 +202,77 @@ test('rejects traversal, protected listings, and symlink escapes', async (t) => 
     );
     assert.equal(incomingListResponse.status, 403);
 
-    const outsideFile = path.join(fixture.rootDir, 'outside.txt');
-    const symlinkPath = path.join(fixture.paths.filesDir, 'escape.txt');
-    await fs.writeFile(outsideFile, 'outside');
+    const outsideMedia = path.join(fixture.rootDir, 'outside-clip.mp4');
+    const outsideMarkdown = path.join(fixture.rootDir, 'outside-note.md');
+    const outsideDirectory = path.join(fixture.rootDir, 'outside-directory');
+    const mediaLink = path.join(fixture.paths.filesDir, 'linked-clip.mp4');
+    const markdownLink = path.join(fixture.paths.filesDir, 'linked-note.md');
+    const directoryLink = path.join(fixture.paths.filesDir, 'linked-directory');
+    const brokenLink = path.join(fixture.paths.filesDir, 'broken.mp4');
+
+    await fs.writeFile(outsideMedia, 'external media');
+    await fs.writeFile(outsideMarkdown, '# External note\n');
+    await fs.mkdir(outsideDirectory);
+    await fs.writeFile(path.join(outsideDirectory, 'hidden.txt'), 'hidden');
     try {
-      await fs.symlink(outsideFile, symlinkPath);
+      await fs.symlink(outsideMedia, mediaLink);
+      await fs.symlink(outsideMarkdown, markdownLink);
+      await fs.symlink(outsideDirectory, directoryLink);
+      await fs.symlink(path.join(fixture.rootDir, 'missing.mp4'), brokenLink);
     } catch (error) {
       t.skip(`symlinks unavailable: ${String(error)}`);
       return;
     }
 
-    const symlinkResponse = await fetch(`${baseUrl}/files/escape.txt?raw=1`);
-    assert.equal(symlinkResponse.status, 404);
+    const listResponse = await fetch(`${baseUrl}/api/list-files`);
+    assert.equal(listResponse.status, 200);
+    const entries = (await listResponse.json()) as Array<{
+      name: string;
+      isDirectory: boolean;
+    }>;
+    assert.deepEqual(
+      entries.find((entry) => entry.name === 'linked-clip.mp4'),
+      { name: 'linked-clip.mp4', isDirectory: false },
+    );
+    assert.equal(
+      entries.some((entry) => entry.name === 'linked-directory'),
+      false,
+    );
+    assert.equal(
+      entries.some((entry) => entry.name === 'broken.mp4'),
+      false,
+    );
+
+    const mediaPageResponse = await fetch(`${baseUrl}/files/linked-clip.mp4`);
+    assert.equal(mediaPageResponse.status, 200);
+    assert.match(await mediaPageResponse.text(), /<title>SPA<\/title>/);
+
+    const mediaResponse = await fetch(`${baseUrl}/files/linked-clip.mp4?raw=1`);
+    assert.equal(mediaResponse.status, 200);
+    assert.match(
+      mediaResponse.headers.get('content-type') ?? '',
+      /^video\/mp4/,
+    );
+    assert.equal(await mediaResponse.text(), 'external media');
+
+    const markdownResponse = await fetch(
+      `${baseUrl}/api/markdown-content?path=linked-note.md`,
+    );
+    assert.equal(markdownResponse.status, 200);
+    assert.deepEqual(await markdownResponse.json(), {
+      content: '# External note\n',
+      filename: 'linked-note.md',
+      path: 'linked-note.md',
+    });
+
+    const searchResponse = await fetch(
+      `${baseUrl}/api/search?q=linked-clip&dir=`,
+    );
+    assert.equal(searchResponse.status, 200);
+    assert.equal((await searchResponse.json()).count, 1);
+
+    const directoryResponse = await fetch(`${baseUrl}/files/linked-directory/`);
+    assert.equal(directoryResponse.status, 404);
   });
 });
 
