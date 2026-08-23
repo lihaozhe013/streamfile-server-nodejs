@@ -18,10 +18,14 @@ database.
 ```text
 streamfile-server-nodejs/
 ├── src/backend/                 # Express server and file APIs
-│   ├── server.ts                # Routes and SPA fallback
+│   ├── server.ts                # Runtime startup and shutdown
+│   ├── app.ts                   # Testable Express app factory
+│   ├── config/                  # YAML loading and runtime paths
+│   ├── routes/                  # Files, APIs, and uploads
+│   ├── services/                # Safe file access and async search
+│   ├── middleware/              # Shared error handling
 │   ├── build/                   # esbuild bundle script
-│   ├── types/                   # Backend types
-│   └── utils/                   # Paths, search, media helpers
+│   └── tests/                   # Backend integration tests
 ├── src/frontend/app/            # Unified React SPA
 │   ├── src/components/          # Shell, navigation, shared UI
 │   ├── src/lib/                 # Typed API and path/Markdown helpers
@@ -49,9 +53,13 @@ cd dist && node server.js
 Development servers:
 
 ```bash
-cd src/backend && pnpm dev
-cd src/frontend/app && pnpm dev
+pnpm dev
 ```
+
+The global dev command starts the backend on port 3000 and the Vite server on
+port 5173. Vite proxies API and raw file requests to the backend. Use
+`BACKEND_URL=http://127.0.0.1:3001 pnpm dev` when the backend uses a different
+port, or run `pnpm dev:backend` and `pnpm dev:frontend` separately.
 
 `pnpm build` runs backend type checking, bundles the backend, type checks and
 builds the SPA with Vite, then copies `src/frontend/public` to `dist/public`.
@@ -81,7 +89,7 @@ by the SPA fallback.
 ## Validation
 
 - `pnpm typecheck` runs TypeScript 7 `tsc --noEmit` for backend and frontend.
-- `pnpm test` runs Vitest unit tests.
+- `pnpm test` runs backend integration tests and frontend Vitest tests.
 - `pnpm test:e2e` runs Playwright browser tests.
 - ESLint is intentionally not used; the repository relies on TypeScript checks
   and automated tests.

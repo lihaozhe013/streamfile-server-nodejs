@@ -66,18 +66,26 @@ cd dist && node server.js
 
 ### Frontend development and validation
 
-The frontend is a single React SPA using React Router, Vite 8, and TypeScript 7.
+The project is a React SPA using React Router, Vite 8, and TypeScript 7. Start
+the backend and Vite development server together from the repository root:
 
 ```bash
+# Start backend and frontend with prefixed logs
+pnpm dev
+
 # Type-check backend and frontend
 pnpm typecheck
 
-# Run frontend unit tests
+# Run backend integration and frontend unit tests
 pnpm test
 
-# Start the frontend development server
-cd src/frontend/app && pnpm dev
+# Run browser tests
+pnpm test:e2e
 ```
+
+Vite runs on `http://127.0.0.1:5173` and proxies `/api`, `/upload`, and raw
+`/files` requests to the backend at `http://127.0.0.1:3000`. Override the
+target with `BACKEND_URL` when using a custom backend port.
 
 The Express server serves the built SPA shell for application routes while
 direct file URLs and `/files/<path>?raw=1` continue to serve original files.

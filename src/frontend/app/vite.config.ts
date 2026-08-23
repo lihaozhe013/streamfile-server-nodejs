@@ -5,6 +5,12 @@ import react from '@vitejs/plugin-react';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:3000';
+
+const backendProxy = {
+  target: backendUrl,
+  changeOrigin: true,
+};
 
 export default defineConfig({
   root: __dirname,
@@ -19,8 +25,21 @@ export default defineConfig({
     },
   },
   server: {
+    host: '127.0.0.1',
     port: 5173,
     strictPort: true,
+    proxy: {
+      '/api': backendProxy,
+      '/upload': backendProxy,
+      '/files': {
+        ...backendProxy,
+        bypass(request: { url?: string }) {
+          const requestUrl = new URL(request.url ?? '/', 'http://vite.local');
+          if (requestUrl.searchParams.get('raw') !== '1') return request.url;
+          return undefined;
+        },
+      },
+    },
   },
   build: {
     outDir: path.resolve(__dirname, '../public'),

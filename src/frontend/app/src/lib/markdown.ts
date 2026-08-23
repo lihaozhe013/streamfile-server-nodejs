@@ -74,7 +74,13 @@ export function processRelativePaths(
   currentFilePath: string,
 ): string {
   const decodedPath = decodeFilePath(currentFilePath);
-  const replacePath = (candidate: string) => {
+  const appendRawQuery = (suffix: string): string => {
+    if (/[?&]raw=1(?:&|$)/.test(suffix)) return suffix;
+    if (suffix.startsWith('#')) return `?raw=1${suffix}`;
+    if (suffix.startsWith('?')) return `${suffix}&raw=1`;
+    return '?raw=1';
+  };
+  const replacePath = (candidate: string, rawAsset = false) => {
     const [pathPart, suffix = ''] = candidate.split(/([?#].*)/, 2);
     if (
       !pathPart ||
@@ -84,18 +90,19 @@ export function processRelativePaths(
     ) {
       return candidate;
     }
-    return `/files/${encodeFilePath(resolveRelativePath(decodedPath, pathPart))}${suffix}`;
+    const normalizedSuffix = rawAsset ? appendRawQuery(suffix) : suffix;
+    return `/files/${encodeFilePath(resolveRelativePath(decodedPath, pathPart))}${normalizedSuffix}`;
   };
 
   return content
     .replace(
       /(!?\[[^\]]*\]\()([^\s)]+)(\s+[^)]*)?\)/g,
       (_match, prefix: string, pathPart: string, title = '') =>
-        `${prefix}${replacePath(pathPart)}${title})`,
+        `${prefix}${replacePath(pathPart, prefix.startsWith('!'))}${title})`,
     )
     .replace(
       /(<(?:img|source)[^>]+(?:src|srcset)=['"])([^'"]+)(['"])/gi,
       (_match, prefix: string, pathPart: string, suffix: string) =>
-        `${prefix}${replacePath(pathPart)}${suffix}`,
+        `${prefix}${replacePath(pathPart, true)}${suffix}`,
     );
 }

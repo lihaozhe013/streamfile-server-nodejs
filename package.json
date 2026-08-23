@@ -6,8 +6,11 @@
     "preinstall": "npx only-allow pnpm",
     "format": "pnpm prettier --write .",
     "install:all": "pnpm i && cd src/backend && pnpm i && cd ../frontend/app && pnpm i",
-    "typecheck": "pnpm --dir src/backend exec tsc --noEmit && pnpm --dir src/frontend/app typecheck",
-    "test": "pnpm --dir src/frontend/app test",
+    "dev": "node scripts/dev.mjs",
+    "dev:backend": "pnpm --dir src/backend dev",
+    "dev:frontend": "pnpm --dir src/frontend/app dev",
+    "typecheck": "pnpm --dir src/backend typecheck && pnpm --dir src/frontend/app typecheck",
+    "test": "pnpm --dir src/backend test && pnpm --dir src/frontend/app test",
     "test:e2e": "pnpm --dir src/frontend/app test:e2e",
     "build": "uv run build.py"
   },

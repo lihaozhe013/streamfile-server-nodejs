@@ -5,24 +5,22 @@
   "main": "dist/server.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "dev": "tsx watch server.ts"
+    "dev": "tsx watch server.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "node build/bundle-backend.mjs",
+    "test": "tsx --test tests/app.test.ts"
   },
   "dependencies": {
     "express": "^5.2.1",
     "fast-glob": "^3.3.3",
     "js-yaml": "^5.3.0",
-    "multer": "^2.2.0",
-    "serve-index": "^1.9.2"
+    "multer": "^2.2.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/js-yaml": "^4.0.9",
     "@types/multer": "^2.2.0",
     "@types/node": "^26.2.0",
-    "@types/serve-index": "^1.9.4",
     "esbuild": "^0.28.2",
-    "fs-extra": "11.4.0",
-    "ts-loader": "^9.6.2",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   }

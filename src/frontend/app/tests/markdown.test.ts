@@ -18,7 +18,7 @@ describe('markdown utilities', () => {
   it('resolves relative images and links from the markdown directory', () => {
     const markdown = '![Photo](../assets/photo.png)\n\n[Guide](./guide.md)';
     expect(processRelativePaths(markdown, 'docs/readme.md')).toContain(
-      '/files/assets/photo.png',
+      '/files/assets/photo.png?raw=1',
     );
     expect(processRelativePaths(markdown, 'docs/readme.md')).toContain(
       '/files/docs/guide.md',

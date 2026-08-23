@@ -4,10 +4,13 @@ format:
 	pnpm prettier --write .
 
 dev:
-	cd src/backend && pnpm tsx watch server.ts
+	pnpm dev
 
 dev-frontend:
-	cd src/frontend/app && pnpm dev
+	pnpm dev:frontend
+
+dev-backend:
+	pnpm dev:backend
 
 build:
 	uv run build.py

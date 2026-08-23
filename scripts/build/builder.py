@@ -21,10 +21,10 @@ def build(base_dir):
     builder.delete(public_dir / 'styles.css')
 
     # type-check backend before bundling
-    builder.run(backend_dir, 'pnpm tsc --noEmit')
+    builder.run(backend_dir, 'pnpm typecheck')
 
     # build backend
-    builder.run(base_dir, 'node src/backend/build/bundle-backend.cjs')
+    builder.run(backend_dir, 'pnpm build')
     
     # build frontend
     builder.run(frontend_app_dir, 'pnpm typecheck && pnpm vite build')
