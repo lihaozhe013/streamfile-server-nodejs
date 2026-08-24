@@ -7,11 +7,12 @@ const projectDirectory = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
 );
-const packageManager = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+const packageManager = 'pnpm';
 const child = spawn(packageManager, ['--dir', 'src/backend', 'dev'], {
   cwd: projectDirectory,
   env: { ...process.env, STREAMFILE_ROOT_DIR: projectDirectory },
   stdio: 'inherit',
+  shell: true,
 });
 
 let shuttingDown = false;

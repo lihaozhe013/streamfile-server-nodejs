@@ -7,7 +7,7 @@ const projectDirectory = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
 );
-const packageManager = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+const packageManager = 'pnpm';
 const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:3000';
 
 const commands = [
@@ -47,6 +47,7 @@ for (const command of commands) {
     cwd: projectDirectory,
     env: command.env,
     stdio: ['inherit', 'pipe', 'pipe'],
+    shell: true,
   });
   children.push(child);
 
