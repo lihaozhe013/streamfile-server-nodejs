@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import fs from 'node:fs/promises';
 import process from 'node:process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +10,8 @@ const projectDirectory = path.resolve(
 );
 const packageManager = 'pnpm';
 const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:3000';
+
+await ensureDevSpaShell(projectDirectory);
 
 const commands = [
   {
@@ -87,3 +90,22 @@ await new Promise((resolve) => {
 });
 
 process.exitCode = exitCode;
+
+async function ensureDevSpaShell(rootDir) {
+  const publicDir = path.join(rootDir, 'public');
+  const stubs = ['index.html', '404-index.html'];
+  for (const name of stubs) {
+    const filePath = path.join(publicDir, name);
+    try {
+      await fs.access(filePath);
+    } catch {
+      await fs.mkdir(publicDir, { recursive: true });
+      await fs.writeFile(
+        filePath,
+        '<!-- Development SPA shell stub -->\n',
+        'utf-8',
+      );
+      console.log(`[global_dev] Created stub public/${name} for development`);
+    }
+  }
+}

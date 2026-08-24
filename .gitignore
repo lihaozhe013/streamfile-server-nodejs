@@ -11,5 +11,6 @@ config.yaml
 /.container/config.yaml
 /.container/files/
 /.container/files
+public/
 *.pyc
 *.log
