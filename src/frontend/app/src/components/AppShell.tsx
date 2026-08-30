@@ -1,6 +1,7 @@
 import { HardDrive, Home, Menu, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -66,6 +67,8 @@ export default function AppShell() {
               Upload
             </Link>
           </nav>
+
+          <ThemeToggle />
         </div>
       </header>
 
