@@ -1,14 +1,20 @@
 # StreamFile Server NodeJS
 
 StreamFile Server is a small Node.js file server with a React SPA for browsing
-files, uploading content, viewing Markdown, and playing media. It uses the
-local filesystem and does not require a database or authentication service.
+files, uploading content, viewing Markdown, and playing media. It serves the
+local filesystem directly; there is no database, authentication, or user
+management.
+
+- `spec.md` is the authoritative behavior contract (URLs, API, access tiers,
+  config, build).
+- `AGENTS.md` describes the repository layout and agent workflow.
 
 ## Requirements
 
 - Node.js 24 or newer
 - pnpm
-- uv for the default production build command
+- uv for the default production build command (`build.py` uses only the Python
+  standard library)
 
 ## Install
 
@@ -18,10 +24,9 @@ pnpm install:all
 
 The backend creates `config.yaml` and the configured runtime directories on
 first startup when they do not exist. The generated defaults use port 3000,
-`files/` for uploads, and `public/` for the production SPA. The development
-launcher sets the repository root explicitly. To customize development values,
-copy `config.yaml.example` to the repository root as `config.yaml`. The local
-file is intentionally ignored by Git.
+`files/` for uploads, and `public/` for the production SPA. To customize
+development values, copy `config.yaml.example` to the repository root as
+`config.yaml`. The local file is intentionally ignored by Git.
 
 ## Development
 
@@ -32,8 +37,8 @@ pnpm dev
 ```
 
 Open `http://127.0.0.1:5173`. The development server proxies `/api`, `/upload`,
-and raw `/files` requests to the backend on port 3000. Override the proxy target
-with `BACKEND_URL`:
+and raw `/files` requests to the backend on port 3000; other `/files` requests
+are served by Vite itself. Override the proxy target with `BACKEND_URL`:
 
 ```bash
 BACKEND_URL=http://127.0.0.1:3001 pnpm dev
@@ -56,10 +61,11 @@ pnpm build
 ```
 
 `pnpm test` runs backend integration tests and frontend unit tests. The browser
-test suite uses Playwright. `pnpm build` type-checks and bundles the backend,
-builds the Vite SPA directly into `dist/public`, and verifies the required
-production files. The build preserves runtime-owned files in `dist`, including
-`config.yaml`, `files/`, and `debug.log`.
+test suite uses Playwright on port 4173 with mocked APIs; install browsers with
+`pnpm --dir src/frontend/app exec playwright install chromium` if needed.
+`pnpm build` type-checks and bundles the backend, builds the Vite SPA directly
+into `dist/public`, and verifies the required production files while preserving
+runtime-owned files in `dist` (`config.yaml`, `files/`, `debug.log`).
 
 ## Production
 
@@ -70,16 +76,15 @@ node server.js
 ```
 
 The production server uses the directory containing `server.js` as its runtime
-root, regardless of the current working directory. It reads `dist/config.yaml`
-and serves the SPA from `dist/public`. If `dist/config.yaml` is absent, it is
-generated from the packaged defaults with port 3000. The build does not remove
-the generated configuration, uploaded files, or `debug.log`.
+root, regardless of the current working directory. It reads or generates
+`dist/config.yaml` and serves the SPA from `dist/public`. Production never
+searches parent directories for configuration; copy `config.yaml.example` to
+`dist/config.yaml` to customize it.
 
 ## Configuration
 
-`config.yaml` contains the server bind address and runtime directory paths. The
-file is resolved from the runtime root: the repository root during development
-and `dist/` in production. The example file documents the supported fields:
+The configuration is resolved from the runtime root: the repository root during
+development and `dist/` in production.
 
 ```yaml
 server:
@@ -93,63 +98,19 @@ directories:
   private: 'files/private-files'
 ```
 
-An existing configuration is never overwritten, including when it is invalid.
-The backend reports the validation error so the file can be corrected. Runtime
-directories are created after a valid configuration is loaded. Generated
-configuration events are recorded in the untracked `debug.log` file when it is
-possible to write that file. The backend fallback template is maintained at
-`src/backend/config/default.yaml` and is packaged with production builds.
+An existing configuration is never overwritten, including when it is invalid;
+the backend reports the validation error so the file can be corrected. Runtime
+directories are created after a valid configuration is loaded. The fallback
+template is `src/backend/config/default.yaml` and is packaged next to
+`server.js` as `default.yaml`.
 
-Production does not search parent directories for configuration. To customize
-the production server, copy `config.yaml.example` to `dist/config.yaml`.
+## Containers and CI
 
-## Supported Scope
+`.container/Dockerfile` copies only `dist/` into the image;
+`.container/compose.yaml` mounts `config.yaml` and `files/`. Pushes to the
+`build` branch publish the image tagged with the repo-root `VERSION` file.
 
-The SPA provides:
+## Documentation
 
-- Home page and upload flow with progress reporting. Uploads go to the hidden
-  `files/incoming/` inbox by default, or to any visible directory chosen in the
-  folder picker (new folders can be created from the picker). Colliding file
-  names in the visible area are auto-renamed to `name (1).ext`.
-- "Upload here" in directory pages to upload straight into the folder being
-  browsed.
-- Directory browsing, breadcrumbs, search, and browser history navigation.
-- Markdown rendering with GFM, math, KaTeX, sanitized HTML, relative assets,
-  and a table of contents.
-- Audio and video playback with Video.js, playback rates, seeking, fullscreen,
-  and keyboard controls.
-- Direct raw-file access through `/files/<path>?raw=1`.
-
-Public routes include `/`, `/files/`, nested `/files/<path>/` directories,
-Markdown files at `/files/<path>.md`, and media files at `/files/<media>`.
-
-## File Access
-
-| Directory              | Listing | Direct access                 |
-| ---------------------- | ------- | ----------------------------- |
-| `files/`               | Public  | Allowed                       |
-| `files/private-files/` | Hidden  | Allowed when the URL is known |
-| `files/incoming/`      | Blocked | Not allowed                   |
-
-The server rejects traversal and symlink paths that escape the configured file
-root by default. Regular-file symlinks located under `files/` are an explicit
-exception: they are listed and served, including when their targets are
-outside the configured file root. Symlinked directories, broken links, and
-links to files inside `incoming/` remain inaccessible. Do not create links to
-secrets or other sensitive local files. Hidden files are excluded from listings
-and search results.
-
-## API
-
-- `GET /api/list-files?path=<path>`
-- `GET /api/search?q=<name>&dir=<directory>`
-- `GET /api/markdown-content?path=<path>`
-- `POST /api/mkdir` with JSON `{ path }` to create a directory inside the
-  visible file root (`incoming/`, `private-files/`, and dot-prefixed names are
-  rejected)
-- `POST /upload` with a multipart `file` field and an optional multipart
-  `destination` field (`''` or omitted selects `files/incoming/`; `'.'` or a
-  relative path selects a visible directory). Visible uploads return
-  `relativePath` and `url` in addition to `message` and `file`.
-
-API routes return JSON errors and are not handled by the SPA fallback.
+- `spec.md` — behavior contract and protected surface.
+- `AGENTS.md` — repository map, commands, traps, verification.
