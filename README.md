@@ -107,7 +107,12 @@ the production server, copy `config.yaml.example` to `dist/config.yaml`.
 
 The SPA provides:
 
-- Home page and upload flow with progress reporting.
+- Home page and upload flow with progress reporting. Uploads go to the hidden
+  `files/incoming/` inbox by default, or to any visible directory chosen in the
+  folder picker (new folders can be created from the picker). Colliding file
+  names in the visible area are auto-renamed to `name (1).ext`.
+- "Upload here" in directory pages to upload straight into the folder being
+  browsed.
 - Directory browsing, breadcrumbs, search, and browser history navigation.
 - Markdown rendering with GFM, math, KaTeX, sanitized HTML, relative assets,
   and a table of contents.
@@ -139,6 +144,12 @@ and search results.
 - `GET /api/list-files?path=<path>`
 - `GET /api/search?q=<name>&dir=<directory>`
 - `GET /api/markdown-content?path=<path>`
-- `POST /upload` with a multipart `file` field
+- `POST /api/mkdir` with JSON `{ path }` to create a directory inside the
+  visible file root (`incoming/`, `private-files/`, and dot-prefixed names are
+  rejected)
+- `POST /upload` with a multipart `file` field and an optional multipart
+  `destination` field (`''` or omitted selects `files/incoming/`; `'.'` or a
+  relative path selects a visible directory). Visible uploads return
+  `relativePath` and `url` in addition to `message` and `file`.
 
 API routes return JSON errors and are not handled by the SPA fallback.

@@ -11,6 +11,7 @@ import {
   resolveWithinDirectory,
 } from '@/services/files';
 import { searchFilesInPath } from '@/services/search';
+import { createVisibleDirectory } from '@/services/upload';
 
 export function createApiRouter(runtime: RuntimeConfig) {
   const router = express.Router();
@@ -128,6 +129,26 @@ export function createApiRouter(runtime: RuntimeConfig) {
       count: results.length,
     });
   });
+
+  router.post(
+    '/api/mkdir',
+    express.json({ limit: '16kb' }),
+    asyncHandler(async (request, response) => {
+      const body = request.body;
+      const relativePath =
+        typeof body === 'object' && body !== null && 'path' in body
+          ? (body as { path: unknown }).path
+          : undefined;
+
+      const created = await createVisibleDirectory(runtime.paths, relativePath);
+      if (!created) {
+        response.status(400).json({ error: 'Invalid directory path' });
+        return;
+      }
+
+      response.json(created);
+    }),
+  );
 
   router.get('/api/search', searchHandler);
   router.get(

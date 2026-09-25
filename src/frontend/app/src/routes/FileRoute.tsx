@@ -4,6 +4,7 @@ import {
   FileDown,
   RefreshCw,
   Search,
+  Upload,
   X,
 } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
@@ -18,6 +19,8 @@ import type { FileRouteData, SearchResult } from '@/types';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import FileIcon from '@/components/FileIcon';
 import PageState from '@/components/PageState';
+import Toast, { type ToastTone } from '@/components/Toast';
+import UploadDialog from '@/components/UploadDialog';
 import {
   directoryHref,
   fileHref,
@@ -54,6 +57,11 @@ function DirectoryPage({
   const revalidator = useRevalidator();
   const [, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState(data.searchQuery);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    tone: ToastTone;
+  } | null>(null);
 
   useEffect(() => setSearchValue(data.searchQuery), [data.searchQuery]);
 
@@ -81,18 +89,27 @@ function DirectoryPage({
           </h1>
           <Breadcrumbs path={data.path} />
         </div>
-        <button
-          className="button button-secondary"
-          onClick={() => revalidator.revalidate()}
-          disabled={revalidator.state === 'loading'}
-        >
-          <RefreshCw
-            aria-hidden="true"
-            className={revalidator.state === 'loading' ? 'spin' : undefined}
-            size={17}
-          />
-          Refresh
-        </button>
+        <div className="page-actions">
+          <button
+            className="button button-secondary"
+            onClick={() => setIsUploadOpen(true)}
+          >
+            <Upload aria-hidden="true" size={17} />
+            Upload here
+          </button>
+          <button
+            className="button button-secondary"
+            onClick={() => revalidator.revalidate()}
+            disabled={revalidator.state === 'loading'}
+          >
+            <RefreshCw
+              aria-hidden="true"
+              className={revalidator.state === 'loading' ? 'spin' : undefined}
+              size={17}
+            />
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="browser-toolbar">
@@ -130,14 +147,33 @@ function DirectoryPage({
       ) : (
         <PageState
           kind="empty"
-          message="Upload something from the home page to get started."
+          message="Upload a file here to get started."
           action={
-            <Link className="button button-primary" to="/#upload">
-              Upload a file
-            </Link>
+            <button
+              className="button button-primary"
+              onClick={() => setIsUploadOpen(true)}
+            >
+              Upload here
+            </button>
           }
         />
       )}
+
+      {isUploadOpen && (
+        <UploadDialog
+          destination={data.path || '.'}
+          onClose={() => setIsUploadOpen(false)}
+          onUploaded={(relativePath) => {
+            revalidator.revalidate();
+            setToast({
+              message: `Uploaded to ${relativePath}.`,
+              tone: 'success',
+            });
+          }}
+        />
+      )}
+
+      {toast && <Toast {...toast} onDismiss={() => setToast(null)} />}
     </div>
   );
 }

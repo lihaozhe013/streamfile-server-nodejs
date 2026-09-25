@@ -334,6 +334,205 @@ test('uploads Unicode filenames and reports malformed uploads', async () => {
   });
 });
 
+async function uploadTo(
+  baseUrl: string,
+  fileName: string,
+  content: string,
+  destination?: string,
+): Promise<Response> {
+  const form = new FormData();
+  if (destination !== undefined) form.append('destination', destination);
+  form.append('file', new Blob([content]), fileName);
+  return fetch(`${baseUrl}/upload`, { method: 'POST', body: form });
+}
+
+test('uploads to visible directories and auto-renames collisions', async () => {
+  await withServer(async (baseUrl, fixture) => {
+    const first = await uploadTo(baseUrl, 'greeting.txt', 'hello', 'folder');
+    assert.equal(first.status, 200);
+    const firstBody = (await first.json()) as {
+      message: string;
+      relativePath: string;
+      url: string;
+    };
+    assert.equal(firstBody.message, 'File uploaded successfully!');
+    assert.equal(firstBody.relativePath, 'folder/greeting.txt');
+    assert.equal(firstBody.url, '/files/folder/greeting.txt');
+    assert.equal(
+      await fs.readFile(
+        path.join(fixture.paths.filesDir, 'folder', 'greeting.txt'),
+        'utf8',
+      ),
+      'hello',
+    );
+
+    const second = await uploadTo(baseUrl, 'greeting.txt', 'again', 'folder');
+    assert.equal(second.status, 200);
+    const secondBody = (await second.json()) as { relativePath: string };
+    assert.equal(secondBody.relativePath, 'folder/greeting (1).txt');
+    assert.equal(
+      await fs.readFile(
+        path.join(fixture.paths.filesDir, 'folder', 'greeting.txt'),
+        'utf8',
+      ),
+      'hello',
+    );
+
+    const nested = await uploadTo(
+      baseUrl,
+      '中文 文件.bin',
+      'bytes',
+      'sub dir/中文',
+    );
+    assert.equal(nested.status, 200);
+    const nestedBody = (await nested.json()) as {
+      relativePath: string;
+      url: string;
+    };
+    assert.equal(nestedBody.relativePath, 'sub dir/中文/中文 文件.bin');
+    assert.equal(
+      nestedBody.url,
+      '/files/sub%20dir/%E4%B8%AD%E6%96%87/%E4%B8%AD%E6%96%87%20%E6%96%87%E4%BB%B6.bin',
+    );
+    assert.equal(
+      await fs.readFile(
+        path.join(fixture.paths.filesDir, 'sub dir', '中文', '中文 文件.bin'),
+        'utf8',
+      ),
+      'bytes',
+    );
+
+    const root = await uploadTo(baseUrl, 'root-file.txt', 'top', '.');
+    assert.equal(root.status, 200);
+    const rootBody = (await root.json()) as { relativePath: string };
+    assert.equal(rootBody.relativePath, 'root-file.txt');
+    assert.equal(
+      await fs.readFile(
+        path.join(fixture.paths.filesDir, 'root-file.txt'),
+        'utf8',
+      ),
+      'top',
+    );
+
+    const inbox = await uploadTo(baseUrl, 'inbox-only.txt', 'hidden', '');
+    assert.equal(inbox.status, 200);
+    const inboxBody = (await inbox.json()) as Record<string, unknown>;
+    assert.equal('relativePath' in inboxBody, false);
+
+    const listResponse = await fetch(`${baseUrl}/api/list-files?path=folder`);
+    const listNames = ((await listResponse.json()) as Array<{ name: string }>)
+      .map((entry) => entry.name)
+      .sort();
+    assert.deepEqual(listNames, [
+      'clip.mp4',
+      'custom',
+      'greeting (1).txt',
+      'greeting.txt',
+      'hello world.md',
+      'note.txt',
+    ]);
+  });
+});
+
+test('rejects traversal, protected, and hidden upload destinations', async () => {
+  await withServer(async (baseUrl, fixture) => {
+    await fs.symlink(
+      fixture.rootDir,
+      path.join(fixture.paths.filesDir, 'link-out'),
+      'dir',
+    );
+
+    const invalidDestinations = [
+      '../escape',
+      'a/../../escape',
+      'incoming',
+      'incoming/sub',
+      'private-files',
+      'private-files/sub',
+      '.hidden/sub',
+      'sub/.hidden',
+      'link-out/outside',
+    ];
+    for (const destination of invalidDestinations) {
+      const response = await uploadTo(
+        baseUrl,
+        'rejected.txt',
+        'nope',
+        destination,
+      );
+      assert.equal(
+        response.status,
+        400,
+        `destination "${destination}" should be rejected`,
+      );
+      assert.equal((await response.json()).error, 'Invalid upload destination');
+    }
+
+    const stagedNames = await fs.readdir(fixture.paths.incomingDir);
+    assert.deepEqual(
+      stagedNames.filter((name) => name !== 'index.html'),
+      [],
+      'rejected uploads must not linger in staging',
+    );
+    await assert.rejects(fs.stat(path.join(fixture.paths.filesDir, 'escape')));
+  });
+});
+
+test('creates visible directories through the mkdir API', async () => {
+  await withServer(async (baseUrl, fixture) => {
+    const mkdir = async (body: unknown): Promise<Response> =>
+      fetch(`${baseUrl}/api/mkdir`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+    const created = await mkdir({ path: 'a/b c' });
+    assert.equal(created.status, 200);
+    assert.deepEqual(await created.json(), {
+      created: true,
+      relativePath: 'a/b c',
+    });
+    const stats = await fs.stat(path.join(fixture.paths.filesDir, 'a', 'b c'));
+    assert.equal(stats.isDirectory(), true);
+
+    const again = await mkdir({ path: 'a/b c' });
+    assert.equal(again.status, 200);
+    assert.equal((await again.json()).created, false);
+
+    const existing = await mkdir({ path: 'folder/custom' });
+    assert.equal(existing.status, 200);
+    assert.equal((await existing.json()).created, false);
+
+    for (const rejectedPath of [
+      'incoming',
+      'incoming/sub',
+      'private-files',
+      '.cache',
+      'a/.hidden',
+      '../escape',
+      '',
+      '.',
+    ]) {
+      const response = await mkdir({ path: rejectedPath });
+      assert.equal(
+        response.status,
+        400,
+        `path "${rejectedPath}" should be rejected`,
+      );
+    }
+
+    assert.equal((await mkdir({})).status, 400);
+    assert.equal((await mkdir({ path: 42 })).status, 400);
+
+    const listResponse = await fetch(`${baseUrl}/api/list-files`);
+    const names = ((await listResponse.json()) as Array<{ name: string }>).map(
+      (entry) => entry.name,
+    );
+    assert.ok(names.includes('a'));
+  });
+});
+
 test('keeps API 404s separate from the SPA fallback', async () => {
   await withServer(async (baseUrl) => {
     const apiResponse = await fetch(`${baseUrl}/api/does-not-exist`);

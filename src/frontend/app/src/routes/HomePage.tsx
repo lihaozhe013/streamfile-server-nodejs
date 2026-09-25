@@ -1,14 +1,25 @@
-import { ArrowRight, CloudUpload, FolderOpen, ShieldCheck } from 'lucide-react';
+import {
+  ArrowRight,
+  CloudUpload,
+  FolderOpen,
+  Inbox,
+  ShieldCheck,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { uploadFile } from '@/lib/api';
+import DirectoryPickerDialog from '@/components/DirectoryPickerDialog';
 import Toast, { type ToastTone } from '@/components/Toast';
+
+type UploadTarget = { kind: 'inbox' } | { kind: 'folder'; path: string };
 
 export default function HomePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [target, setTarget] = useState<UploadTarget>({ kind: 'inbox' });
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     tone: ToastTone;
@@ -32,10 +43,14 @@ export default function HomePage() {
     setIsUploading(true);
     setProgress(0);
     setToast(null);
+    const destination = target.kind === 'inbox' ? '' : target.path;
     try {
-      const response = await uploadFile(selectedFile, setProgress);
+      const response = await uploadFile(selectedFile, destination, setProgress);
       setToast({
-        message: response.message || 'File uploaded successfully.',
+        message:
+          target.kind === 'folder' && response.relativePath
+            ? `Uploaded to ${response.relativePath}.`
+            : response.message || 'File uploaded successfully.',
         tone: 'success',
       });
       setSelectedFile(null);
@@ -91,6 +106,64 @@ export default function HomePage() {
             </div>
             <CloudUpload aria-hidden="true" size={24} />
           </div>
+
+          <fieldset className="upload-target-group" disabled={isUploading}>
+            <legend className="visually-hidden">Upload destination</legend>
+            <label
+              className={`upload-target-option ${target.kind === 'inbox' ? 'upload-target-active' : ''}`}
+            >
+              <input
+                type="radio"
+                name="upload-target"
+                value="inbox"
+                checked={target.kind === 'inbox'}
+                onChange={() => setTarget({ kind: 'inbox' })}
+              />
+              <Inbox aria-hidden="true" size={17} />
+              <span>
+                <strong>Inbox</strong>
+                <small>Hidden area, not shown in file lists</small>
+              </span>
+            </label>
+            <label
+              className={`upload-target-option ${target.kind === 'folder' ? 'upload-target-active' : ''}`}
+            >
+              <input
+                type="radio"
+                name="upload-target"
+                value="folder"
+                checked={target.kind === 'folder'}
+                onChange={() => {
+                  setTarget(
+                    target.kind === 'folder'
+                      ? target
+                      : { kind: 'folder', path: '.' },
+                  );
+                  setIsPickerOpen(true);
+                }}
+              />
+              <FolderOpen aria-hidden="true" size={17} />
+              <span>
+                <strong>Files folder</strong>
+                <small>
+                  {target.kind === 'folder'
+                    ? target.path === '.'
+                      ? 'Visible files (root)'
+                      : target.path
+                    : 'Pick any visible directory'}
+                </small>
+              </span>
+            </label>
+            {target.kind === 'folder' && (
+              <button
+                type="button"
+                className="button button-ghost button-small upload-target-change"
+                onClick={() => setIsPickerOpen(true)}
+              >
+                Change folder…
+              </button>
+            )}
+          </fieldset>
 
           <div
             className={`drop-zone ${isDragging ? 'drop-zone-active' : ''} ${selectedFile ? 'drop-zone-selected' : ''}`}
@@ -172,6 +245,19 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      {isPickerOpen && (
+        <DirectoryPickerDialog
+          initialPath={
+            target.kind === 'folder' && target.path !== '.' ? target.path : ''
+          }
+          onClose={() => setIsPickerOpen(false)}
+          onSelect={(directoryPath) => {
+            setTarget({ kind: 'folder', path: directoryPath });
+            setIsPickerOpen(false);
+          }}
+        />
+      )}
 
       {toast && <Toast {...toast} onDismiss={() => setToast(null)} />}
     </div>

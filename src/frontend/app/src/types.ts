@@ -30,6 +30,13 @@ export interface UploadResponse {
     originalname?: string;
     filename?: string;
   };
+  relativePath?: string;
+  url?: string | null;
+}
+
+export interface MkdirResponse {
+  created: boolean;
+  relativePath: string;
 }
 
 export type FileRouteData =

@@ -1,6 +1,7 @@
 import type {
   FileEntry,
   MarkdownResponse,
+  MkdirResponse,
   SearchResponse,
   UploadResponse,
 } from '@/types';
@@ -64,14 +65,29 @@ export async function getMarkdown(
   return parseResponse<MarkdownResponse>(response);
 }
 
+export async function createDirectory(
+  directoryPath: string,
+  signal?: AbortSignal,
+): Promise<MkdirResponse> {
+  const response = await fetch('/api/mkdir', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ path: directoryPath }),
+    signal,
+  });
+  return parseResponse<MkdirResponse>(response);
+}
+
 export function uploadFile(
   file: File,
+  destination: string,
   onProgress: (percentage: number) => void,
   signal?: AbortSignal,
 ): Promise<UploadResponse> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
+    formData.append('destination', destination);
     formData.append('file', file);
 
     const abort = () => xhr.abort();
