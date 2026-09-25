@@ -147,7 +147,8 @@ Errors are JSON `{ "error": string }`.
   alias `@` -> `src`.
 - E2E (`src/frontend/app/e2e`): Playwright Chromium on 4173; only Vite is
   started and tests mock `/api/list-files` and `/upload`, so no backend is
-  required. Browsers must be installed separately.
+  required. Browsers must be installed separately. Playwright runs headed by
+  default and headless when `CI` is set (`CI=1 bun run test:e2e`).
 - `bun run test` covers backend integration plus frontend unit;
   `bun run test:e2e` runs browser tests only.
 

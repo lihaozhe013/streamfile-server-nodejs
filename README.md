@@ -61,8 +61,9 @@ bun run build
 
 `bun run test` runs backend integration tests under `bun test` and frontend
 unit tests under Vitest. The browser test suite uses Playwright on port 4173
-with mocked APIs; install browsers with
-`bunx playwright install chromium` from `src/frontend/app` if needed.
+with mocked APIs; it runs headed locally and headless when `CI` is set, and
+browsers can be installed with `bunx playwright install chromium` from
+`src/frontend/app` if needed.
 `bun run build` type-checks both packages, bundles the backend with `Bun.build`,
 builds the Vite SPA directly into `dist/public`, and verifies the required
 production files while preserving runtime-owned files in `dist` (`config.yaml`,
