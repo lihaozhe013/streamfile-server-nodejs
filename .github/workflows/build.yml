@@ -23,7 +23,7 @@ jobs:
           cache-dependency-path: |
             pnpm-lock.yaml
             src/backend/pnpm-lock.yaml
-            src/frontend/markdown-viewer/pnpm-lock.yaml
+            src/frontend/app/pnpm-lock.yaml
 
       - name: Install dependencies and build project
         run: |
