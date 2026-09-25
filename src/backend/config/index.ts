@@ -1,7 +1,6 @@
 import fsPromises from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import * as yaml from 'js-yaml';
 import type { Config, RuntimeConfig, RuntimePaths } from '@/types/index';
 import { appendDebugLog } from '@/utils/logger';
 
@@ -135,7 +134,7 @@ export async function loadRuntimeConfig(
   );
   const configPath = await ensureConfigFile(rootDir, options.configPath);
   const fileContents = await fsPromises.readFile(configPath, 'utf8');
-  const config = parseConfig(yaml.load(fileContents));
+  const config = parseConfig(Bun.YAML.parse(fileContents));
 
   return {
     server: config.server,

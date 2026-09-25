@@ -1,5 +1,5 @@
-FROM node:24-alpine
+FROM oven/bun:1.4.2-alpine
 WORKDIR /app
 COPY dist/ /app/
 EXPOSE 3000
-CMD ["node", "/app/server.js"]
+CMD ["bun", "/app/server.js"]

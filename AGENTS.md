@@ -15,14 +15,15 @@ Deep dives belong in `docs/` only when they outgrow `spec.md`; link them here.
 
 ## Repository map
 
-Three independent pnpm roots, each with its own `package.json`, lockfile, and
-`pnpm-workspace.yaml`. Install all of them; a root install alone is not enough.
+One Bun workspace rooted at `/` with a single `bun.lock`; `src/backend` and
+`src/frontend/app` are workspace packages. `bun install` at the root installs
+everything.
 
-| Root               | Contents                                                                              |
-| ------------------ | ------------------------------------------------------------------------------------- |
-| `/`                | orchestration scripts (`scripts/dev*.mjs`, `build.py`), Prettier, Makefile, `VERSION` |
-| `src/backend`      | Express 5 + TypeScript backend; tsx in dev/test, esbuild bundle in production         |
-| `src/frontend/app` | React 19 + Vite SPA; vitest and Playwright live here                                  |
+| Root               | Contents                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------- |
+| `/`                | orchestration scripts (`scripts/dev*.mjs`, `scripts/build/build.ts`), Prettier, `Makefile`  |
+| `src/backend`      | Express 5 + TypeScript backend; `bun --watch` in dev, `bun test`, `Bun.build` in production |
+| `src/frontend/app` | React 19 + Vite SPA; vitest and Playwright live here                                        |
 
 Backend (`src/backend`):
 
@@ -34,7 +35,7 @@ Backend (`src/backend`):
   renames; `services/search.ts` search
 - `config/index.ts` + `config/default.yaml`; `middleware/errors.ts`;
   `utils/logger.ts`
-- `tests/*.test.ts` node:test integration tests
+- `tests/*.test.ts` node:test integration tests executed by `bun test`
 
 Frontend (`src/frontend/app`):
 
@@ -51,30 +52,32 @@ Runtime-owned and git-ignored (never commit, do not delete blindly): repo-root
 
 ## Commands
 
-| Command                                  | Purpose                                                                              |
-| ---------------------------------------- | ------------------------------------------------------------------------------------ |
-| `pnpm install:all`                       | install root + backend + frontend dependencies                                       |
-| `pnpm dev`                               | backend (tsx watch, :3000) + Vite (:5173); sets `STREAMFILE_ROOT_DIR`, `BACKEND_URL` |
-| `pnpm dev:backend` / `pnpm dev:frontend` | run one side only                                                                    |
-| `pnpm typecheck`                         | `tsc --noEmit` in both packages                                                      |
-| `pnpm test`                              | backend node:test + frontend vitest                                                  |
-| `pnpm test:e2e`                          | Playwright on :4173 with mocked APIs (no backend needed)                             |
-| `pnpm build`                             | `uv run build.py`: typecheck, esbuild backend, Vite -> `dist/public`, verify         |
-| `pnpm format`                            | Prettier over the repository                                                         |
+| Command                                | Purpose                                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `bun install`                          | install every workspace package                                                          |
+| `bun run dev`                          | backend (`bun --watch`, :3000) + Vite (:5173); sets `STREAMFILE_ROOT_DIR`, `BACKEND_URL` |
+| `bun run dev:backend` / `dev:frontend` | run one side only                                                                        |
+| `bun run typecheck`                    | `tsc --noEmit` in both packages                                                          |
+| `bun run test`                         | backend `bun test` + frontend vitest                                                     |
+| `bun run test:e2e`                     | Playwright on :4173 with mocked APIs (no backend needed)                                 |
+| `bun run build`                        | `scripts/build/build.ts`: typecheck, `Bun.build` backend, Vite -> `dist/public`, verify  |
+| `bun run format`                       | Prettier over the repository                                                             |
 
-Ports: backend 3000, Vite dev 5173, Playwright 4173. Playwright browsers may
-need `pnpm --dir src/frontend/app exec playwright install chromium`.
+Ports: backend 3000, Vite dev 5173, Playwright 4173. Vite, Vitest, Playwright,
+and `tsc` still run on Node 24+, so a Node installation is required for those
+development tools even though production runs on Bun. Playwright browsers may
+need `bunx playwright install chromium` from `src/frontend/app`.
 
 ## Task starting points
 
-| Change                                    | Start here                                                                                                                                      |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| file URLs, raw, tiers, symlinks           | `src/backend/routes/files.ts`, `src/backend/services/files.ts`, `src/backend/tests/app.test.ts`                                                 |
-| JSON API                                  | `src/backend/routes/api.ts`, `src/frontend/app/src/lib/api.ts`, tests                                                                           |
-| uploads, mkdir, destinations              | `src/backend/routes/upload.ts`, `src/backend/services/upload.ts`, tests                                                                         |
-| config, logging, startup, build packaging | `src/backend/config/index.ts`, `src/backend/server.ts`, `src/backend/config/default.yaml`, `src/backend/build/bundle-backend.mjs`, config tests |
-| directory, markdown, media UI             | `src/frontend/app/src/routes/`, `src/frontend/app/src/lib/paths.ts`, `e2e/`                                                                     |
-| build, release, containers                | `scripts/build/builder.py`, `.container/`, `.github/workflows/build.yml`, `VERSION`                                                             |
+| Change                                    | Start here                                                                                                                                     |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| file URLs, raw, tiers, symlinks           | `src/backend/routes/files.ts`, `src/backend/services/files.ts`, `src/backend/tests/app.test.ts`                                                |
+| JSON API                                  | `src/backend/routes/api.ts`, `src/frontend/app/src/lib/api.ts`, tests                                                                          |
+| uploads, mkdir, destinations              | `src/backend/routes/upload.ts`, `src/backend/services/upload.ts`, tests                                                                        |
+| config, logging, startup, build packaging | `src/backend/config/index.ts`, `src/backend/server.ts`, `src/backend/config/default.yaml`, `src/backend/build/bundle-backend.ts`, config tests |
+| directory, markdown, media UI             | `src/frontend/app/src/routes/`, `src/frontend/app/src/lib/paths.ts`, `e2e/`                                                                    |
+| build, release, containers                | `scripts/build/build.ts`, `.container/`, `.github/workflows/build.yml`, `VERSION`                                                              |
 
 ## Guardrails
 
@@ -104,14 +107,17 @@ need `pnpm --dir src/frontend/app exec playwright install chromium`.
 - Express 5 wildcard syntax is `/{*splat}`; async route handlers must catch and
   forward errors (see `asyncHandler` in `routes/api.ts`).
 - Production runtime root is the directory containing `server.js`, not the cwd.
-  The esbuild bundle reads `default.yaml` from its own directory; keep the
-  packaging step in `bundle-backend.mjs` in sync.
+  The Bun bundle reads `default.yaml` from its own directory; keep the packaging
+  step in `build/bundle-backend.ts` in sync.
+- The bundle and backend runtime use Bun globals (`Bun.build`, `Bun.YAML`,
+  `Bun.Glob`); run backend tests with `bun test` and production with `bun`, not
+  Node. The `dist/server.js` bundle is Bun-only.
 - Config is never searched upward and never overwritten (even invalid files are
   preserved and fail startup). Missing config is generated from
   `config/default.yaml`.
 - The dev SPA runs on :5173 and Vite answers non-raw `/files` requests itself;
   only `?raw=1` reaches the backend. Verify file-serving changes on :3000 or
-  through `pnpm test`.
+  through `bun run test`.
 - E2E tests mock `/api/list-files` and `/upload`; they do not exercise the real
   backend.
 - Multer decodes `originalname` from latin1 to utf8; removing that breaks
@@ -129,11 +135,11 @@ need `pnpm --dir src/frontend/app exec playwright install chromium`.
 
 ## Verification and handoff
 
-| Change            | Run                                                                       |
-| ----------------- | ------------------------------------------------------------------------- |
-| backend behavior  | `pnpm typecheck`, `pnpm test`; add `pnpm build` for bundle/config changes |
-| frontend behavior | `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`                            |
-| docs only         | Prettier on changed files                                                 |
+| Change            | Run                                                                                |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| backend behavior  | `bun run typecheck`, `bun run test`; add `bun run build` for bundle/config changes |
+| frontend behavior | `bun run typecheck`, `bun run test`, `bun run test:e2e`                            |
+| docs only         | Prettier on changed files                                                          |
 
 Regression-prone cases: Unicode names, spaces, nested paths, deep SPA
 refreshes, API failures, raw files, uploads, and protected directories. When

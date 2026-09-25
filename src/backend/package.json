@@ -1,27 +1,24 @@
 {
-  "name": "streamfile-server-nodejs",
+  "name": "streamfile-backend",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
-    "dev": "tsx watch server.ts",
+    "dev": "bun --watch server.ts",
     "typecheck": "tsc --noEmit",
-    "build": "node build/bundle-backend.mjs",
-    "test": "tsx --test tests/app.test.ts tests/config.test.ts"
+    "build": "bun build/bundle-backend.ts",
+    "test": "bun test tests/"
   },
   "dependencies": {
     "express": "^5.2.1",
-    "fast-glob": "^3.3.3",
-    "js-yaml": "^5.3.0",
-    "multer": "^2.2.0"
+    "multer": "^2.4.0"
   },
   "devDependencies": {
+    "@types/bun": "^1.4.2",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.2.0",
-    "@types/node": "^26.2.0",
-    "esbuild": "^0.28.2",
-    "tsx": "^4.23.12",
+    "@types/node": "^26.6.2",
     "typescript": "^7.0.2"
   }
 }

@@ -7,4 +7,4 @@ services:
       - ./files:/app/files
     ports:
       - '3000:3000'
-    command: node server.js
+    command: bun server.js

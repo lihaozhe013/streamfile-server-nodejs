@@ -8,12 +8,11 @@ const projectDirectory = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
 );
-const packageManager = 'pnpm';
 
 await ensureDevSpaShell(projectDirectory);
 
-const child = spawn(packageManager, ['--dir', 'src/backend', 'dev'], {
-  cwd: projectDirectory,
+const child = spawn('bun', ['run', 'dev'], {
+  cwd: path.join(projectDirectory, 'src', 'backend'),
   env: { ...process.env, STREAMFILE_ROOT_DIR: projectDirectory },
   stdio: 'inherit',
   shell: true,

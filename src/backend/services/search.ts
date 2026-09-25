@@ -1,5 +1,4 @@
 import path from 'node:path';
-import fg from 'fast-glob';
 import type { RuntimePaths, SearchResult } from '@/types/index';
 import {
   isAccessibleFilePath,
@@ -8,9 +7,36 @@ import {
   isWithinDirectory,
 } from '@/services/files';
 
-function buildCandidates(fileName: string): string[] {
-  const escaped = fileName.replace(/[\\{}[\]()?+^$.]/g, '\\$&');
-  return [`**/*${escaped}*`];
+function escapeGlobLiteral(value: string): string {
+  return value.replace(/[\\*?[\]{}!]/g, '\\$&');
+}
+
+function buildCandidatePattern(fileName: string): string {
+  return `**/*${escapeGlobLiteral(fileName)}*`;
+}
+
+async function scanCandidates(
+  fileName: string,
+  searchPath: string,
+): Promise<string[]> {
+  const glob = new Bun.Glob(buildCandidatePattern(fileName));
+  const matches = new Set<string>();
+  try {
+    for await (const entry of glob.scan({
+      cwd: searchPath,
+      absolute: true,
+      onlyFiles: false,
+      dot: false,
+      followSymlinks: false,
+    })) {
+      matches.add(entry);
+    }
+  } catch {
+    // Mirror the previous suppressErrors behavior: unreadable or non-directory
+    // search roots yield no matches instead of failing the request.
+    return [];
+  }
+  return [...matches];
 }
 
 export async function searchFilesInPath(
@@ -18,16 +44,7 @@ export async function searchFilesInPath(
   searchPath: string,
   paths: RuntimePaths,
 ): Promise<SearchResult[]> {
-  const entries = await fg(buildCandidates(fileName), {
-    cwd: searchPath,
-    absolute: true,
-    onlyFiles: false,
-    dot: false,
-    followSymbolicLinks: false,
-    ignore: ['**/incoming/**', '**/private-files/**'],
-    unique: true,
-    suppressErrors: true,
-  });
+  const entries = await scanCandidates(fileName, searchPath);
 
   const query = fileName.toLowerCase();
   const candidates = entries

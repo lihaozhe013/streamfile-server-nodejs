@@ -161,7 +161,7 @@ test('reports a clear error when the SPA shell is missing', async () => {
     assert.equal(response.status, 500);
     assert.match(
       (await response.json()).error,
-      /SPA shell is missing.*Run pnpm build/,
+      /SPA shell is missing.*Run bun run build/,
     );
   });
 });

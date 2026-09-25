@@ -6,9 +6,10 @@ file in the same change. If code and this document disagree, fix both.
 
 ## Runtime model
 
-- Node.js 24+, ESM. The backend listens on `server.host:server.port`
-  (default `0.0.0.0:3000`). There is no authentication, TLS, database, or user
-  management.
+- Bun 1.4+ runs the backend, bundle, and backend tests; the frontend tooling
+  (Vite, Vitest, Playwright, `tsc`) still runs on Node.js 24+. ESM. The backend
+  listens on `server.host:server.port` (default `0.0.0.0:3000`). There is no
+  authentication, TLS, database, or user management.
 - Runtime root: `STREAMFILE_ROOT_DIR` when set (the dev launchers set it to the
   repository root); otherwise the directory containing the running `server.js`.
   The process cwd is irrelevant.
@@ -54,7 +55,7 @@ file in the same change. If code and this document disagree, fix both.
   assets. Unknown `/api/*` returns JSON `{error:'API endpoint not found'}`, never
   the SPA shell. Every other unmatched route returns the SPA shell.
 - `public/index.html` must exist in production; a missing shell returns 500
-  with an error telling the operator to run `pnpm build`.
+  with an error telling the operator to run `bun run build`.
 - `?raw=1` is the only raw switch; `?raw=true` is not recognized.
 
 ## HTTP API
@@ -116,35 +117,39 @@ Errors are JSON `{ "error": string }`.
 
 ## Build, distribution, release
 
-- `pnpm build` -> `uv run build.py` -> `scripts/build/builder.py`: cleans
-  `dist/public`, deletes `dist/server.js` and `dist/default.yaml`, typechecks
-  the backend, bundles `src/backend/server.ts` with esbuild (ESM, minified) to
+- `bun run build` -> `scripts/build/build.ts`: cleans `dist/public`, deletes
+  `dist/server.js` and `dist/default.yaml`, typechecks the backend, bundles
+  `src/backend/server.ts` with `Bun.build` (target `bun`, ESM, minified) to
   `dist/server.js`, copies `src/backend/config/default.yaml` to
-  `dist/default.yaml`, then
-  typechecks the frontend and runs `vite build` into `dist/public`, finally
-  verifying `server.js`, `default.yaml`, `public/index.html`, and
-  `public/404-index.html` exist.
+  `dist/default.yaml`, then typechecks the frontend and runs `vite build` into
+  `dist/public`, finally verifying `server.js`, `default.yaml`,
+  `public/index.html`, and `public/404-index.html` exist.
 - Build-owned: `dist/server.js`, `dist/default.yaml`, `dist/public/**`.
   Runtime-owned and preserved by builds: `dist/config.yaml`, `dist/files/`,
   `dist/debug.log`.
-- Production: `cd dist && node server.js`. The Dockerfile copies only `dist/`
-  into `/app`; `.container/compose.yaml` mounts `config.yaml` and `files/`.
-- CI (`.github/workflows/build.yml`) runs on pushes to the `build` branch, runs
-  `pnpm install:all` and the Python build, and pushes Docker Hub tags `latest`
-  and the repo-root `VERSION` value. Package versions do not drive the tag.
+- Production: `cd dist && bun server.js`. The `dist/server.js` bundle is
+  Bun-only (it carries the `// @bun` pragma and `import.meta.require` interop),
+  so Node.js cannot execute it. The Dockerfile copies only `dist/` into `/app`
+  of an `oven/bun` image; `.container/compose.yaml` mounts `config.yaml` and
+  `files/` and starts `bun server.js`.
+- CI (`.github/workflows/build.yml`) runs on pushes to the `build` branch with
+  `oven-sh/setup-bun` (plus Node.js for Vite, Vitest, Playwright, and `tsc`),
+  runs `bun install --frozen-lockfile`, `bun run test`, and the Bun build, and
+  pushes Docker Hub tags `latest` and the repo-root `VERSION` value. Package
+  versions do not drive the tag.
 
 ## Testing contract
 
-- Backend (`src/backend/tests`): node:test via `tsx --test`. Each test builds a
-  temporary runtime fixture and calls `createApp` on an ephemeral port; no
-  shared config or network state.
-- Frontend unit (`src/frontend/app/tests`): vitest, `environment: node`,
+- Backend (`src/backend/tests`): node:test files executed by `bun test` in the
+  Bun runtime. Each test builds a temporary runtime fixture and calls `createApp`
+  on an ephemeral port; no shared config or network state.
+- Frontend unit (`src/frontend/app/tests`): vitest on Node, `environment: node`,
   alias `@` -> `src`.
 - E2E (`src/frontend/app/e2e`): Playwright Chromium on 4173; only Vite is
   started and tests mock `/api/list-files` and `/upload`, so no backend is
   required. Browsers must be installed separately.
-- `pnpm test` covers backend integration plus frontend unit;
-  `pnpm test:e2e` runs browser tests only.
+- `bun run test` covers backend integration plus frontend unit;
+  `bun run test:e2e` runs browser tests only.
 
 ## Protected surface
 

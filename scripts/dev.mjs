@@ -8,7 +8,6 @@ const projectDirectory = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
 );
-const packageManager = 'pnpm';
 const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:3000';
 
 await ensureDevSpaShell(projectDirectory);
@@ -16,12 +15,12 @@ await ensureDevSpaShell(projectDirectory);
 const commands = [
   {
     label: 'backend',
-    args: ['--dir', 'src/backend', 'dev'],
+    cwd: path.join(projectDirectory, 'src', 'backend'),
     env: { ...process.env, STREAMFILE_ROOT_DIR: projectDirectory },
   },
   {
     label: 'frontend',
-    args: ['--dir', 'src/frontend/app', 'dev'],
+    cwd: path.join(projectDirectory, 'src', 'frontend', 'app'),
     env: { ...process.env, BACKEND_URL: backendUrl },
   },
 ];
@@ -46,8 +45,8 @@ function stopChildren(signal = 'SIGTERM') {
 }
 
 for (const command of commands) {
-  const child = spawn(packageManager, command.args, {
-    cwd: projectDirectory,
+  const child = spawn('bun', ['run', 'dev'], {
+    cwd: command.cwd,
     env: command.env,
     stdio: ['inherit', 'pipe', 'pipe'],
     shell: true,

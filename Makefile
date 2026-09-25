@@ -1,16 +1,16 @@
 default: dev
 
 format:
-	pnpm prettier --write .
+	bun run format
 
 dev:
-	pnpm dev
+	bun run dev
 
 dev-frontend:
-	pnpm dev:frontend
+	bun run dev:frontend
 
 dev-backend:
-	pnpm dev:backend
+	bun run dev:backend
 
 build:
-	uv run build.py
+	bun run build

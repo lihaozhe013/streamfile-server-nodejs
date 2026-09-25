@@ -1,9 +1,9 @@
 # StreamFile Server NodeJS
 
-StreamFile Server is a small Node.js file server with a React SPA for browsing
-files, uploading content, viewing Markdown, and playing media. It serves the
-local filesystem directly; there is no database, authentication, or user
-management.
+StreamFile Server is a small Bun-powered file server with a React SPA for
+browsing files, uploading content, viewing Markdown, and playing media. It
+serves the local filesystem directly; there is no database, authentication, or
+user management.
 
 - `spec.md` is the authoritative behavior contract (URLs, API, access tiers,
   config, build).
@@ -11,15 +11,13 @@ management.
 
 ## Requirements
 
-- Node.js 24 or newer
-- pnpm
-- uv for the default production build command (`build.py` uses only the Python
-  standard library)
+- Bun 1.4 or newer (package manager, backend development, and production runtime)
+- Node.js 24 or newer for the frontend tooling (Vite, Vitest, Playwright, `tsc`)
 
 ## Install
 
 ```bash
-pnpm install:all
+bun install
 ```
 
 The backend creates `config.yaml` and the configured runtime directories on
@@ -33,7 +31,7 @@ development values, copy `config.yaml.example` to the repository root as
 Start the backend and Vite together:
 
 ```bash
-pnpm dev
+bun run dev
 ```
 
 Open `http://127.0.0.1:5173`. The development server proxies `/api`, `/upload`,
@@ -41,38 +39,41 @@ and raw `/files` requests to the backend on port 3000; other `/files` requests
 are served by Vite itself. Override the proxy target with `BACKEND_URL`:
 
 ```bash
-BACKEND_URL=http://127.0.0.1:3001 pnpm dev
+BACKEND_URL=http://127.0.0.1:3001 bun run dev
 ```
 
-Run either side separately when needed:
+The backend runs on Bun with `bun --watch`; the Vite dev server, Vitest, and
+Playwright still run on Node. Run either side separately when needed:
 
 ```bash
-pnpm dev:backend
-pnpm dev:frontend
+bun run dev:backend
+bun run dev:frontend
 ```
 
 ## Validation
 
 ```bash
-pnpm typecheck
-pnpm test
-pnpm test:e2e
-pnpm build
+bun run typecheck
+bun run test
+bun run test:e2e
+bun run build
 ```
 
-`pnpm test` runs backend integration tests and frontend unit tests. The browser
-test suite uses Playwright on port 4173 with mocked APIs; install browsers with
-`pnpm --dir src/frontend/app exec playwright install chromium` if needed.
-`pnpm build` type-checks and bundles the backend, builds the Vite SPA directly
-into `dist/public`, and verifies the required production files while preserving
-runtime-owned files in `dist` (`config.yaml`, `files/`, `debug.log`).
+`bun run test` runs backend integration tests under `bun test` and frontend
+unit tests under Vitest. The browser test suite uses Playwright on port 4173
+with mocked APIs; install browsers with
+`bunx playwright install chromium` from `src/frontend/app` if needed.
+`bun run build` type-checks both packages, bundles the backend with `Bun.build`,
+builds the Vite SPA directly into `dist/public`, and verifies the required
+production files while preserving runtime-owned files in `dist` (`config.yaml`,
+`files/`, `debug.log`).
 
 ## Production
 
 ```bash
-pnpm build
+bun run build
 cd dist
-node server.js
+bun server.js
 ```
 
 The production server uses the directory containing `server.js` as its runtime

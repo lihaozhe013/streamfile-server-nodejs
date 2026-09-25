@@ -1,20 +1,25 @@
 {
   "name": "streamfile-server-nodejs",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
+  "packageManager": "bun@1.4.2",
+  "workspaces": [
+    "src/backend",
+    "src/frontend/app"
+  ],
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
-    "format": "pnpm prettier --write .",
-    "install:all": "pnpm i && cd src/backend && pnpm i && cd ../frontend/app && pnpm i",
-    "dev": "node scripts/dev.mjs",
-    "dev:backend": "node scripts/dev-backend.mjs",
-    "dev:frontend": "pnpm --dir src/frontend/app dev",
-    "typecheck": "pnpm --dir src/backend typecheck && pnpm --dir src/frontend/app typecheck",
-    "test": "pnpm --dir src/backend test && pnpm --dir src/frontend/app test",
-    "test:e2e": "pnpm --dir src/frontend/app test:e2e",
-    "build": "uv run build.py"
+    "preinstall": "bunx only-allow bun",
+    "format": "prettier --write .",
+    "dev": "bun scripts/dev.mjs",
+    "dev:backend": "bun scripts/dev-backend.mjs",
+    "dev:frontend": "bun run --cwd src/frontend/app dev",
+    "typecheck": "bun run --cwd src/backend typecheck && bun run --cwd src/frontend/app typecheck",
+    "test": "bun run --cwd src/backend test && bun run --cwd src/frontend/app test",
+    "test:e2e": "bun run --cwd src/frontend/app test:e2e",
+    "build": "bun scripts/build/build.ts"
   },
   "devDependencies": {
-    "prettier": "3.9.6"
+    "prettier": "3.9.9"
   }
 }

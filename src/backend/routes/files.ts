@@ -111,7 +111,7 @@ export async function sendSpaShell(
     await fs.access(runtime.paths.spaShellPath);
   } catch {
     throw new Error(
-      `SPA shell is missing at ${runtime.paths.spaShellPath}. Run pnpm build before starting the production server.`,
+      `SPA shell is missing at ${runtime.paths.spaShellPath}. Run bun run build before starting the production server.`,
     );
   }
   await sendFile(response, runtime.paths.spaShellPath);
