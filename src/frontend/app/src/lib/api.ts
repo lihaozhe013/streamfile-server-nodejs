@@ -3,7 +3,7 @@ import type {
   MarkdownResponse,
   MkdirResponse,
   SearchResponse,
-  UploadResponse,
+  UploadResponse
 } from '@/types';
 import { ApiError } from '@/types';
 
@@ -30,24 +30,16 @@ async function parseResponse<T>(response: Response): Promise<T> {
   return payload as T;
 }
 
-export async function listFiles(
-  filePath: string,
-  signal?: AbortSignal,
-): Promise<FileEntry[]> {
-  const response = await fetch(
-    `/api/list-files?path=${encodeURIComponent(filePath)}`,
-    { signal },
-  );
-  const payload = await parseResponse<FileEntry[] | { files: FileEntry[] }>(
-    response,
-  );
+export async function listFiles(filePath: string, signal?: AbortSignal): Promise<FileEntry[]> {
+  const response = await fetch(`/api/list-files?path=${encodeURIComponent(filePath)}`, { signal });
+  const payload = await parseResponse<FileEntry[] | { files: FileEntry[] }>(response);
   return Array.isArray(payload) ? payload : payload.files;
 }
 
 export async function searchFiles(
   query: string,
   directoryPath: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<SearchResponse> {
   const params = new URLSearchParams({ q: query, dir: directoryPath });
   const response = await fetch(`/api/search?${params.toString()}`, { signal });
@@ -56,24 +48,23 @@ export async function searchFiles(
 
 export async function getMarkdown(
   filePath: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<MarkdownResponse> {
-  const response = await fetch(
-    `/api/markdown-content?path=${encodeURIComponent(filePath)}`,
-    { signal },
-  );
+  const response = await fetch(`/api/markdown-content?path=${encodeURIComponent(filePath)}`, {
+    signal
+  });
   return parseResponse<MarkdownResponse>(response);
 }
 
 export async function createDirectory(
   directoryPath: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<MkdirResponse> {
   const response = await fetch('/api/mkdir', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ path: directoryPath }),
-    signal,
+    signal
   });
   return parseResponse<MkdirResponse>(response);
 }
@@ -82,7 +73,7 @@ export function uploadFile(
   file: File,
   destination: string,
   onProgress: (percentage: number) => void,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<UploadResponse> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();

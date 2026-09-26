@@ -1,10 +1,4 @@
-import {
-  ArrowRight,
-  CloudUpload,
-  FolderOpen,
-  Inbox,
-  ShieldCheck,
-} from 'lucide-react';
+import { ArrowRight, CloudUpload, FolderOpen, Inbox, ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { uploadFile } from '@/lib/api';
@@ -51,7 +45,7 @@ export default function HomePage() {
           target.kind === 'folder' && response.relativePath
             ? `Uploaded to ${response.relativePath}.`
             : response.message || 'File uploaded successfully.',
-        tone: 'success',
+        tone: 'success'
       });
       setSelectedFile(null);
       if (inputRef.current) inputRef.current.value = '';
@@ -59,7 +53,7 @@ export default function HomePage() {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       setToast({
         message: error instanceof Error ? error.message : 'Upload failed.',
-        tone: 'error',
+        tone: 'error'
       });
     } finally {
       setIsUploading(false);
@@ -73,9 +67,8 @@ export default function HomePage() {
           <span className="eyebrow">Your files, beautifully simple</span>
           <h1>A calm place for everything you share.</h1>
           <p>
-            Browse, preview, and upload files from any device on your local
-            network. StreamFile keeps the experience fast without getting in
-            your way.
+            Browse, preview, and upload files from any device on your local network. StreamFile
+            keeps the experience fast without getting in your way.
           </p>
           <div className="hero-actions">
             <Link className="button button-primary" to="/files/">
@@ -134,11 +127,7 @@ export default function HomePage() {
                 value="folder"
                 checked={target.kind === 'folder'}
                 onChange={() => {
-                  setTarget(
-                    target.kind === 'folder'
-                      ? target
-                      : { kind: 'folder', path: '.' },
-                  );
+                  setTarget(target.kind === 'folder' ? target : { kind: 'folder', path: '.' });
                   setIsPickerOpen(true);
                 }}
               />
@@ -193,9 +182,7 @@ export default function HomePage() {
             <span className="drop-icon">
               <CloudUpload aria-hidden="true" size={28} />
             </span>
-            <strong>
-              {selectedFile ? selectedFile.name : 'Drop a file here'}
-            </strong>
+            <strong>{selectedFile ? selectedFile.name : 'Drop a file here'}</strong>
             <span>
               {selectedFile
                 ? formatFileSize(selectedFile.size)
@@ -210,10 +197,7 @@ export default function HomePage() {
                 <span>{progress}%</span>
               </div>
               <div className="progress-track">
-                <div
-                  className="progress-value"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="progress-value" style={{ width: `${progress}%` }} />
               </div>
             </div>
           )}
@@ -236,8 +220,8 @@ export default function HomePage() {
             <FolderOpen aria-hidden="true" size={24} />
           </div>
           <p>
-            Jump into your files with a responsive browser, fast search, and
-            previews for the formats you use most.
+            Jump into your files with a responsive browser, fast search, and previews for the
+            formats you use most.
           </p>
           <Link className="button button-secondary button-full" to="/files/">
             Browse files
@@ -248,9 +232,7 @@ export default function HomePage() {
 
       {isPickerOpen && (
         <DirectoryPickerDialog
-          initialPath={
-            target.kind === 'folder' && target.path !== '.' ? target.path : ''
-          }
+          initialPath={target.kind === 'folder' && target.path !== '.' ? target.path : ''}
           onClose={() => setIsPickerOpen(false)}
           onSelect={(directoryPath) => {
             setTarget({ kind: 'folder', path: directoryPath });

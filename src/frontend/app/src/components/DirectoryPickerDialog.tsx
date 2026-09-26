@@ -18,7 +18,7 @@ function joinPath(base: string, name: string): string {
 export default function DirectoryPickerDialog({
   initialPath,
   onClose,
-  onSelect,
+  onSelect
 }: DirectoryPickerDialogProps) {
   const [currentPath, setCurrentPath] = useState(initialPath);
   const [directories, setDirectories] = useState<string[]>([]);
@@ -38,15 +38,13 @@ export default function DirectoryPickerDialog({
           entries
             .filter((entry) => entry.isDirectory)
             .map((entry) => entry.name)
-            .sort((left, right) => left.localeCompare(right)),
+            .sort((left, right) => left.localeCompare(right))
         );
       })
       .catch((cause: unknown) => {
         if (cancelled) return;
         setDirectories([]);
-        setError(
-          cause instanceof Error ? cause.message : 'Failed to load folders',
-        );
+        setError(cause instanceof Error ? cause.message : 'Failed to load folders');
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -74,9 +72,7 @@ export default function DirectoryPickerDialog({
       setNewFolderName('');
       setCurrentPath(joinPath(currentPath, name));
     } catch (cause: unknown) {
-      setError(
-        cause instanceof Error ? cause.message : 'Failed to create folder',
-      );
+      setError(cause instanceof Error ? cause.message : 'Failed to create folder');
     } finally {
       setIsCreating(false);
     }
@@ -96,11 +92,7 @@ export default function DirectoryPickerDialog({
         <div className="dialog-heading">
           <span className="panel-kicker">Upload folder</span>
           <h2>Choose a destination</h2>
-          <button
-            className="icon-button"
-            onClick={onClose}
-            aria-label="Close folder picker"
-          >
+          <button className="icon-button" onClick={onClose} aria-label="Close folder picker">
             <X aria-hidden="true" size={18} />
           </button>
         </div>

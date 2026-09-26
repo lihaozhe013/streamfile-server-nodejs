@@ -1,23 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import {
-  decodeFilePath,
-  directoryHref,
-  encodeFilePath,
-  fileHref,
-  getFileKind,
-} from '@/lib/paths';
+import { decodeFilePath, directoryHref, encodeFilePath, fileHref, getFileKind } from '@/lib/paths';
 
 describe('file path utilities', () => {
   it('encodes each path segment without encoding separators', () => {
     expect(encodeFilePath('中文 folder/report final.md')).toBe(
-      '%E4%B8%AD%E6%96%87%20folder/report%20final.md',
+      '%E4%B8%AD%E6%96%87%20folder/report%20final.md'
     );
   });
 
   it('decodes encoded nested paths', () => {
-    expect(
-      decodeFilePath('%E4%B8%AD%E6%96%87%20folder/report%20final.md'),
-    ).toBe('中文 folder/report final.md');
+    expect(decodeFilePath('%E4%B8%AD%E6%96%87%20folder/report%20final.md')).toBe(
+      '中文 folder/report final.md'
+    );
   });
 
   it('creates stable file and directory URLs', () => {

@@ -4,7 +4,7 @@ import {
   isAccessibleFilePath,
   isIncomingPath,
   isPrivatePath,
-  isWithinDirectory,
+  isWithinDirectory
 } from '@/services/files';
 
 function escapeGlobLiteral(value: string): string {
@@ -15,10 +15,7 @@ function buildCandidatePattern(fileName: string): string {
   return `**/*${escapeGlobLiteral(fileName)}*`;
 }
 
-async function scanCandidates(
-  fileName: string,
-  searchPath: string,
-): Promise<string[]> {
+async function scanCandidates(fileName: string, searchPath: string): Promise<string[]> {
   const glob = new Bun.Glob(buildCandidatePattern(fileName));
   const matches = new Set<string>();
   try {
@@ -27,7 +24,7 @@ async function scanCandidates(
       absolute: true,
       onlyFiles: false,
       dot: false,
-      followSymlinks: false,
+      followSymlinks: false
     })) {
       matches.add(entry);
     }
@@ -42,15 +39,13 @@ async function scanCandidates(
 export async function searchFilesInPath(
   fileName: string,
   searchPath: string,
-  paths: RuntimePaths,
+  paths: RuntimePaths
 ): Promise<SearchResult[]> {
   const entries = await scanCandidates(fileName, searchPath);
 
   const query = fileName.toLowerCase();
   const candidates = entries
-    .filter((absolutePath) =>
-      path.basename(absolutePath).toLowerCase().includes(query),
-    )
+    .filter((absolutePath) => path.basename(absolutePath).toLowerCase().includes(query))
     .filter((absolutePath) => {
       const relativePath = path.relative(paths.filesDir, absolutePath);
       return (
@@ -63,23 +58,16 @@ export async function searchFilesInPath(
 
   const results = await Promise.all(
     candidates.map(async (absolutePath) => {
-      if (
-        !(await isAccessibleFilePath(paths.filesDir, absolutePath, [
-          paths.incomingDir,
-        ]))
-      ) {
+      if (!(await isAccessibleFilePath(paths.filesDir, absolutePath, [paths.incomingDir]))) {
         return null;
       }
 
       return {
         file_name: path.basename(absolutePath),
         file_path: absolutePath,
-        relative_path: path
-          .relative(paths.filesDir, absolutePath)
-          .split(path.sep)
-          .join('/'),
+        relative_path: path.relative(paths.filesDir, absolutePath).split(path.sep).join('/')
       };
-    }),
+    })
   );
 
   return results.filter((result): result is SearchResult => result !== null);

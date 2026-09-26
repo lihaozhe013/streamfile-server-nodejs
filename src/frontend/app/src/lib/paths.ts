@@ -11,7 +11,7 @@ const mediaExtensions = new Set([
   'ogg',
   'm4a',
   'flac',
-  'aac',
+  'aac'
 ]);
 
 const imageExtensions = new Set([
@@ -32,7 +32,7 @@ const imageExtensions = new Set([
   'pjp',
   'raw',
   'heic',
-  'heif',
+  'heif'
 ]);
 
 export type FileKind = 'markdown' | 'media' | 'image' | 'resource';
@@ -68,9 +68,7 @@ export function getFileKind(filePath: string): FileKind {
 }
 
 export function isAudioPath(filePath: string): boolean {
-  return new Set(['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac']).has(
-    getFileExtension(filePath),
-  );
+  return new Set(['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac']).has(getFileExtension(filePath));
 }
 
 export function fileHref(filePath: string, raw = false): string {

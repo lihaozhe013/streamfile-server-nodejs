@@ -9,11 +9,7 @@ interface UploadDialogProps {
   onUploaded: (relativePath: string) => void;
 }
 
-export default function UploadDialog({
-  destination,
-  onClose,
-  onUploaded,
-}: UploadDialogProps) {
+export default function UploadDialog({ destination, onClose, onUploaded }: UploadDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -39,9 +35,7 @@ export default function UploadDialog({
       onUploaded(response.relativePath ?? selectedFile.name);
       onClose();
     } catch (cause: unknown) {
-      setError(
-        cause instanceof Error ? cause.message : 'Failed to upload the file',
-      );
+      setError(cause instanceof Error ? cause.message : 'Failed to upload the file');
     } finally {
       setIsUploading(false);
     }
@@ -89,17 +83,13 @@ export default function UploadDialog({
               ref={inputRef}
               type="file"
               className="visually-hidden"
-              onChange={(event) =>
-                setSelectedFile(event.target.files?.[0] ?? null)
-              }
+              onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
               disabled={isUploading}
             />
             <span className="drop-icon">
               <CloudUpload aria-hidden="true" size={28} />
             </span>
-            <strong>
-              {selectedFile ? selectedFile.name : 'Click to choose a file'}
-            </strong>
+            <strong>{selectedFile ? selectedFile.name : 'Click to choose a file'}</strong>
             <span>{selectedFile ? `${selectedFile.size} bytes` : ''}</span>
           </div>
 
@@ -110,10 +100,7 @@ export default function UploadDialog({
                 <span>{progress}%</span>
               </div>
               <div className="progress-track">
-                <div
-                  className="progress-value"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="progress-value" style={{ width: `${progress}%` }} />
               </div>
             </div>
           )}

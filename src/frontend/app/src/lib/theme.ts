@@ -5,22 +5,18 @@ const STORAGE_KEY = 'streamfile-theme';
 
 export const THEME_META_COLOR: Record<ResolvedTheme, string> = {
   light: '#f6f8fb',
-  dark: '#0b1120',
+  dark: '#0b1120'
 };
 
 export function getStoredPreference(): ThemePreference {
   if (typeof window === 'undefined') return 'system';
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === 'light' || stored === 'dark' || stored === 'system'
-    ? stored
-    : 'system';
+  return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
 }
 
 function resolveSystemTheme(): ResolvedTheme {
   if (typeof window === 'undefined') return 'dark';
-  return window.matchMedia('(prefers-color-scheme: light)').matches
-    ? 'light'
-    : 'dark';
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
 
 export function resolveTheme(preference: ThemePreference): ResolvedTheme {

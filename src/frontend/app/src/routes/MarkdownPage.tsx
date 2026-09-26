@@ -13,20 +13,15 @@ interface MarkdownPageProps {
 export default function MarkdownPage({ data }: MarkdownPageProps) {
   const [tocOpen, setTocOpen] = useState(false);
   const [activeHeading, setActiveHeading] = useState('');
-  const headings = useMemo(
-    () => extractHeadings(data.markdown.content),
-    [data.markdown.content],
-  );
+  const headings = useMemo(() => extractHeadings(data.markdown.content), [data.markdown.content]);
   const content = useMemo(
     () => processRelativePaths(data.markdown.content, data.path),
-    [data.markdown.content, data.path],
+    [data.markdown.content, data.path]
   );
 
   useEffect(() => {
     if (!headings.length) return;
-    const elements = headings
-      .map((heading) => document.getElementById(heading.id))
-      .filter(Boolean);
+    const elements = headings.map((heading) => document.getElementById(heading.id)).filter(Boolean);
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -34,7 +29,7 @@ export default function MarkdownPage({ data }: MarkdownPageProps) {
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
         if (visible[0]?.target.id) setActiveHeading(visible[0].target.id);
       },
-      { rootMargin: '-96px 0px -70% 0px', threshold: 0 },
+      { rootMargin: '-96px 0px -70% 0px', threshold: 0 }
     );
     elements.forEach((element) => element && observer.observe(element));
     return () => observer.disconnect();
@@ -46,9 +41,7 @@ export default function MarkdownPage({ data }: MarkdownPageProps) {
         <Link
           className="button button-secondary"
           to={
-            parentDirectoryPath(data.path)
-              ? `/files/${parentDirectoryPath(data.path)}/`
-              : '/files/'
+            parentDirectoryPath(data.path) ? `/files/${parentDirectoryPath(data.path)}/` : '/files/'
           }
         >
           <ArrowLeft aria-hidden="true" size={17} />
@@ -58,10 +51,7 @@ export default function MarkdownPage({ data }: MarkdownPageProps) {
           <span className="eyebrow">Markdown document</span>
           <h1>{data.markdown.filename}</h1>
         </div>
-        <button
-          className="button button-secondary toc-toggle"
-          onClick={() => setTocOpen(true)}
-        >
+        <button className="button button-secondary toc-toggle" onClick={() => setTocOpen(true)}>
           <List aria-hidden="true" size={17} />
           Contents
         </button>
@@ -81,11 +71,7 @@ export default function MarkdownPage({ data }: MarkdownPageProps) {
       </div>
 
       {tocOpen && (
-        <div
-          className="toc-overlay"
-          role="presentation"
-          onClick={() => setTocOpen(false)}
-        >
+        <div className="toc-overlay" role="presentation" onClick={() => setTocOpen(false)}>
           <aside
             className="toc-drawer"
             role="dialog"
@@ -117,7 +103,7 @@ export default function MarkdownPage({ data }: MarkdownPageProps) {
 function TableOfContents({
   headings,
   activeHeading,
-  onSelect,
+  onSelect
 }: {
   headings: ReturnType<typeof extractHeadings>;
   activeHeading: string;
@@ -128,9 +114,7 @@ function TableOfContents({
     <nav className="toc-nav">
       {headings.map((heading) => (
         <a
-          className={
-            activeHeading === heading.id ? 'toc-link active' : 'toc-link'
-          }
+          className={activeHeading === heading.id ? 'toc-link active' : 'toc-link'}
           style={{ paddingLeft: `${12 + (heading.level - 1) * 14}px` }}
           href={`#${heading.id}`}
           key={heading.id}

@@ -15,9 +15,7 @@ interface Fixture {
 }
 
 async function createFixture(): Promise<Fixture> {
-  const rootDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'streamfile-backend-'),
-  );
+  const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'streamfile-backend-'));
   const publicDir = path.join(rootDir, 'public');
   const filesDir = path.join(rootDir, 'files');
   const incomingDir = path.join(filesDir, 'incoming');
@@ -29,7 +27,7 @@ async function createFixture(): Promise<Fixture> {
     incomingDir,
     privateDir,
     spaShellPath: path.join(publicDir, 'index.html'),
-    notFoundPath: path.join(publicDir, '404-index.html'),
+    notFoundPath: path.join(publicDir, '404-index.html')
   };
 
   await fs.mkdir(publicDir, { recursive: true });
@@ -40,37 +38,28 @@ async function createFixture(): Promise<Fixture> {
   await fs.writeFile(paths.spaShellPath, '<!doctype html><title>SPA</title>');
   await fs.writeFile(paths.notFoundPath, '<!doctype html><title>404</title>');
   await fs.writeFile(path.join(publicDir, 'icons', 'server.svg'), '<svg />');
-  await fs.writeFile(
-    path.join(filesDir, 'folder', 'hello world.md'),
-    '# Hello world\n',
-  );
+  await fs.writeFile(path.join(filesDir, 'folder', 'hello world.md'), '# Hello world\n');
   await fs.writeFile(path.join(filesDir, 'folder', 'clip.mp4'), 'media');
   await fs.writeFile(path.join(filesDir, 'folder', 'note.txt'), 'plain text');
   await fs.writeFile(
     path.join(filesDir, 'folder', 'custom', 'index.html'),
-    '<!doctype html><title>Custom</title>',
+    '<!doctype html><title>Custom</title>'
   );
-  await fs.writeFile(
-    path.join(filesDir, 'private-files', 'secret.txt'),
-    'secret',
-  );
-  await fs.writeFile(
-    path.join(filesDir, 'incoming-evil', 'visible.txt'),
-    'visible',
-  );
+  await fs.writeFile(path.join(filesDir, 'private-files', 'secret.txt'), 'secret');
+  await fs.writeFile(path.join(filesDir, 'incoming-evil', 'visible.txt'), 'visible');
   await fs.writeFile(path.join(filesDir, '.hidden'), 'hidden');
 
   const runtime: RuntimeConfig = {
     server: { host: '127.0.0.1', port: 0 },
     paths,
-    configPath: path.join(rootDir, 'config.yaml'),
+    configPath: path.join(rootDir, 'config.yaml')
   };
   await ensureRuntimeDirectories(runtime);
   return { rootDir, paths, runtime };
 }
 
 async function withServer(
-  callback: (baseUrl: string, fixture: Fixture) => Promise<void>,
+  callback: (baseUrl: string, fixture: Fixture) => Promise<void>
 ): Promise<void> {
   const fixture = await createFixture();
   const server = createApp(fixture.runtime).listen(0, '127.0.0.1');
@@ -110,21 +99,15 @@ test('lists public files and serves SPA, raw, custom, and private URLs', async (
     assert.equal(rootIconResponse.status, 200);
     assert.equal(await rootIconResponse.text(), '<svg />');
 
-    const publicIconResponse = await fetch(
-      `${baseUrl}/public/icons/server.svg`,
-    );
+    const publicIconResponse = await fetch(`${baseUrl}/public/icons/server.svg`);
     assert.equal(publicIconResponse.status, 200);
     assert.equal(await publicIconResponse.text(), '<svg />');
 
-    const markdownResponse = await fetch(
-      `${baseUrl}/files/folder/hello%20world.md`,
-    );
+    const markdownResponse = await fetch(`${baseUrl}/files/folder/hello%20world.md`);
     assert.equal(markdownResponse.status, 200);
     assert.match(await markdownResponse.text(), /<title>SPA<\/title>/);
 
-    const rawResponse = await fetch(
-      `${baseUrl}/files/folder/hello%20world.md?raw=1`,
-    );
+    const rawResponse = await fetch(`${baseUrl}/files/folder/hello%20world.md?raw=1`);
     assert.equal(rawResponse.status, 200);
     assert.equal(await rawResponse.text(), '# Hello world\n');
 
@@ -136,15 +119,11 @@ test('lists public files and serves SPA, raw, custom, and private URLs', async (
     assert.equal(customResponse.status, 200);
     assert.match(await customResponse.text(), /<title>Custom<\/title>/);
 
-    const privateResponse = await fetch(
-      `${baseUrl}/files/private-files/secret.txt?raw=1`,
-    );
+    const privateResponse = await fetch(`${baseUrl}/files/private-files/secret.txt?raw=1`);
     assert.equal(privateResponse.status, 200);
     assert.equal(await privateResponse.text(), 'secret');
 
-    const incomingResponse = await fetch(
-      `${baseUrl}/files/incoming/index.html?raw=1`,
-    );
+    const incomingResponse = await fetch(`${baseUrl}/files/incoming/index.html?raw=1`);
     assert.equal(incomingResponse.status, 403);
 
     const missingResponse = await fetch(`${baseUrl}/files/missing.txt`);
@@ -159,18 +138,13 @@ test('reports a clear error when the SPA shell is missing', async () => {
 
     const response = await fetch(`${baseUrl}/`);
     assert.equal(response.status, 500);
-    assert.match(
-      (await response.json()).error,
-      /SPA shell is missing.*Run bun run build/,
-    );
+    assert.match((await response.json()).error, /SPA shell is missing.*Run bun run build/);
   });
 });
 
 test('supports nested paths, markdown API, and legacy search URLs', async () => {
   await withServer(async (baseUrl) => {
-    const directoryResponse = await fetch(
-      `${baseUrl}/api/list-files?path=folder`,
-    );
+    const directoryResponse = await fetch(`${baseUrl}/api/list-files?path=folder`);
     assert.equal(directoryResponse.status, 200);
     const directoryEntries = (await directoryResponse.json()) as Array<{
       name: string;
@@ -178,22 +152,20 @@ test('supports nested paths, markdown API, and legacy search URLs', async () => 
     }>;
     assert.equal(
       directoryEntries.some((entry) => entry.name === 'hello world.md'),
-      true,
+      true
     );
 
     const markdownResponse = await fetch(
-      `${baseUrl}/api/markdown-content?path=${encodeURIComponent('folder/hello world.md')}`,
+      `${baseUrl}/api/markdown-content?path=${encodeURIComponent('folder/hello world.md')}`
     );
     assert.equal(markdownResponse.status, 200);
     assert.deepEqual(await markdownResponse.json(), {
       content: '# Hello world\n',
       filename: 'hello world.md',
-      path: 'folder/hello world.md',
+      path: 'folder/hello world.md'
     });
 
-    const searchResponse = await fetch(
-      `${baseUrl}/api/search?q=hello&dir=folder`,
-    );
+    const searchResponse = await fetch(`${baseUrl}/api/search?q=hello&dir=folder`);
     assert.equal(searchResponse.status, 200);
     const searchPayload = (await searchResponse.json()) as {
       count: number;
@@ -202,9 +174,7 @@ test('supports nested paths, markdown API, and legacy search URLs', async () => 
     assert.equal(searchPayload.count, 1);
     assert.equal(searchPayload.results[0]?.file_name, 'hello world.md');
 
-    const legacyResponse = await fetch(
-      `${baseUrl}/api/search/file_name=hello/current_dir=folder`,
-    );
+    const legacyResponse = await fetch(`${baseUrl}/api/search/file_name=hello/current_dir=folder`);
     assert.equal(legacyResponse.status, 200);
     assert.equal((await legacyResponse.json()).count, 1);
   });
@@ -213,18 +183,14 @@ test('supports nested paths, markdown API, and legacy search URLs', async () => 
 test('supports file symlinks without following directory symlinks', async (t) => {
   await withServer(async (baseUrl, fixture) => {
     const traversalResponse = await fetch(
-      `${baseUrl}/api/list-files?path=${encodeURIComponent('../outside')}`,
+      `${baseUrl}/api/list-files?path=${encodeURIComponent('../outside')}`
     );
     assert.equal(traversalResponse.status, 400);
 
-    const privateListResponse = await fetch(
-      `${baseUrl}/api/list-files?path=private-files`,
-    );
+    const privateListResponse = await fetch(`${baseUrl}/api/list-files?path=private-files`);
     assert.equal(privateListResponse.status, 403);
 
-    const incomingListResponse = await fetch(
-      `${baseUrl}/api/list-files?path=incoming`,
-    );
+    const incomingListResponse = await fetch(`${baseUrl}/api/list-files?path=incoming`);
     assert.equal(incomingListResponse.status, 403);
 
     const outsideMedia = path.join(fixture.rootDir, 'outside-clip.mp4');
@@ -257,15 +223,15 @@ test('supports file symlinks without following directory symlinks', async (t) =>
     }>;
     assert.deepEqual(
       entries.find((entry) => entry.name === 'linked-clip.mp4'),
-      { name: 'linked-clip.mp4', isDirectory: false },
+      { name: 'linked-clip.mp4', isDirectory: false }
     );
     assert.equal(
       entries.some((entry) => entry.name === 'linked-directory'),
-      false,
+      false
     );
     assert.equal(
       entries.some((entry) => entry.name === 'broken.mp4'),
-      false,
+      false
     );
 
     const mediaPageResponse = await fetch(`${baseUrl}/files/linked-clip.mp4`);
@@ -274,25 +240,18 @@ test('supports file symlinks without following directory symlinks', async (t) =>
 
     const mediaResponse = await fetch(`${baseUrl}/files/linked-clip.mp4?raw=1`);
     assert.equal(mediaResponse.status, 200);
-    assert.match(
-      mediaResponse.headers.get('content-type') ?? '',
-      /^video\/mp4/,
-    );
+    assert.match(mediaResponse.headers.get('content-type') ?? '', /^video\/mp4/);
     assert.equal(await mediaResponse.text(), 'external media');
 
-    const markdownResponse = await fetch(
-      `${baseUrl}/api/markdown-content?path=linked-note.md`,
-    );
+    const markdownResponse = await fetch(`${baseUrl}/api/markdown-content?path=linked-note.md`);
     assert.equal(markdownResponse.status, 200);
     assert.deepEqual(await markdownResponse.json(), {
       content: '# External note\n',
       filename: 'linked-note.md',
-      path: 'linked-note.md',
+      path: 'linked-note.md'
     });
 
-    const searchResponse = await fetch(
-      `${baseUrl}/api/search?q=linked-clip&dir=`,
-    );
+    const searchResponse = await fetch(`${baseUrl}/api/search?q=linked-clip&dir=`);
     assert.equal(searchResponse.status, 200);
     assert.equal((await searchResponse.json()).count, 1);
 
@@ -307,28 +266,22 @@ test('uploads Unicode filenames and reports malformed uploads', async () => {
     form.append('file', new Blob(['upload content']), '中文 文件.txt');
     const uploadResponse = await fetch(`${baseUrl}/upload`, {
       method: 'POST',
-      body: form,
+      body: form
     });
     assert.equal(uploadResponse.status, 200);
-    assert.equal(
-      (await uploadResponse.json()).message,
-      'File uploaded successfully!',
-    );
+    assert.equal((await uploadResponse.json()).message, 'File uploaded successfully!');
 
     const uploadedNames = await fs.readdir(fixture.paths.incomingDir);
     const uploadedName = uploadedNames.find((name) => name !== 'index.html');
     assert.equal(uploadedName, '中文 文件.txt');
     assert.equal(
-      await fs.readFile(
-        path.join(fixture.paths.incomingDir, uploadedName),
-        'utf8',
-      ),
-      'upload content',
+      await fs.readFile(path.join(fixture.paths.incomingDir, uploadedName), 'utf8'),
+      'upload content'
     );
 
     const malformedResponse = await fetch(`${baseUrl}/upload`, {
       method: 'POST',
-      body: new FormData(),
+      body: new FormData()
     });
     assert.equal(malformedResponse.status, 400);
   });
@@ -338,7 +291,7 @@ async function uploadTo(
   baseUrl: string,
   fileName: string,
   content: string,
-  destination?: string,
+  destination?: string
 ): Promise<Response> {
   const form = new FormData();
   if (destination !== undefined) form.append('destination', destination);
@@ -359,11 +312,8 @@ test('uploads to visible directories and auto-renames collisions', async () => {
     assert.equal(firstBody.relativePath, 'folder/greeting.txt');
     assert.equal(firstBody.url, '/files/folder/greeting.txt');
     assert.equal(
-      await fs.readFile(
-        path.join(fixture.paths.filesDir, 'folder', 'greeting.txt'),
-        'utf8',
-      ),
-      'hello',
+      await fs.readFile(path.join(fixture.paths.filesDir, 'folder', 'greeting.txt'), 'utf8'),
+      'hello'
     );
 
     const second = await uploadTo(baseUrl, 'greeting.txt', 'again', 'folder');
@@ -371,19 +321,11 @@ test('uploads to visible directories and auto-renames collisions', async () => {
     const secondBody = (await second.json()) as { relativePath: string };
     assert.equal(secondBody.relativePath, 'folder/greeting (1).txt');
     assert.equal(
-      await fs.readFile(
-        path.join(fixture.paths.filesDir, 'folder', 'greeting.txt'),
-        'utf8',
-      ),
-      'hello',
+      await fs.readFile(path.join(fixture.paths.filesDir, 'folder', 'greeting.txt'), 'utf8'),
+      'hello'
     );
 
-    const nested = await uploadTo(
-      baseUrl,
-      '中文 文件.bin',
-      'bytes',
-      'sub dir/中文',
-    );
+    const nested = await uploadTo(baseUrl, '中文 文件.bin', 'bytes', 'sub dir/中文');
     assert.equal(nested.status, 200);
     const nestedBody = (await nested.json()) as {
       relativePath: string;
@@ -392,14 +334,14 @@ test('uploads to visible directories and auto-renames collisions', async () => {
     assert.equal(nestedBody.relativePath, 'sub dir/中文/中文 文件.bin');
     assert.equal(
       nestedBody.url,
-      '/files/sub%20dir/%E4%B8%AD%E6%96%87/%E4%B8%AD%E6%96%87%20%E6%96%87%E4%BB%B6.bin',
+      '/files/sub%20dir/%E4%B8%AD%E6%96%87/%E4%B8%AD%E6%96%87%20%E6%96%87%E4%BB%B6.bin'
     );
     assert.equal(
       await fs.readFile(
         path.join(fixture.paths.filesDir, 'sub dir', '中文', '中文 文件.bin'),
-        'utf8',
+        'utf8'
       ),
-      'bytes',
+      'bytes'
     );
 
     const root = await uploadTo(baseUrl, 'root-file.txt', 'top', '.');
@@ -407,11 +349,8 @@ test('uploads to visible directories and auto-renames collisions', async () => {
     const rootBody = (await root.json()) as { relativePath: string };
     assert.equal(rootBody.relativePath, 'root-file.txt');
     assert.equal(
-      await fs.readFile(
-        path.join(fixture.paths.filesDir, 'root-file.txt'),
-        'utf8',
-      ),
-      'top',
+      await fs.readFile(path.join(fixture.paths.filesDir, 'root-file.txt'), 'utf8'),
+      'top'
     );
 
     const inbox = await uploadTo(baseUrl, 'inbox-only.txt', 'hidden', '');
@@ -429,18 +368,14 @@ test('uploads to visible directories and auto-renames collisions', async () => {
       'greeting (1).txt',
       'greeting.txt',
       'hello world.md',
-      'note.txt',
+      'note.txt'
     ]);
   });
 });
 
 test('rejects traversal, protected, and hidden upload destinations', async () => {
   await withServer(async (baseUrl, fixture) => {
-    await fs.symlink(
-      fixture.rootDir,
-      path.join(fixture.paths.filesDir, 'link-out'),
-      'dir',
-    );
+    await fs.symlink(fixture.rootDir, path.join(fixture.paths.filesDir, 'link-out'), 'dir');
 
     const invalidDestinations = [
       '../escape',
@@ -451,20 +386,11 @@ test('rejects traversal, protected, and hidden upload destinations', async () =>
       'private-files/sub',
       '.hidden/sub',
       'sub/.hidden',
-      'link-out/outside',
+      'link-out/outside'
     ];
     for (const destination of invalidDestinations) {
-      const response = await uploadTo(
-        baseUrl,
-        'rejected.txt',
-        'nope',
-        destination,
-      );
-      assert.equal(
-        response.status,
-        400,
-        `destination "${destination}" should be rejected`,
-      );
+      const response = await uploadTo(baseUrl, 'rejected.txt', 'nope', destination);
+      assert.equal(response.status, 400, `destination "${destination}" should be rejected`);
       assert.equal((await response.json()).error, 'Invalid upload destination');
     }
 
@@ -472,7 +398,7 @@ test('rejects traversal, protected, and hidden upload destinations', async () =>
     assert.deepEqual(
       stagedNames.filter((name) => name !== 'index.html'),
       [],
-      'rejected uploads must not linger in staging',
+      'rejected uploads must not linger in staging'
     );
     await assert.rejects(fs.stat(path.join(fixture.paths.filesDir, 'escape')));
   });
@@ -484,14 +410,14 @@ test('creates visible directories through the mkdir API', async () => {
       fetch(`${baseUrl}/api/mkdir`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(body)
       });
 
     const created = await mkdir({ path: 'a/b c' });
     assert.equal(created.status, 200);
     assert.deepEqual(await created.json(), {
       created: true,
-      relativePath: 'a/b c',
+      relativePath: 'a/b c'
     });
     const stats = await fs.stat(path.join(fixture.paths.filesDir, 'a', 'b c'));
     assert.equal(stats.isDirectory(), true);
@@ -512,14 +438,10 @@ test('creates visible directories through the mkdir API', async () => {
       'a/.hidden',
       '../escape',
       '',
-      '.',
+      '.'
     ]) {
       const response = await mkdir({ path: rejectedPath });
-      assert.equal(
-        response.status,
-        400,
-        `path "${rejectedPath}" should be rejected`,
-      );
+      assert.equal(response.status, 400, `path "${rejectedPath}" should be rejected`);
     }
 
     assert.equal((await mkdir({})).status, 400);
@@ -527,7 +449,7 @@ test('creates visible directories through the mkdir API', async () => {
 
     const listResponse = await fetch(`${baseUrl}/api/list-files`);
     const names = ((await listResponse.json()) as Array<{ name: string }>).map(
-      (entry) => entry.name,
+      (entry) => entry.name
     );
     assert.ok(names.includes('a'));
   });
@@ -538,7 +460,7 @@ test('keeps API 404s separate from the SPA fallback', async () => {
     const apiResponse = await fetch(`${baseUrl}/api/does-not-exist`);
     assert.equal(apiResponse.status, 404);
     assert.deepEqual(await apiResponse.json(), {
-      error: 'API endpoint not found',
+      error: 'API endpoint not found'
     });
 
     const spaResponse = await fetch(`${baseUrl}/client/deep/link`);

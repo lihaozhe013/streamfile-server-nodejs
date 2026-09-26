@@ -5,7 +5,7 @@ import {
   Folder,
   Music2,
   Play,
-  SquareArrowOutUpRight,
+  SquareArrowOutUpRight
 } from 'lucide-react';
 import { getFileKind } from '@/lib/paths';
 
@@ -20,8 +20,8 @@ export default function FileIcon({ name, isDirectory = false }: FileIconProps) {
   const kind = getFileKind(name);
   if (kind === 'markdown') return <FileText aria-hidden="true" size={21} />;
   if (kind === 'media') {
-    const isAudio = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'].some(
-      (extension) => name.toLowerCase().endsWith(`.${extension}`),
+    const isAudio = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'].some((extension) =>
+      name.toLowerCase().endsWith(`.${extension}`)
     );
     return isAudio ? (
       <Music2 aria-hidden="true" size={21} />

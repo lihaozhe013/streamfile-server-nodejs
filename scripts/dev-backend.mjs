@@ -4,10 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-const projectDirectory = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '..',
-);
+const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 await ensureDevSpaShell(projectDirectory);
 
@@ -15,7 +12,7 @@ const child = spawn('bun', ['run', 'dev'], {
   cwd: path.join(projectDirectory, 'src', 'backend'),
   env: { ...process.env, STREAMFILE_ROOT_DIR: projectDirectory },
   stdio: 'inherit',
-  shell: true,
+  shell: true
 });
 
 let shuttingDown = false;
@@ -49,11 +46,7 @@ async function ensureDevSpaShell(rootDir) {
       await fs.access(filePath);
     } catch {
       await fs.mkdir(publicDir, { recursive: true });
-      await fs.writeFile(
-        filePath,
-        '<!-- Development SPA shell stub -->\n',
-        'utf-8',
-      );
+      await fs.writeFile(filePath, '<!-- Development SPA shell stub -->\n', 'utf-8');
       console.log(`[backend_dev] Created stub public/${name} for development`);
     }
   }

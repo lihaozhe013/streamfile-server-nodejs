@@ -37,9 +37,7 @@ export default function AppShell() {
 
           <nav className={`main-nav ${mobileMenuOpen ? 'main-nav-open' : ''}`}>
             <Link
-              className={
-                location.pathname === '/' ? 'nav-link active' : 'nav-link'
-              }
+              className={location.pathname === '/' ? 'nav-link active' : 'nav-link'}
               to="/"
               onClick={closeMenu}
             >
@@ -47,22 +45,14 @@ export default function AppShell() {
               Home
             </Link>
             <Link
-              className={
-                location.pathname.startsWith('/files')
-                  ? 'nav-link active'
-                  : 'nav-link'
-              }
+              className={location.pathname.startsWith('/files') ? 'nav-link active' : 'nav-link'}
               to="/files/"
               onClick={closeMenu}
             >
               <HardDrive aria-hidden="true" size={17} />
               Browse files
             </Link>
-            <Link
-              className="nav-link nav-upload"
-              to="/#upload"
-              onClick={closeMenu}
-            >
+            <Link className="nav-link nav-upload" to="/#upload" onClick={closeMenu}>
               <Upload aria-hidden="true" size={17} />
               Upload
             </Link>

@@ -8,7 +8,7 @@ import {
   isPrivatePath,
   isSafeExistingPath,
   listPublicDirectory,
-  resolveWithinDirectory,
+  resolveWithinDirectory
 } from '@/services/files';
 import { searchFilesInPath } from '@/services/search';
 import { createVisibleDirectory } from '@/services/upload';
@@ -35,50 +35,35 @@ export function createApiRouter(runtime: RuntimeConfig) {
         return;
       }
       if (path.extname(fullPath).toLowerCase() !== '.md') {
-        response
-          .status(404)
-          .json({ error: 'File not found or not a markdown file' });
+        response.status(404).json({ error: 'File not found or not a markdown file' });
         return;
       }
 
       if (
-        !(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, [
-          runtime.paths.incomingDir,
-        ]))
+        !(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, [runtime.paths.incomingDir]))
       ) {
-        response
-          .status(404)
-          .json({ error: 'File not found or not a markdown file' });
+        response.status(404).json({ error: 'File not found or not a markdown file' });
         return;
       }
 
       response.json({
         content: await fs.readFile(fullPath, 'utf8'),
         filename: path.basename(fullPath),
-        path: path
-          .relative(runtime.paths.filesDir, fullPath)
-          .split(path.sep)
-          .join('/'),
+        path: path.relative(runtime.paths.filesDir, fullPath).split(path.sep).join('/')
       });
-    }),
+    })
   );
 
   router.get(
     '/api/list-files',
     asyncHandler(async (request, response) => {
       const relativePath = getQueryString(request, 'path') ?? '';
-      const fullPath = resolveWithinDirectory(
-        runtime.paths.filesDir,
-        relativePath,
-      );
+      const fullPath = resolveWithinDirectory(runtime.paths.filesDir, relativePath);
       if (!fullPath) {
         response.status(400).json({ error: 'Invalid path' });
         return;
       }
-      if (
-        isIncomingPath(runtime.paths, fullPath) ||
-        isPrivatePath(runtime.paths, fullPath)
-      ) {
+      if (isIncomingPath(runtime.paths, fullPath) || isPrivatePath(runtime.paths, fullPath)) {
         response.status(403).json({ error: 'Access denied' });
         return;
       }
@@ -88,7 +73,7 @@ export function createApiRouter(runtime: RuntimeConfig) {
       }
 
       response.json(await listPublicDirectory(fullPath, runtime.paths));
-    }),
+    })
   );
 
   const searchHandler = asyncHandler(async (request, response) => {
@@ -101,10 +86,7 @@ export function createApiRouter(runtime: RuntimeConfig) {
       return;
     }
 
-    const searchPath = resolveWithinDirectory(
-      runtime.paths.filesDir,
-      currentDir,
-    );
+    const searchPath = resolveWithinDirectory(runtime.paths.filesDir, currentDir);
     if (!searchPath) {
       response.json({ error: 'Invalid search path' });
       return;
@@ -118,15 +100,11 @@ export function createApiRouter(runtime: RuntimeConfig) {
       return;
     }
 
-    const results = await searchFilesInPath(
-      fileName,
-      searchPath,
-      runtime.paths,
-    );
+    const results = await searchFilesInPath(fileName, searchPath, runtime.paths);
     response.json({
       query: { file_name: fileName, current_dir: currentDir },
       results,
-      count: results.length,
+      count: results.length
     });
   });
 
@@ -147,14 +125,11 @@ export function createApiRouter(runtime: RuntimeConfig) {
       }
 
       response.json(created);
-    }),
+    })
   );
 
   router.get('/api/search', searchHandler);
-  router.get(
-    /^\/api\/search\/file_name=([^/]+)\/current_dir=(.*)$/,
-    searchHandler,
-  );
+  router.get(/^\/api\/search\/file_name=([^/]+)\/current_dir=(.*)$/, searchHandler);
 
   return router;
 }
@@ -164,14 +139,8 @@ function getQueryString(request: Request, key: string): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
-function asyncHandler(
-  handler: (request: Request, response: Response) => Promise<void>,
-) {
-  return (
-    request: Request,
-    response: Response,
-    next: (error?: unknown) => void,
-  ) => {
+function asyncHandler(handler: (request: Request, response: Response) => Promise<void>) {
+  return (request: Request, response: Response, next: (error?: unknown) => void) => {
     void handler(request, response).catch(next);
   };
 }

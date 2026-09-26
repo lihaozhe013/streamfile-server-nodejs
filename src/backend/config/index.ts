@@ -23,12 +23,7 @@ function readString(value: unknown, field: string): string {
 }
 
 function readPort(value: unknown): number {
-  if (
-    typeof value !== 'number' ||
-    !Number.isInteger(value) ||
-    value < 1 ||
-    value > 65535
-  ) {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 65535) {
     throw new Error('Invalid config field: server.port');
   }
   return value;
@@ -46,14 +41,14 @@ function parseConfig(value: unknown): Config {
   return {
     server: {
       host: readString(server.host, 'server.host'),
-      port: readPort(server.port),
+      port: readPort(server.port)
     },
     directories: {
       public: readString(directories.public, 'directories.public'),
       upload: readString(directories.upload, 'directories.upload'),
       incoming: readString(directories.incoming, 'directories.incoming'),
-      private: readString(directories.private, 'directories.private'),
-    },
+      private: readString(directories.private, 'directories.private')
+    }
   };
 }
 
@@ -70,10 +65,7 @@ async function pathExists(candidatePath: string): Promise<boolean> {
   }
 }
 
-async function toRuntimePaths(
-  rootDir: string,
-  config: Config,
-): Promise<RuntimePaths> {
+async function toRuntimePaths(rootDir: string, config: Config): Promise<RuntimePaths> {
   const publicDir = resolveDirectory(rootDir, config.directories.public);
   const filesDir = resolveDirectory(rootDir, config.directories.upload);
   const incomingDir = resolveDirectory(rootDir, config.directories.incoming);
@@ -86,14 +78,11 @@ async function toRuntimePaths(
     incomingDir,
     privateDir,
     spaShellPath: path.join(publicDir, 'index.html'),
-    notFoundPath: path.join(publicDir, '404-index.html'),
+    notFoundPath: path.join(publicDir, '404-index.html')
   };
 }
 
-async function ensureConfigFile(
-  rootDir: string,
-  requestedPath?: string,
-): Promise<string> {
+async function ensureConfigFile(rootDir: string, requestedPath?: string): Promise<string> {
   const configPath = path.resolve(rootDir, requestedPath ?? 'config.yaml');
   if (await pathExists(configPath)) return configPath;
 
@@ -101,7 +90,7 @@ async function ensureConfigFile(
     const defaultConfig = await fsPromises.readFile(DEFAULT_CONFIG_URL, 'utf8');
     await fsPromises.writeFile(configPath, defaultConfig, {
       encoding: 'utf8',
-      flag: 'wx',
+      flag: 'wx'
     });
     await appendDebugLog(rootDir, '[backend_config] Generated config.yaml');
     return configPath;
@@ -112,26 +101,17 @@ async function ensureConfigFile(
     throw new Error(
       `Unable to create config.yaml in ${rootDir}: ${
         error instanceof Error ? error.message : 'Unknown error'
-      }`,
+      }`
     );
   }
 }
 
 function isFileExistsError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'EEXIST'
-  );
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'EEXIST';
 }
 
-export async function loadRuntimeConfig(
-  options: LoadConfigOptions = {},
-): Promise<RuntimeConfig> {
-  const rootDir = path.resolve(
-    options.rootDir ?? process.env.STREAMFILE_ROOT_DIR ?? process.cwd(),
-  );
+export async function loadRuntimeConfig(options: LoadConfigOptions = {}): Promise<RuntimeConfig> {
+  const rootDir = path.resolve(options.rootDir ?? process.env.STREAMFILE_ROOT_DIR ?? process.cwd());
   const configPath = await ensureConfigFile(rootDir, options.configPath);
   const fileContents = await fsPromises.readFile(configPath, 'utf8');
   const config = parseConfig(Bun.YAML.parse(fileContents));
@@ -139,18 +119,16 @@ export async function loadRuntimeConfig(
   return {
     server: config.server,
     paths: await toRuntimePaths(rootDir, config),
-    configPath,
+    configPath
   };
 }
 
-export async function ensureRuntimeDirectories(
-  runtime: RuntimeConfig,
-): Promise<void> {
+export async function ensureRuntimeDirectories(runtime: RuntimeConfig): Promise<void> {
   const { paths } = runtime;
   await Promise.all([
     fsPromises.mkdir(paths.filesDir, { recursive: true }),
     fsPromises.mkdir(paths.incomingDir, { recursive: true }),
-    fsPromises.mkdir(paths.privateDir, { recursive: true }),
+    fsPromises.mkdir(paths.privateDir, { recursive: true })
   ]);
 
   try {
@@ -161,14 +139,11 @@ export async function ensureRuntimeDirectories(
 
   await Promise.all([
     ensurePrivateNotFoundPage(paths.incomingDir, paths.notFoundPath),
-    ensurePrivateNotFoundPage(paths.privateDir, paths.notFoundPath),
+    ensurePrivateNotFoundPage(paths.privateDir, paths.notFoundPath)
   ]);
 }
 
-async function ensurePrivateNotFoundPage(
-  directory: string,
-  source404Path: string,
-): Promise<void> {
+async function ensurePrivateNotFoundPage(directory: string, source404Path: string): Promise<void> {
   const destination = path.join(directory, 'index.html');
   try {
     await fsPromises.access(destination);

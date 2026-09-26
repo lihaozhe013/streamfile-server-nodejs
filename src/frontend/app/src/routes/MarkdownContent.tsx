@@ -53,7 +53,7 @@ export default function MarkdownContent({ content }: MarkdownContentProps) {
                 {children}
               </a>
             );
-          },
+          }
         }}
       >
         {content}

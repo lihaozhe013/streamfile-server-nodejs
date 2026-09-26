@@ -4,10 +4,7 @@ import process from 'node:process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const projectDirectory = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '..',
-);
+const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:3000';
 
 await ensureDevSpaShell(projectDirectory);
@@ -16,13 +13,13 @@ const commands = [
   {
     label: 'backend',
     cwd: path.join(projectDirectory, 'src', 'backend'),
-    env: { ...process.env, STREAMFILE_ROOT_DIR: projectDirectory },
+    env: { ...process.env, STREAMFILE_ROOT_DIR: projectDirectory }
   },
   {
     label: 'frontend',
     cwd: path.join(projectDirectory, 'src', 'frontend', 'app'),
-    env: { ...process.env, BACKEND_URL: backendUrl },
-  },
+    env: { ...process.env, BACKEND_URL: backendUrl }
+  }
 ];
 
 const children = [];
@@ -49,16 +46,14 @@ for (const command of commands) {
     cwd: command.cwd,
     env: command.env,
     stdio: ['inherit', 'pipe', 'pipe'],
-    shell: true,
+    shell: true
   });
   children.push(child);
 
   child.stdout.on('data', (chunk) => writePrefixed(command.label, chunk));
   child.stderr.on('data', (chunk) => writePrefixed(command.label, chunk));
   child.on('error', (error) => {
-    console.error(
-      `[global_dev] ${command.label} failed to start: ${error.message}`,
-    );
+    console.error(`[global_dev] ${command.label} failed to start: ${error.message}`);
     exitCode = 1;
     stopChildren();
   });
@@ -66,9 +61,7 @@ for (const command of commands) {
     if (shuttingDown) return;
     if (code !== 0) {
       exitCode = code ?? 1;
-      console.error(
-        `[global_dev] ${command.label} exited with ${signal ?? `code ${code}`}`,
-      );
+      console.error(`[global_dev] ${command.label} exited with ${signal ?? `code ${code}`}`);
     }
     stopChildren();
   });
@@ -99,11 +92,7 @@ async function ensureDevSpaShell(rootDir) {
       await fs.access(filePath);
     } catch {
       await fs.mkdir(publicDir, { recursive: true });
-      await fs.writeFile(
-        filePath,
-        '<!-- Development SPA shell stub -->\n',
-        'utf-8',
-      );
+      await fs.writeFile(filePath, '<!-- Development SPA shell stub -->\n', 'utf-8');
       console.log(`[global_dev] Created stub public/${name} for development`);
     }
   }

@@ -18,7 +18,7 @@ const router = createBrowserRouter([
         lazy: async () => {
           const module = await import('@/routes/HomePage');
           return { Component: module.default };
-        },
+        }
       },
       {
         path: 'files/*',
@@ -26,21 +26,21 @@ const router = createBrowserRouter([
         lazy: async () => {
           const module = await import('@/routes/FileRoute');
           return { Component: module.default };
-        },
+        }
       },
       {
         path: '*',
         lazy: async () => {
           const module = await import('@/routes/NotFoundPage');
           return { Component: module.default };
-        },
-      },
-    ],
-  },
+        }
+      }
+    ]
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
-  </React.StrictMode>,
+  </React.StrictMode>
 );

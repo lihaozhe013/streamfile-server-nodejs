@@ -1,32 +1,13 @@
-import {
-  Download,
-  ExternalLink,
-  FileDown,
-  RefreshCw,
-  Search,
-  Upload,
-  X,
-} from 'lucide-react';
+import { Download, ExternalLink, FileDown, RefreshCw, Search, Upload, X } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
-import {
-  Form,
-  Link,
-  useLoaderData,
-  useRevalidator,
-  useSearchParams,
-} from 'react-router';
+import { Form, Link, useLoaderData, useRevalidator, useSearchParams } from 'react-router';
 import type { FileRouteData, SearchResult } from '@/types';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import FileIcon from '@/components/FileIcon';
 import PageState from '@/components/PageState';
 import Toast, { type ToastTone } from '@/components/Toast';
 import UploadDialog from '@/components/UploadDialog';
-import {
-  directoryHref,
-  fileHref,
-  getFileKind,
-  parentDirectoryPath,
-} from '@/lib/paths';
+import { directoryHref, fileHref, getFileKind, parentDirectoryPath } from '@/lib/paths';
 
 const MarkdownPage = lazy(() => import('@/routes/MarkdownPage'));
 const MediaPage = lazy(() => import('@/routes/MediaPage'));
@@ -49,11 +30,7 @@ export default function FileRoute() {
   return <DirectoryPage data={data} />;
 }
 
-function DirectoryPage({
-  data,
-}: {
-  data: Extract<FileRouteData, { kind: 'directory' }>;
-}) {
+function DirectoryPage({ data }: { data: Extract<FileRouteData, { kind: 'directory' }> }) {
   const revalidator = useRevalidator();
   const [, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState(data.searchQuery);
@@ -82,18 +59,11 @@ function DirectoryPage({
       <div className="page-heading-row">
         <div>
           <span className="eyebrow">File library</span>
-          <h1>
-            {data.path
-              ? data.path.split('/').filter(Boolean).pop()
-              : 'All files'}
-          </h1>
+          <h1>{data.path ? data.path.split('/').filter(Boolean).pop() : 'All files'}</h1>
           <Breadcrumbs path={data.path} />
         </div>
         <div className="page-actions">
-          <button
-            className="button button-secondary"
-            onClick={() => setIsUploadOpen(true)}
-          >
+          <button className="button button-secondary" onClick={() => setIsUploadOpen(true)}>
             <Upload aria-hidden="true" size={17} />
             Upload here
           </button>
@@ -138,10 +108,7 @@ function DirectoryPage({
       </div>
 
       {data.searchQuery ? (
-        <SearchResults
-          query={data.searchQuery}
-          results={data.searchResults ?? []}
-        />
+        <SearchResults query={data.searchQuery} results={data.searchResults ?? []} />
       ) : data.entries.length ? (
         <FileList entries={data.entries} currentPath={data.path} />
       ) : (
@@ -149,10 +116,7 @@ function DirectoryPage({
           kind="empty"
           message="Upload a file here to get started."
           action={
-            <button
-              className="button button-primary"
-              onClick={() => setIsUploadOpen(true)}
-            >
+            <button className="button button-primary" onClick={() => setIsUploadOpen(true)}>
               Upload here
             </button>
           }
@@ -167,7 +131,7 @@ function DirectoryPage({
             revalidator.revalidate();
             setToast({
               message: `Uploaded to ${relativePath}.`,
-              tone: 'success',
+              tone: 'success'
             });
           }}
         />
@@ -180,7 +144,7 @@ function DirectoryPage({
 
 function FileList({
   entries,
-  currentPath,
+  currentPath
 }: {
   entries: { name: string; isDirectory: boolean }[];
   currentPath: string;
@@ -189,11 +153,7 @@ function FileList({
   return (
     <div className="file-list" role="list">
       {currentPath && (
-        <Link
-          className="file-row file-row-parent"
-          to={directoryHref(parent)}
-          role="listitem"
-        >
+        <Link className="file-row file-row-parent" to={directoryHref(parent)} role="listitem">
           <span className="file-icon">
             <FileIcon name="folder" isDirectory />
           </span>
@@ -209,7 +169,7 @@ function FileList({
 
 function FileRow({
   entry,
-  currentPath,
+  currentPath
 }: {
   entry: { name: string; isDirectory: boolean };
   currentPath: string;
@@ -218,9 +178,7 @@ function FileRow({
   const kind = getFileKind(entry.name);
   const content = (
     <>
-      <span
-        className={`file-icon ${entry.isDirectory ? 'file-icon-folder' : ''}`}
-      >
+      <span className={`file-icon ${entry.isDirectory ? 'file-icon-folder' : ''}`}>
         <FileIcon name={entry.name} isDirectory={entry.isDirectory} />
       </span>
       <span className="file-name">{entry.name}</span>
@@ -252,21 +210,14 @@ function FileRow({
   );
 }
 
-function SearchResults({
-  query,
-  results,
-}: {
-  query: string;
-  results: SearchResult[];
-}) {
+function SearchResults({ query, results }: { query: string; results: SearchResult[] }) {
   return (
     <section className="search-results-section">
       <div className="section-heading">
         <div>
           <span className="eyebrow">Search results</span>
           <h2>
-            {results.length} result{results.length === 1 ? '' : 's'} for “
-            {query}”
+            {results.length} result{results.length === 1 ? '' : 's'} for “{query}”
           </h2>
         </div>
       </div>
@@ -284,11 +235,7 @@ function SearchResults({
                   <small>{result.relative_path}</small>
                 </span>
                 {kind === 'resource' ? (
-                  <ExternalLink
-                    aria-hidden="true"
-                    className="file-action-icon"
-                    size={17}
-                  />
+                  <ExternalLink aria-hidden="true" className="file-action-icon" size={17} />
                 ) : (
                   <span className="file-kind">Open</span>
                 )}
@@ -333,18 +280,12 @@ function ResourcePage({ path }: { path: string }) {
       <FileDown aria-hidden="true" size={44} />
       <span className="eyebrow">Downloadable file</span>
       <h1>{path.split('/').pop()}</h1>
-      <p>
-        This file does not have an in-app preview. Open it directly or download
-        the original.
-      </p>
+      <p>This file does not have an in-app preview. Open it directly or download the original.</p>
       <div className="hero-actions">
         <a className="button button-primary" href={rawUrl}>
           Open original <ExternalLink aria-hidden="true" size={17} />
         </a>
-        <Link
-          className="button button-secondary"
-          to={directoryHref(parentDirectoryPath(path))}
-        >
+        <Link className="button button-secondary" to={directoryHref(parentDirectoryPath(path))}>
           Back to folder
         </Link>
       </div>

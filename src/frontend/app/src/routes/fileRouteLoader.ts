@@ -5,7 +5,7 @@ import type { FileRouteData } from '@/types';
 
 export async function fileRouteLoader({
   params,
-  request,
+  request
 }: LoaderFunctionArgs): Promise<FileRouteData> {
   const path = decodeFilePath(params['*'] ?? '');
   const url = new URL(request.url);
@@ -16,7 +16,7 @@ export async function fileRouteLoader({
     return {
       kind: 'markdown',
       path,
-      markdown: await getMarkdown(path, request.signal),
+      markdown: await getMarkdown(path, request.signal)
     };
   }
   if (kind === 'media') return { kind: 'media', path };

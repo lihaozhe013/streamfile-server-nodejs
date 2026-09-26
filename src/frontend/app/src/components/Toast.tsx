@@ -8,13 +8,8 @@ interface ToastProps {
   onDismiss: () => void;
 }
 
-export default function Toast({
-  message,
-  tone = 'info',
-  onDismiss,
-}: ToastProps) {
-  const Icon =
-    tone === 'success' ? CheckCircle2 : tone === 'error' ? XCircle : Info;
+export default function Toast({ message, tone = 'info', onDismiss }: ToastProps) {
+  const Icon = tone === 'success' ? CheckCircle2 : tone === 'error' ? XCircle : Info;
 
   return (
     <div className={`toast toast-${tone}`} role="status">

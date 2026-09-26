@@ -8,7 +8,7 @@ import {
   isAccessibleFilePath,
   isIncomingPath,
   isSafeExistingPath,
-  resolveWithinDirectory,
+  resolveWithinDirectory
 } from '@/services/files';
 import { isMediaExtension } from '@/utils/isMediaExtension';
 
@@ -29,7 +29,7 @@ export function createFilesRouter(runtime: RuntimeConfig): Router {
 async function handleFileRequest(
   request: Request,
   response: Response,
-  runtime: RuntimeConfig,
+  runtime: RuntimeConfig
 ): Promise<void> {
   const rawRelativePath = request.path.slice('/files'.length);
   const relativePath = decodeRoutePath(rawRelativePath);
@@ -72,9 +72,7 @@ async function handleFileRequest(
   }
 
   if (
-    !(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, [
-      runtime.paths.incomingDir,
-    ]))
+    !(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, [runtime.paths.incomingDir]))
   ) {
     response.status(404).sendFile(runtime.paths.notFoundPath);
     return;
@@ -103,15 +101,12 @@ export function sendFile(response: Response, filePath: string): Promise<void> {
   });
 }
 
-export async function sendSpaShell(
-  response: Response,
-  runtime: RuntimeConfig,
-): Promise<void> {
+export async function sendSpaShell(response: Response, runtime: RuntimeConfig): Promise<void> {
   try {
     await fs.access(runtime.paths.spaShellPath);
   } catch {
     throw new Error(
-      `SPA shell is missing at ${runtime.paths.spaShellPath}. Run bun run build before starting the production server.`,
+      `SPA shell is missing at ${runtime.paths.spaShellPath}. Run bun run build before starting the production server.`
     );
   }
   await sendFile(response, runtime.paths.spaShellPath);

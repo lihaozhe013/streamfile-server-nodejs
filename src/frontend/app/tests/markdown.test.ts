@@ -11,17 +11,15 @@ describe('markdown utilities', () => {
   it('extracts heading order and levels', () => {
     expect(extractHeadings('# One\n\n### Three')).toEqual([
       { id: 'one', level: 1, text: 'One' },
-      { id: 'three', level: 3, text: 'Three' },
+      { id: 'three', level: 3, text: 'Three' }
     ]);
   });
 
   it('resolves relative images and links from the markdown directory', () => {
     const markdown = '![Photo](../assets/photo.png)\n\n[Guide](./guide.md)';
     expect(processRelativePaths(markdown, 'docs/readme.md')).toContain(
-      '/files/assets/photo.png?raw=1',
+      '/files/assets/photo.png?raw=1'
     );
-    expect(processRelativePaths(markdown, 'docs/readme.md')).toContain(
-      '/files/docs/guide.md',
-    );
+    expect(processRelativePaths(markdown, 'docs/readme.md')).toContain('/files/docs/guide.md');
   });
 });

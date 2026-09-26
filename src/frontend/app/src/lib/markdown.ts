@@ -46,7 +46,7 @@ export function extractHeadings(markdown: string): MarkdownHeading[] {
     headings.push({
       id: slugify(text, usedIds),
       level: match[1].length,
-      text,
+      text
     });
   }
 
@@ -69,10 +69,7 @@ function resolveRelativePath(baseFilePath: string, relativePath: string) {
   return baseSegments.join('/');
 }
 
-export function processRelativePaths(
-  content: string,
-  currentFilePath: string,
-): string {
+export function processRelativePaths(content: string, currentFilePath: string): string {
   const decodedPath = decodeFilePath(currentFilePath);
   const appendRawQuery = (suffix: string): string => {
     if (/[?&]raw=1(?:&|$)/.test(suffix)) return suffix;
@@ -98,11 +95,11 @@ export function processRelativePaths(
     .replace(
       /(!?\[[^\]]*\]\()([^\s)]+)(\s+[^)]*)?\)/g,
       (_match, prefix: string, pathPart: string, title = '') =>
-        `${prefix}${replacePath(pathPart, prefix.startsWith('!'))}${title})`,
+        `${prefix}${replacePath(pathPart, prefix.startsWith('!'))}${title})`
     )
     .replace(
       /(<(?:img|source)[^>]+(?:src|srcset)=['"])([^'"]+)(['"])/gi,
       (_match, prefix: string, pathPart: string, suffix: string) =>
-        `${prefix}${replacePath(pathPart, true)}${suffix}`,
+        `${prefix}${replacePath(pathPart, true)}${suffix}`
     );
 }

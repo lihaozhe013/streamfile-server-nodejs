@@ -23,37 +23,26 @@ test('generates a default config and runtime directories when missing', async ()
   try {
     const publicDir = path.join(rootDir, 'public');
     await fs.mkdir(publicDir, { recursive: true });
-    await fs.writeFile(
-      path.join(publicDir, 'index.html'),
-      '<!doctype html><title>SPA</title>',
-    );
-    await fs.writeFile(
-      path.join(publicDir, '404-index.html'),
-      '<!doctype html><title>404</title>',
-    );
+    await fs.writeFile(path.join(publicDir, 'index.html'), '<!doctype html><title>SPA</title>');
+    await fs.writeFile(path.join(publicDir, '404-index.html'), '<!doctype html><title>404</title>');
 
     const runtime = await loadRuntimeConfig({ rootDir });
     assert.equal(runtime.configPath, path.join(rootDir, 'config.yaml'));
     assert.equal(runtime.server.port, 3000);
     assert.equal(runtime.paths.publicDir, publicDir);
-    assert.match(
-      await fs.readFile(runtime.configPath, 'utf8'),
-      /directories:\n  public: "public"/,
-    );
+    assert.match(await fs.readFile(runtime.configPath, 'utf8'), /directories:\n  public: "public"/);
 
     await ensureRuntimeDirectories(runtime);
     await Promise.all(
-      [
-        runtime.paths.filesDir,
-        runtime.paths.incomingDir,
-        runtime.paths.privateDir,
-      ].map(async (directory) => {
-        assert.equal(await pathExists(directory), true);
-      }),
+      [runtime.paths.filesDir, runtime.paths.incomingDir, runtime.paths.privateDir].map(
+        async (directory) => {
+          assert.equal(await pathExists(directory), true);
+        }
+      )
     );
     assert.match(
       await fs.readFile(path.join(rootDir, 'debug.log'), 'utf8'),
-      /\[backend_config\] Generated config\.yaml/,
+      /\[backend_config\] Generated config\.yaml/
     );
   } finally {
     await fs.rm(rootDir, { recursive: true, force: true });
@@ -67,11 +56,11 @@ test('does not load configuration from a parent directory', async () => {
     await fs.mkdir(path.join(runtimeDir, 'public'), { recursive: true });
     await fs.writeFile(
       path.join(runtimeDir, 'public', 'index.html'),
-      '<!doctype html><title>SPA</title>',
+      '<!doctype html><title>SPA</title>'
     );
     await fs.writeFile(
       path.join(runtimeDir, 'public', '404-index.html'),
-      '<!doctype html><title>404</title>',
+      '<!doctype html><title>404</title>'
     );
     await fs.writeFile(
       path.join(parentDir, 'config.yaml'),
@@ -84,7 +73,7 @@ directories:
   upload: "source-files"
   incoming: "source-files/incoming"
   private: "source-files/private-files"
-`,
+`
     );
 
     const runtime = await loadRuntimeConfig({ rootDir: runtimeDir });
@@ -132,7 +121,7 @@ test('preserves an invalid existing config for correction', async () => {
 
     await assert.rejects(
       loadRuntimeConfig({ rootDir }),
-      /Invalid config: server and directories are required/,
+      /Invalid config: server and directories are required/
     );
     assert.equal(await fs.readFile(configPath, 'utf8'), invalidConfig);
   } finally {
@@ -144,14 +133,11 @@ test('handles concurrent first-start config generation', async () => {
   const rootDir = await createTempRoot();
   try {
     const runtimes = await Promise.all(
-      Array.from({ length: 2 }, () => loadRuntimeConfig({ rootDir })),
+      Array.from({ length: 2 }, () => loadRuntimeConfig({ rootDir }))
     );
     assert.equal(runtimes[0]?.configPath, path.join(rootDir, 'config.yaml'));
     assert.equal(runtimes[1]?.server.port, 3000);
-    assert.equal(
-      (await fs.readFile(path.join(rootDir, 'config.yaml'), 'utf8')).length > 0,
-      true,
-    );
+    assert.equal((await fs.readFile(path.join(rootDir, 'config.yaml'), 'utf8')).length > 0, true);
   } finally {
     await fs.rm(rootDir, { recursive: true, force: true });
   }

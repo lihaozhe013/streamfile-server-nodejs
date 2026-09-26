@@ -2,24 +2,16 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { constants as fsConstants } from 'node:fs';
 import type { RuntimePaths } from '@/types/index';
-import {
-  isWithinDirectory,
-  normalizeRelativePath,
-  resolveWithinDirectory,
-} from '@/services/files';
+import { isWithinDirectory, normalizeRelativePath, resolveWithinDirectory } from '@/services/files';
 
 const INCOMING_DESTINATION: ResolvedUploadDestination = {
-  mode: 'incoming',
+  mode: 'incoming'
 };
 
 export type ResolvedUploadDestination =
-  | { mode: 'incoming' }
-  | { mode: 'directory'; absolutePath: string; relativePath: string }
-  | null;
+  { mode: 'incoming' } | { mode: 'directory'; absolutePath: string; relativePath: string } | null;
 
-export function isInvalidDestination(
-  destination: ResolvedUploadDestination,
-): destination is null {
+export function isInvalidDestination(destination: ResolvedUploadDestination): destination is null {
   return destination === null;
 }
 
@@ -50,15 +42,14 @@ async function pathExists(candidatePath: string): Promise<boolean> {
 
 async function isRealPathInsideBlockedDirectories(
   paths: RuntimePaths,
-  realCandidate: string,
+  realCandidate: string
 ): Promise<boolean> {
   const [realIncoming, realPrivate] = await Promise.all([
     fs.realpath(paths.incomingDir),
-    fs.realpath(paths.privateDir),
+    fs.realpath(paths.privateDir)
   ]);
   return (
-    isWithinDirectory(realIncoming, realCandidate) ||
-    isWithinDirectory(realPrivate, realCandidate)
+    isWithinDirectory(realIncoming, realCandidate) || isWithinDirectory(realPrivate, realCandidate)
   );
 }
 
@@ -71,7 +62,7 @@ async function isRealPathInsideBlockedDirectories(
  */
 export async function resolveUploadDestination(
   paths: RuntimePaths,
-  destination: unknown,
+  destination: unknown
 ): Promise<ResolvedUploadDestination> {
   if (destination === undefined || destination === null) {
     return INCOMING_DESTINATION;
@@ -116,10 +107,7 @@ export async function resolveUploadDestination(
   return {
     mode: 'directory',
     absolutePath: resolved,
-    relativePath: path
-      .relative(paths.filesDir, resolved)
-      .split(path.sep)
-      .join('/'),
+    relativePath: path.relative(paths.filesDir, resolved).split(path.sep).join('/')
   };
 }
 
@@ -141,7 +129,7 @@ function buildCandidateName(name: string, attempt: number): string {
 export async function moveStagedFile(
   stagedPath: string,
   targetDirectory: string,
-  desiredName: string,
+  desiredName: string
 ): Promise<string> {
   const maxAttempts = 1000;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
@@ -182,7 +170,7 @@ export async function moveStagedFile(
  */
 export async function createVisibleDirectory(
   paths: RuntimePaths,
-  relativePath: unknown,
+  relativePath: unknown
 ): Promise<{ created: boolean; relativePath: string } | null> {
   if (typeof relativePath !== 'string') return null;
 
@@ -194,9 +182,7 @@ export async function createVisibleDirectory(
 
   // Check existence before resolveUploadDestination creates the chain.
   const preexistingStats = await fs.stat(resolved).catch(() => null);
-  const alreadyExists = Boolean(
-    preexistingStats && preexistingStats.isDirectory(),
-  );
+  const alreadyExists = Boolean(preexistingStats && preexistingStats.isDirectory());
 
   const destination = await resolveUploadDestination(paths, normalized);
   if (!destination || destination.mode !== 'directory') return null;

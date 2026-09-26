@@ -11,7 +11,7 @@ const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:3000';
 
 const backendProxy = {
   target: backendUrl,
-  changeOrigin: true,
+  changeOrigin: true
 };
 
 export default defineConfig({
@@ -20,12 +20,12 @@ export default defineConfig({
   publicDir: staticPublicDir,
   plugins: [react()],
   css: {
-    postcss: path.resolve(__dirname, 'postcss.config.js'),
+    postcss: path.resolve(__dirname, 'postcss.config.js')
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
+      '@': path.resolve(__dirname, 'src')
+    }
   },
   server: {
     host: '127.0.0.1',
@@ -40,9 +40,9 @@ export default defineConfig({
           const requestUrl = new URL(request.url ?? '/', 'http://vite.local');
           if (requestUrl.searchParams.get('raw') !== '1') return request.url;
           return undefined;
-        },
-      },
-    },
+        }
+      }
+    }
   },
   build: {
     outDir: productionPublicDir,
@@ -64,8 +64,8 @@ export default defineConfig({
               return 'markdown';
           }
           return undefined;
-        },
-      },
-    },
-  },
+        }
+      }
+    }
+  }
 });

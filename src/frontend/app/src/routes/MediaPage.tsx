@@ -3,12 +3,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import videojs from 'video.js';
-import {
-  fileHref,
-  isAudioPath,
-  parentDirectoryPath,
-  getFileExtension,
-} from '@/lib/paths';
+import { fileHref, isAudioPath, parentDirectoryPath, getFileExtension } from '@/lib/paths';
 
 interface MediaPageProps {
   path: string;
@@ -31,9 +26,7 @@ export default function MediaPage({ path }: MediaPageProps) {
       fill: !audio,
       userActions: { hotkeys: false },
       controlBar: { volumePanel: { inline: false, vertical: true } },
-      sources: [
-        { src: rawUrl, type: mediaType(getFileExtension(path), audio) },
-      ],
+      sources: [{ src: rawUrl, type: mediaType(getFileExtension(path), audio) }]
     });
     playerRef.current = player;
     return () => {
@@ -56,9 +49,7 @@ export default function MediaPage({ path }: MediaPageProps) {
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         event.preventDefault();
         const direction = event.key === 'ArrowLeft' ? -1 : 1;
-        player.currentTime(
-          Math.max(0, (player.currentTime() ?? 0) + direction * 5),
-        );
+        player.currentTime(Math.max(0, (player.currentTime() ?? 0) + direction * 5));
         setSeekFlash(`${direction > 0 ? '+' : ''}${direction * 5}s`);
         window.setTimeout(() => setSeekFlash(null), 400);
       } else if (event.key === ' ') {
@@ -80,11 +71,7 @@ export default function MediaPage({ path }: MediaPageProps) {
       <header className="media-header">
         <Link
           className="button button-ghost"
-          to={
-            parentDirectoryPath(path)
-              ? `/files/${parentDirectoryPath(path)}/`
-              : '/files/'
-          }
+          to={parentDirectoryPath(path) ? `/files/${parentDirectoryPath(path)}/` : '/files/'}
         >
           <ArrowLeft aria-hidden="true" size={18} />
           Back
@@ -98,11 +85,7 @@ export default function MediaPage({ path }: MediaPageProps) {
         </a>
       </header>
       <div className={audio ? 'media-stage media-stage-audio' : 'media-stage'}>
-        <video
-          ref={videoElement}
-          className="video-js vjs-big-play-centered"
-          playsInline
-        />
+        <video ref={videoElement} className="video-js vjs-big-play-centered" playsInline />
         {seekFlash && <span className="seek-flash">{seekFlash}</span>}
       </div>
     </div>
@@ -112,8 +95,7 @@ export default function MediaPage({ path }: MediaPageProps) {
 function mediaType(extension: string, audio: boolean): string {
   if (extension === 'mp4') return 'video/mp4';
   if (extension === 'webm') return 'video/webm';
-  if (extension === 'ogv' || extension === 'ogg')
-    return audio ? 'audio/ogg' : 'video/ogg';
+  if (extension === 'ogv' || extension === 'ogg') return audio ? 'audio/ogg' : 'video/ogg';
   if (extension === 'mp3') return 'audio/mpeg';
   if (extension === 'wav') return 'audio/wav';
   if (extension === 'm4a') return 'audio/mp4';
