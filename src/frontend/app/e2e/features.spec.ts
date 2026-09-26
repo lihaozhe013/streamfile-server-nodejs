@@ -118,3 +118,20 @@ test('shows a route error if feature discovery fails', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Unable to load this page' })).toBeVisible();
   await expect(page.getByText('Feature discovery unavailable')).toBeVisible();
 });
+
+test('shows a retry message when directory requests are rate limited', async ({ page }) => {
+  await mockFeatures(page, { publicTrafficLimits: true });
+  await page.route('**/api/list-files*', async (route) => {
+    await route.fulfill({
+      status: 429,
+      contentType: 'application/json',
+      headers: { 'Retry-After': '60' },
+      body: JSON.stringify({ error: 'Too many requests' })
+    });
+  });
+
+  await page.goto('/files/');
+  await expect(page.getByRole('heading', { name: 'Please try again shortly' })).toBeVisible();
+  await expect(page.getByText('Too many requests. Wait about a minute, then retry.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
+});

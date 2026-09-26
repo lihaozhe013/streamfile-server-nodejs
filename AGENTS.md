@@ -12,6 +12,8 @@ Read order:
 3. `README.md` — user quickstart. Not authoritative.
 
 Deep dives belong in `docs/` only when they outgrow `spec.md`; link them here.
+Public proxy setup and traffic limits are described in
+`docs/public-deployment.md`.
 
 ## Repository map
 
@@ -27,12 +29,13 @@ everything.
 
 Backend (`src/backend`):
 
-- `server.ts` bootstrap; `app.ts` middleware order (files -> api -> upload ->
-  public assets -> SPA fallback -> errors)
+- `server.ts` bootstrap; `app.ts` middleware order (optional public traffic
+  limits -> files -> api -> upload -> public assets -> SPA fallback -> errors)
 - `routes/files.ts` file serving; `routes/api.ts` JSON API; `routes/upload.ts`
   `POST /upload`
 - `services/files.ts` path guards; `services/upload.ts` destinations and
-  renames; `services/search.ts` search; `services/publicAssets.ts` public
+  renames; `services/search.ts` search; `services/publicTrafficLimits.ts`
+  per-process request and transfer limits; `services/publicAssets.ts` public
   asset routing (disk static vs embedded `Bun.file`)
 - `config/index.ts` + `config/default.yaml`; `middleware/errors.ts`;
   `utils/logger.ts`; `types/yaml.d.ts` for the template text import

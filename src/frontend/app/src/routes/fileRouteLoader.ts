@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { getMarkdown, listFiles, searchFiles } from '@/lib/api';
 import { decodeFilePath, getFileKind } from '@/lib/paths';
-import type { FileRouteData } from '@/types';
+import { ApiError, type FileRouteData } from '@/types';
 
 export async function fileRouteLoader({
   params,
@@ -27,7 +27,8 @@ export async function fileRouteLoader({
       ? (await searchFiles(searchQuery, path, request.signal)).results
       : null;
     return { kind: 'directory', path, entries, searchQuery, searchResults };
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 429) throw error;
     return { kind: 'resource', path };
   }
 }

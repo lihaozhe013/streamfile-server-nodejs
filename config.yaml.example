@@ -6,6 +6,7 @@ features:
   upload: true
   privateFiles: true
   homePage: true
+  publicTrafficLimits: false
 
 directories:
   public: '~/.local/stream-file-server/public'

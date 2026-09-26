@@ -1,0 +1,10 @@
+services:
+  app:
+    image: lihaozhe013/streamfile-server:latest
+    container_name: streamfile-server-instance
+    volumes:
+      - ~/.config/stream-file-server:/app/data/.config/stream-file-server
+      - ~/.local/stream-file-server:/app/data/.local/stream-file-server
+    ports:
+      - '127.0.0.1:3000:3000'
+    restart: unless-stopped

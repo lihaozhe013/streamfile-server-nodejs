@@ -14,13 +14,22 @@ import {
 } from '@/services/files';
 import { isMediaExtension } from '@/utils/isMediaExtension';
 import { sendPublicFile } from '@/services/publicAssets';
+import {
+  LARGE_TRANSFER_BYTES,
+  PROXY_TRANSFER_BYTES_PER_SECOND,
+  PublicTrafficLimits,
+  sendTrafficLimitResponse
+} from '@/services/publicTrafficLimits';
 
-export function createFilesRouter(runtime: RuntimeConfig): Router {
+export function createFilesRouter(
+  runtime: RuntimeConfig,
+  trafficLimits: PublicTrafficLimits | null = null
+): Router {
   const router = express.Router();
 
   router.get(/^\/files(?:\/.*)?$/, async (request, response, next) => {
     try {
-      await handleFileRequest(request, response, runtime);
+      await handleFileRequest(request, response, runtime, trafficLimits);
     } catch (error) {
       next(error);
     }
@@ -32,7 +41,8 @@ export function createFilesRouter(runtime: RuntimeConfig): Router {
 async function handleFileRequest(
   request: Request,
   response: Response,
-  runtime: RuntimeConfig
+  runtime: RuntimeConfig,
+  trafficLimits: PublicTrafficLimits | null
 ): Promise<void> {
   const rawRelativePath = request.path.slice('/files'.length);
   const relativePath = decodeRoutePath(rawRelativePath);
@@ -73,7 +83,8 @@ async function handleFileRequest(
 
     const customIndexPath = path.join(fullPath, 'index.html');
     if (await isSafeExistingPath(runtime.paths.filesDir, customIndexPath)) {
-      await sendFile(response, customIndexPath);
+      const customIndexStats = await fs.stat(customIndexPath);
+      await sendDataFile(request, response, customIndexPath, customIndexStats.size, trafficLimits);
       return;
     }
 
@@ -90,7 +101,7 @@ async function handleFileRequest(
   }
 
   if (request.query.raw === '1') {
-    await sendFile(response, fullPath);
+    await sendDataFile(request, response, fullPath, stats.size, trafficLimits);
     return;
   }
 
@@ -100,7 +111,33 @@ async function handleFileRequest(
     return;
   }
 
-  await sendFile(response, fullPath);
+  await sendDataFile(request, response, fullPath, stats.size, trafficLimits);
+}
+
+async function sendDataFile(
+  request: Request,
+  response: Response,
+  filePath: string,
+  fileSize: number,
+  trafficLimits: PublicTrafficLimits | null
+): Promise<void> {
+  if (!trafficLimits || request.method === 'HEAD' || fileSize <= LARGE_TRANSFER_BYTES) {
+    await sendFile(response, filePath);
+    return;
+  }
+
+  const release = trafficLimits.acquireTransfer(request, response);
+  if (!release) {
+    sendTrafficLimitResponse(response);
+    return;
+  }
+  response.setHeader('X-Accel-Limit-Rate', String(PROXY_TRANSFER_BYTES_PER_SECOND));
+  response.setHeader('X-Accel-Buffering', 'yes');
+  try {
+    await sendFile(response, filePath);
+  } finally {
+    release();
+  }
 }
 
 export function sendFile(response: Response, filePath: string): Promise<void> {

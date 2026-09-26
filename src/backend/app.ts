@@ -5,13 +5,19 @@ import { createApiRouter } from '@/routes/api';
 import { createFilesRouter, sendSpaShell } from '@/routes/files';
 import { createPublicAssetRouter } from '@/services/publicAssets';
 import { createUploadRouter } from '@/routes/upload';
+import { PublicTrafficLimits } from '@/services/publicTrafficLimits';
 
 export function createApp(runtime: RuntimeConfig): Express {
   const app = express();
   app.disable('x-powered-by');
+  const trafficLimits = runtime.features.publicTrafficLimits ? new PublicTrafficLimits() : null;
+  if (trafficLimits) {
+    app.set('trust proxy', 1);
+    app.use(trafficLimits.middleware);
+  }
 
-  app.use(createFilesRouter(runtime));
-  app.use(createApiRouter(runtime));
+  app.use(createFilesRouter(runtime, trafficLimits));
+  app.use(createApiRouter(runtime, trafficLimits));
   app.use(createUploadRouter(runtime));
   if (!runtime.features.homePage) {
     app.get('/', (_request, response) => response.redirect(302, '/files/'));

@@ -13,8 +13,17 @@ import {
 } from '@/services/files';
 import { searchFilesInPath } from '@/services/search';
 import { createVisibleDirectory } from '@/services/upload';
+import {
+  LARGE_TRANSFER_BYTES,
+  PROXY_TRANSFER_BYTES_PER_SECOND,
+  PublicTrafficLimits,
+  sendTrafficLimitResponse
+} from '@/services/publicTrafficLimits';
 
-export function createApiRouter(runtime: RuntimeConfig) {
+export function createApiRouter(
+  runtime: RuntimeConfig,
+  trafficLimits: PublicTrafficLimits | null = null
+) {
   const router = express.Router();
 
   router.get('/api/features', (_request, response) => {
@@ -57,11 +66,29 @@ export function createApiRouter(runtime: RuntimeConfig) {
         return;
       }
 
-      response.json({
-        content: await fs.readFile(fullPath, 'utf8'),
-        filename: path.basename(fullPath),
-        path: path.relative(runtime.paths.filesDir, fullPath).split(path.sep).join('/')
-      });
+      const isLarge =
+        trafficLimits !== null &&
+        request.method !== 'HEAD' &&
+        (await fs.stat(fullPath)).size > LARGE_TRANSFER_BYTES;
+      const release = isLarge ? trafficLimits.acquireTransfer(request, response) : undefined;
+      if (isLarge && !release) {
+        sendTrafficLimitResponse(response);
+        return;
+      }
+      if (release) {
+        response.setHeader('X-Accel-Limit-Rate', String(PROXY_TRANSFER_BYTES_PER_SECOND));
+        response.setHeader('X-Accel-Buffering', 'yes');
+      }
+      try {
+        response.json({
+          content: await fs.readFile(fullPath, 'utf8'),
+          filename: path.basename(fullPath),
+          path: path.relative(runtime.paths.filesDir, fullPath).split(path.sep).join('/')
+        });
+      } catch (error) {
+        release?.();
+        throw error;
+      }
     })
   );
 

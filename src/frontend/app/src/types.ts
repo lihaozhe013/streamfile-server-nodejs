@@ -7,6 +7,7 @@ export interface RuntimeFeatures {
   upload: boolean;
   privateFiles: boolean;
   homePage: boolean;
+  publicTrafficLimits: boolean;
 }
 
 export interface SearchResult {

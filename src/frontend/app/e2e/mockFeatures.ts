@@ -6,7 +6,13 @@ export async function mockFeatures(page: Page, features: Partial<RuntimeFeatures
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ upload: true, privateFiles: true, homePage: true, ...features })
+      body: JSON.stringify({
+        upload: true,
+        privateFiles: true,
+        homePage: true,
+        publicTrafficLimits: false,
+        ...features
+      })
     });
   });
 }

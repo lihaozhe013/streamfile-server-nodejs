@@ -113,6 +113,7 @@ features:
   upload: true
   privateFiles: true
   homePage: true
+  publicTrafficLimits: false
 
 directories:
   public: '~/.local/stream-file-server/public'
@@ -131,13 +132,18 @@ An existing configuration is never overwritten, including when it is invalid;
 the backend reports the validation error so the file can be corrected. Runtime
 directories are created after a valid configuration is loaded.
 
-Feature flags are optional and default to `true` when omitted, including in
-existing configuration files. Set `upload: false` to disable uploads and
+Feature flags are optional. The existing flags default to `true`; the new
+`publicTrafficLimits` flag defaults to `false`, including in existing
+configuration files. Set `upload: false` to disable uploads and
 directory creation, `privateFiles: false` to block direct access to the hidden
 private directory while keeping its files on disk, or `homePage: false` to
 redirect `/` to `/files/`. The private directory provides no authentication.
 Restart the server and reload browser tabs after changing flags. Custom public
 asset overrides must adapt their own UI; the backend still enforces the flags.
+
+Set `publicTrafficLimits: true` for a public read-only deployment to limit
+request volume and concurrent large downloads. Bandwidth limiting requires the
+recommended Nginx proxy; see [public deployment](docs/public-deployment.md).
 
 ## Containers and CI
 

@@ -29,8 +29,8 @@ file in the same change. If code and this document disagree, fix both.
   relative paths resolve against the data root. The template ships with
   explicit `~/.local/stream-file-server/...` values.
 - Optional `features.upload`, `features.privateFiles`, and `features.homePage`
-  are booleans. Missing `features` or individual flags default to `true` for
-  existing configurations; non-boolean values fail startup. Configuration is
+  default to `true`; `features.publicTrafficLimits` defaults to `false`. All
+  four are booleans, and non-boolean values fail startup. Configuration is
   read only at startup, so changes require a server restart and browser reload.
 - Public assets resolve in order: (1) the configured public directory when it
   exists on disk, contains `index.html`, and carries no
@@ -102,7 +102,7 @@ file in the same change. If code and this document disagree, fix both.
 
 Errors are JSON `{ "error": string }`.
 
-- `GET /api/features`: returns `{upload, privateFiles, homePage}` booleans with
+- `GET /api/features`: returns `{upload, privateFiles, homePage, publicTrafficLimits}` booleans with
   `Cache-Control: no-store`. No filesystem paths are exposed.
 - `GET /api/list-files?path=<relative>` (path optional, default root): returns
   `FileEntry[]` = `{name, isDirectory}`. 400 invalid path, 403
@@ -128,6 +128,34 @@ Errors are JSON `{ "error": string }`.
   `features.privateFiles` is false, Markdown content requests into that
   directory return 403 `{error:'Access denied'}`; listing and search retain
   their existing protected-path responses.
+
+## Public traffic limits
+
+- When `features.publicTrafficLimits` is false or omitted, this feature adds no
+  request, concurrent-transfer, or response-speed limit. It does not emit
+  `X-Accel-Limit-Rate` or `X-Robots-Tag`.
+- When true, a per-process token bucket allows each client 10 requests/second
+  (capacity 30), with a global 30 requests/second bucket (capacity 60). GET and
+  HEAD requests for `/files/*` and `/api/markdown-content` share a client
+  60 requests/minute bucket (capacity 20) and a global 10 requests/second
+  bucket (capacity 20). `/api/list-files` has a client 30 requests/minute
+  bucket (capacity 10). Both search URL forms share a client 6 requests/minute
+  bucket (capacity 3) and a global 30 requests/minute bucket (capacity 10).
+  Exceeding any bucket returns 429 JSON `{ "error": "Too many requests" }`,
+  `Retry-After: 60`, and `Cache-Control: no-store`.
+- Actual file responses and Markdown API responses backed by files larger than
+  1 MiB have at most four concurrent transfers per client and 16 globally.
+  Slots are released on completion or connection close. These responses emit
+  `X-Accel-Limit-Rate: 524288` and `X-Accel-Buffering: yes` for Nginx to cap
+  transfer speed at 512 KiB/s while keeping disk buffering disabled.
+  Small files and SPA shells do not emit this header. Every response includes
+  `X-Robots-Tag: noindex, nofollow` while the feature is enabled.
+- Client identification trusts one reverse-proxy hop when enabled. The public
+  Nginx deployment must overwrite `X-Forwarded-For` and keep Bun unreachable
+  directly. The supplied proxy has no unconditional traffic limits; it
+  processes the application response headers. Response buffering is disabled
+  by default and enabled for rate-limited responses with disk buffering off.
+  Limits are held in memory and reset on restart.
 
 ## Upload contract
 

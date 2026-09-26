@@ -52,7 +52,13 @@ async function createFixture(features: Partial<RuntimeFeatures> = {}): Promise<F
 
   const runtime: RuntimeConfig = {
     server: { host: '127.0.0.1', port: 0 },
-    features: { upload: true, privateFiles: true, homePage: true, ...features },
+    features: {
+      upload: true,
+      privateFiles: true,
+      homePage: true,
+      publicTrafficLimits: false,
+      ...features
+    },
     paths,
     configPath: path.join(rootDir, 'config.yaml')
   };
@@ -481,11 +487,112 @@ test('reports effective feature flags without caching', async () => {
       assert.deepEqual(await response.json(), {
         upload: false,
         privateFiles: false,
-        homePage: false
+        homePage: false,
+        publicTrafficLimits: false
       });
     },
     { upload: false, privateFiles: false, homePage: false }
   );
+});
+
+test('leaves public traffic unrestricted when its feature flag is disabled', async () => {
+  await withServer(async (baseUrl) => {
+    const responses = await Promise.all(
+      Array.from({ length: 25 }, () => fetch(`${baseUrl}/files/folder/note.txt?raw=1`))
+    );
+    assert.equal(
+      responses.every((response) => response.status === 200),
+      true
+    );
+    assert.equal(responses[0]?.headers.get('x-robots-tag'), null);
+    await Promise.all(responses.map((response) => response.arrayBuffer()));
+  });
+});
+
+test('limits repeated content and search requests in public traffic mode', async () => {
+  await withServer(
+    async (baseUrl) => {
+      const responses = await Promise.all(
+        Array.from({ length: 25 }, () => fetch(`${baseUrl}/files/folder/note.txt?raw=1`))
+      );
+      assert.equal(responses.filter((response) => response.status === 429).length > 0, true);
+      const limited = responses.find((response) => response.status === 429);
+      assert.equal(limited?.headers.get('retry-after'), '60');
+      assert.equal(limited?.headers.get('x-robots-tag'), 'noindex, nofollow');
+      assert.deepEqual(await limited?.json(), { error: 'Too many requests' });
+      await Promise.all(
+        responses
+          .filter((response) => response !== limited)
+          .map((response) => response.arrayBuffer())
+      );
+    },
+    { publicTrafficLimits: true }
+  );
+
+  await withServer(
+    async (baseUrl) => {
+      const urls = [
+        '/api/search?q=hello',
+        '/api/search/file_name=hello/current_dir=folder',
+        '/api/search?q=hello',
+        '/api/search/file_name=hello/current_dir=folder'
+      ];
+      const responses = await Promise.all(urls.map((url) => fetch(`${baseUrl}${url}`)));
+      assert.equal(responses.filter((response) => response.status === 429).length, 1);
+      await Promise.all(responses.map((response) => response.arrayBuffer()));
+    },
+    { publicTrafficLimits: true }
+  );
+});
+
+test('marks large file and markdown responses for proxy speed limiting', async () => {
+  await withServer(
+    async (baseUrl, fixture) => {
+      await fs.writeFile(
+        path.join(fixture.paths.filesDir, 'folder', 'large.bin'),
+        Buffer.alloc(2 * 1024 * 1024)
+      );
+      await fs.writeFile(
+        path.join(fixture.paths.filesDir, 'folder', 'large.md'),
+        'x'.repeat(2 * 1024 * 1024)
+      );
+
+      const rangeResponse = await fetch(`${baseUrl}/files/folder/large.bin?raw=1`, {
+        headers: { Range: 'bytes=0-15' }
+      });
+      assert.equal(rangeResponse.status, 206);
+      assert.equal(rangeResponse.headers.get('content-range'), 'bytes 0-15/2097152');
+      assert.equal(rangeResponse.headers.get('x-accel-limit-rate'), '524288');
+      assert.equal(rangeResponse.headers.get('x-accel-buffering'), 'yes');
+      assert.equal((await rangeResponse.arrayBuffer()).byteLength, 16);
+
+      const markdownResponse = await fetch(`${baseUrl}/api/markdown-content?path=folder/large.md`);
+      assert.equal(markdownResponse.status, 200);
+      assert.equal(markdownResponse.headers.get('x-accel-limit-rate'), '524288');
+      assert.equal(markdownResponse.headers.get('x-accel-buffering'), 'yes');
+      await markdownResponse.arrayBuffer();
+
+      const pageResponse = await fetch(`${baseUrl}/files/folder/large.md`);
+      assert.equal(pageResponse.headers.get('x-accel-limit-rate'), null);
+      assert.equal(pageResponse.headers.get('x-accel-buffering'), null);
+      await pageResponse.arrayBuffer();
+    },
+    { publicTrafficLimits: true }
+  );
+
+  await withServer(async (baseUrl, fixture) => {
+    await fs.writeFile(
+      path.join(fixture.paths.filesDir, 'folder', 'large.bin'),
+      Buffer.alloc(2 * 1024 * 1024)
+    );
+    const response = await fetch(`${baseUrl}/files/folder/large.bin?raw=1`, {
+      headers: { Range: 'bytes=0-15' }
+    });
+    assert.equal(response.status, 206);
+    assert.equal(response.headers.get('x-accel-limit-rate'), null);
+    assert.equal(response.headers.get('x-robots-tag'), null);
+    await response.arrayBuffer();
+  });
 });
 
 test('rejects uploads and directory creation before writing when uploads are disabled', async () => {
@@ -623,7 +730,12 @@ test('serves paths through dot directories and direct dot files', async () => {
 
     const runtime: RuntimeConfig = {
       server: { host: '127.0.0.1', port: 0 },
-      features: { upload: true, privateFiles: true, homePage: true },
+      features: {
+        upload: true,
+        privateFiles: true,
+        homePage: true,
+        publicTrafficLimits: false
+      },
       paths: {
         dataRoot: homeDir,
         publicDir,

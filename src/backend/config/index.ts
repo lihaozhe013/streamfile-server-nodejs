@@ -35,23 +35,24 @@ function readPort(value: unknown): number {
 
 function readFeatures(value: unknown): RuntimeFeatures {
   if (value === undefined) {
-    return { upload: true, privateFiles: true, homePage: true };
+    return { upload: true, privateFiles: true, homePage: true, publicTrafficLimits: false };
   }
   if (!isRecord(value) || Array.isArray(value)) {
     throw new Error('Invalid config field: features');
   }
 
-  const readFlag = (name: keyof RuntimeFeatures): boolean => {
+  const readFlag = (name: keyof RuntimeFeatures, defaultValue: boolean): boolean => {
     const flag = value[name];
-    if (flag === undefined) return true;
+    if (flag === undefined) return defaultValue;
     if (typeof flag !== 'boolean') throw new Error(`Invalid config field: features.${name}`);
     return flag;
   };
 
   return {
-    upload: readFlag('upload'),
-    privateFiles: readFlag('privateFiles'),
-    homePage: readFlag('homePage')
+    upload: readFlag('upload', true),
+    privateFiles: readFlag('privateFiles', true),
+    homePage: readFlag('homePage', true),
+    publicTrafficLimits: readFlag('publicTrafficLimits', false)
   };
 }
 
