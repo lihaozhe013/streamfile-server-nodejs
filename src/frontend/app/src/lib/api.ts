@@ -2,6 +2,7 @@ import type {
   FileEntry,
   MarkdownResponse,
   MkdirResponse,
+  RuntimeFeatures,
   SearchResponse,
   UploadResponse
 } from '@/types';
@@ -28,6 +29,11 @@ async function parseResponse<T>(response: Response): Promise<T> {
   }
 
   return payload as T;
+}
+
+export async function getFeatures(signal?: AbortSignal): Promise<RuntimeFeatures> {
+  const response = await fetch('/api/features', { signal });
+  return parseResponse<RuntimeFeatures>(response);
 }
 
 export async function listFiles(filePath: string, signal?: AbortSignal): Promise<FileEntry[]> {

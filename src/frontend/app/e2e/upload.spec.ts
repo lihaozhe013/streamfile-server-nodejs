@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { mockFeatures } from './mockFeatures';
 
 test('home page uploads to a folder picked in the directory dialog', async ({ page }) => {
+  await mockFeatures(page);
   await page.route('**/api/list-files*', async (route) => {
     const requestedPath = new URL(route.request().url()).searchParams.get('path') ?? '';
     const payload =
@@ -54,6 +56,7 @@ test('home page uploads to a folder picked in the directory dialog', async ({ pa
 });
 
 test('directory page uploads here with the current path as destination', async ({ page }) => {
+  await mockFeatures(page);
   await page.route('**/api/list-files*', async (route) => {
     await route.fulfill({
       status: 200,

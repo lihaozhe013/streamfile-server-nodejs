@@ -33,9 +33,9 @@ Start the backend and Vite together:
 bun run dev
 ```
 
-Open `http://127.0.0.1:5173`. The development server proxies `/api`, `/upload`,
+Open `http://127.0.0.1:5173`. The development server proxies `/api`, `POST /upload`,
 and raw `/files` requests to the backend on port 3000; other `/files` requests
-are served by Vite itself. Override the proxy target with `BACKEND_URL`:
+and the upload page are served by Vite itself. Override the proxy target with `BACKEND_URL`:
 
 ```bash
 BACKEND_URL=http://127.0.0.1:3001 bun run dev
@@ -109,6 +109,11 @@ server:
   host: '0.0.0.0'
   port: 3000
 
+features:
+  upload: true
+  privateFiles: true
+  homePage: true
+
 directories:
   public: '~/.local/stream-file-server/public'
   upload: '~/.local/stream-file-server/files'
@@ -125,6 +130,14 @@ relative paths resolve against `~/.local/stream-file-server/`.
 An existing configuration is never overwritten, including when it is invalid;
 the backend reports the validation error so the file can be corrected. Runtime
 directories are created after a valid configuration is loaded.
+
+Feature flags are optional and default to `true` when omitted, including in
+existing configuration files. Set `upload: false` to disable uploads and
+directory creation, `privateFiles: false` to block direct access to the hidden
+private directory while keeping its files on disk, or `homePage: false` to
+redirect `/` to `/files/`. The private directory provides no authentication.
+Restart the server and reload browser tabs after changing flags. Custom public
+asset overrides must adapt their own UI; the backend still enforces the flags.
 
 ## Containers and CI
 

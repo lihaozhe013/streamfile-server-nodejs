@@ -28,6 +28,10 @@ file in the same change. If code and this document disagree, fix both.
   paths pass through, a leading `~/` expands to the home directory, and
   relative paths resolve against the data root. The template ships with
   explicit `~/.local/stream-file-server/...` values.
+- Optional `features.upload`, `features.privateFiles`, and `features.homePage`
+  are booleans. Missing `features` or individual flags default to `true` for
+  existing configurations; non-boolean values fail startup. Configuration is
+  read only at startup, so changes require a server restart and browser reload.
 - Public assets resolve in order: (1) the configured public directory when it
   exists on disk, contains `index.html`, and carries no
   `.streamfile-dev-stub` marker (operator override/theme); (2) otherwise the
@@ -54,12 +58,12 @@ file in the same change. If code and this document disagree, fix both.
 
 ## File access contract
 
-| Location                 | Listing and search                | Direct URL                    |
-| ------------------------ | --------------------------------- | ----------------------------- |
-| `files/` non-dot entries | yes                               | served                        |
-| `files/private-files/`   | no (403 on listing, not searched) | served                        |
-| `files/incoming/`        | no (403 on listing, not searched) | 403                           |
-| dot-prefixed entries     | no                                | served when targeted directly |
+| Location                 | Listing and search                | Direct URL                                           |
+| ------------------------ | --------------------------------- | ---------------------------------------------------- |
+| `files/` non-dot entries | yes                               | served                                               |
+| `files/private-files/`   | no (403 on listing, not searched) | served when `privateFiles` is enabled; otherwise 403 |
+| `files/incoming/`        | no (403 on listing, not searched) | 403                                                  |
+| dot-prefixed entries     | no                                | served when targeted directly                        |
 
 `/files/<path>` handling order (`src/backend/routes/files.ts`):
 
@@ -70,6 +74,15 @@ file in the same change. If code and this document disagree, fix both.
 4. File: inaccessible or broken -> 404. `?raw=1` -> file bytes. `.md` and known
    media extensions -> SPA shell. Anything else (images, text, archives) ->
    file bytes.
+
+- When `features.privateFiles` is false, direct paths into the configured
+  private directory return 403 JSON `{error:'Access denied'}` before directory
+  index or raw handling. File and directory symlink aliases resolving into it
+  are inaccessible with the existing 404 behavior. The directory and files
+  remain on disk and hidden from listings and search. This is not authentication.
+- When `features.homePage` is false, `GET /` returns 302 to `/files/` before
+  static asset handling. A custom `files/index.html` keeps its usual priority
+  at `/files/`.
 
 - Regular-file symlinks under `files/` are intentionally served even when the
   real target is outside the file root; links whose target is inside
@@ -89,6 +102,8 @@ file in the same change. If code and this document disagree, fix both.
 
 Errors are JSON `{ "error": string }`.
 
+- `GET /api/features`: returns `{upload, privateFiles, homePage}` booleans with
+  `Cache-Control: no-store`. No filesystem paths are exposed.
 - `GET /api/list-files?path=<relative>` (path optional, default root): returns
   `FileEntry[]` = `{name, isDirectory}`. 400 invalid path, 403
   incoming/private, 500 `Failed to read directory` when stat fails.
@@ -108,6 +123,11 @@ Errors are JSON `{ "error": string }`.
   `{created, relativePath}`; an existing directory returns `created:false`.
   Rejects empty, `.`, traversal, dot segments, and incoming/private targets
   with 400.
+- When `features.upload` is false, `POST /api/mkdir` returns 403
+  `{error:'Uploads are disabled'}` before parsing the body. When
+  `features.privateFiles` is false, Markdown content requests into that
+  directory return 403 `{error:'Access denied'}`; listing and search retain
+  their existing protected-path responses.
 
 ## Upload contract
 
@@ -126,10 +146,19 @@ Errors are JSON `{ "error": string }`.
   filesystems.
 - Rejected uploads are deleted from staging. Errors are JSON 400/500. No upload
   size limit is configured.
+- When `features.upload` is false, `POST /upload` returns 403
+  `{error:'Uploads are disabled'}` before Multer stages a file.
 
 ## Frontend contract
 
-- Routes: `/` home and upload, `/files/*` data route, `*` not found.
+- Routes: `/` home and upload, `/upload` independent upload page, `/files/*`
+  data route, `*` not found. The SPA loads `/api/features` before showing the
+  navigation or pages and shows a route error if it fails.
+  With `homePage:false`, client navigation to `/` replaces the history entry
+  with `/files/`; Home navigation is hidden. With `upload:false`, all upload
+  controls are hidden and `/upload` renders the not-found page. With the home
+  page disabled but uploads enabled, Upload navigation points to `/upload` and
+  keeps both inbox and visible-folder destinations available.
   `src/routes/fileRouteLoader.ts` classifies by extension: `md` -> markdown
   page, media set -> media player, otherwise directory listing; a failed
   listing falls back to a resource page.
@@ -138,9 +167,9 @@ Errors are JSON `{ "error": string }`.
 - Markdown pipeline order is `remarkGfm`, `remarkMath`, then rehype
   `raw -> sanitize -> katex` in `MarkdownContent.tsx`. Relative links and
   images resolve against the current file and get `?raw=1` for assets.
-- Dev proxy (`vite.config.ts`): `/api` and `/upload` go to `BACKEND_URL`
+- Dev proxy (`vite.config.ts`): `/api` and `POST /upload` go to `BACKEND_URL`
   (default `http://127.0.0.1:3000`); `/files` is proxied only for `?raw=1`,
-  other `/files` requests are answered by Vite itself.
+  other `/files` requests and `GET /upload` are answered by Vite itself.
 
 ## Build, distribution, release
 

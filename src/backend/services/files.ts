@@ -82,11 +82,30 @@ export function isPrivatePath(paths: RuntimePaths, candidatePath: string): boole
   return isWithinDirectory(paths.privateDir, candidatePath);
 }
 
+export async function isPrivateRealPath(
+  paths: RuntimePaths,
+  candidatePath: string
+): Promise<boolean> {
+  try {
+    const [privateDir, candidate] = await Promise.all([
+      fs.realpath(paths.privateDir),
+      fs.realpath(candidatePath)
+    ]);
+    return isWithinDirectory(privateDir, candidate);
+  } catch {
+    return false;
+  }
+}
+
 export async function listPublicDirectory(
   directoryPath: string,
-  paths: RuntimePaths
+  paths: RuntimePaths,
+  privateFilesEnabled: boolean
 ): Promise<FileEntry[]> {
   const entries = await fs.readdir(directoryPath, { withFileTypes: true });
+  const blockedDirectories = privateFilesEnabled
+    ? [paths.incomingDir]
+    : [paths.incomingDir, paths.privateDir];
   const visibleEntries = entries.filter(
     (entry) =>
       !entry.name.startsWith('.') && entry.name !== 'incoming' && entry.name !== 'private-files'
@@ -97,15 +116,19 @@ export async function listPublicDirectory(
       const entryPath = path.join(directoryPath, entry.name);
 
       try {
+        if (isPrivatePath(paths, entryPath)) return null;
         const stats = await fs.stat(entryPath);
         if (stats.isDirectory()) {
-          if (!(await isSafeExistingPath(paths.filesDir, entryPath))) {
+          if (
+            !(await isSafeExistingPath(paths.filesDir, entryPath)) ||
+            (!privateFilesEnabled && (await isPrivateRealPath(paths, entryPath)))
+          ) {
             return null;
           }
           return { name: entry.name, isDirectory: true };
         }
 
-        if (!(await isAccessibleFilePath(paths.filesDir, entryPath, [paths.incomingDir]))) {
+        if (!(await isAccessibleFilePath(paths.filesDir, entryPath, blockedDirectories))) {
           return null;
         }
         return { name: entry.name, isDirectory: false };

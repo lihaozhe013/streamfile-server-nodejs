@@ -27,6 +27,7 @@ test('generates a default config under the home directories when missing', async
 
     assert.equal(runtime.configPath, configPath);
     assert.equal(runtime.server.port, 3000);
+    assert.deepEqual(runtime.features, { upload: true, privateFiles: true, homePage: true });
     assert.equal(runtime.paths.dataRoot, dataRoot);
     assert.equal(runtime.paths.publicDir, path.join(dataRoot, 'public'));
     assert.equal(runtime.paths.publicEmbedded, false);
@@ -95,6 +96,7 @@ directories:
     const runtime = await loadRuntimeConfig({ homeDir });
     const dataRoot = path.join(homeDir, '.local', 'stream-file-server');
     assert.equal(runtime.server.port, 4310);
+    assert.deepEqual(runtime.features, { upload: true, privateFiles: true, homePage: true });
     assert.equal(runtime.paths.publicDir, path.join(homeDir, 'custom-public'));
     assert.equal(runtime.paths.filesDir, path.join(dataRoot, 'files'));
     assert.equal(runtime.paths.incomingDir, path.join(dataRoot, 'files', 'incoming'));
@@ -261,6 +263,68 @@ directories:
     assert.equal(runtime.server.port, 4310);
     assert.equal(await fs.readFile(configPath, 'utf8'), config);
     assert.equal(await pathExists(path.join(runtime.paths.dataRoot, 'debug.log')), false);
+  } finally {
+    await fs.rm(homeDir, { recursive: true, force: true });
+  }
+});
+
+test('loads independently configured feature flags without rewriting the file', async () => {
+  const homeDir = await createTempHome();
+  try {
+    const configPath = path.join(homeDir, '.config', 'stream-file-server', 'config.yaml');
+    await fs.mkdir(path.dirname(configPath), { recursive: true });
+    const config = `server:
+  host: "127.0.0.1"
+  port: 3000
+features:
+  upload: false
+  privateFiles: false
+directories:
+  upload: "files"
+  incoming: "files/incoming"
+  private: "files/private-files"
+`;
+    await fs.writeFile(configPath, config);
+
+    const runtime = await loadRuntimeConfig({ homeDir });
+    assert.deepEqual(runtime.features, { upload: false, privateFiles: false, homePage: true });
+    assert.equal(await fs.readFile(configPath, 'utf8'), config);
+
+    const homeDisabledConfig = config.replace(
+      '  upload: false\n  privateFiles: false',
+      '  homePage: false'
+    );
+    await fs.writeFile(configPath, homeDisabledConfig);
+    const homeDisabledRuntime = await loadRuntimeConfig({ homeDir });
+    assert.deepEqual(homeDisabledRuntime.features, {
+      upload: true,
+      privateFiles: true,
+      homePage: false
+    });
+  } finally {
+    await fs.rm(homeDir, { recursive: true, force: true });
+  }
+});
+
+test('rejects non-boolean feature flags', async () => {
+  const homeDir = await createTempHome();
+  try {
+    const configPath = path.join(homeDir, '.config', 'stream-file-server', 'config.yaml');
+    await fs.mkdir(path.dirname(configPath), { recursive: true });
+    const baseConfig = `server:
+  host: "127.0.0.1"
+  port: 3000
+directories:
+  upload: "files"
+  incoming: "files/incoming"
+  private: "files/private-files"
+`;
+    for (const field of ['upload', 'privateFiles', 'homePage']) {
+      await fs.writeFile(configPath, `${baseConfig}features:\n  ${field}: "false"\n`);
+      await assert.rejects(loadRuntimeConfig({ homeDir }), new RegExp(`features\\.${field}`));
+    }
+    await fs.writeFile(configPath, `${baseConfig}features: null\n`);
+    await assert.rejects(loadRuntimeConfig({ homeDir }), /Invalid config field: features$/);
   } finally {
     await fs.rm(homeDir, { recursive: true, force: true });
   }

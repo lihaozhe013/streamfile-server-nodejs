@@ -1,11 +1,14 @@
 import { HardDrive, Home, Menu, Upload, X } from 'lucide-react';
 import { useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router';
+import { Link, Outlet, useLoaderData, useLocation } from 'react-router';
 import ThemeToggle from '@/components/ThemeToggle';
+import type { RuntimeFeatures } from '@/types';
 
 export default function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const features = useLoaderData() as RuntimeFeatures;
+  const homePath = features.homePage ? '/' : '/files/';
 
   const closeMenu = () => setMobileMenuOpen(false);
 
@@ -13,7 +16,7 @@ export default function AppShell() {
     <div className="app-shell">
       <header className="app-header">
         <div className="header-inner">
-          <Link className="brand" to="/" onClick={closeMenu}>
+          <Link className="brand" to={homePath} onClick={closeMenu}>
             <span className="brand-mark">
               <HardDrive aria-hidden="true" size={20} />
             </span>
@@ -36,14 +39,16 @@ export default function AppShell() {
           </button>
 
           <nav className={`main-nav ${mobileMenuOpen ? 'main-nav-open' : ''}`}>
-            <Link
-              className={location.pathname === '/' ? 'nav-link active' : 'nav-link'}
-              to="/"
-              onClick={closeMenu}
-            >
-              <Home aria-hidden="true" size={17} />
-              Home
-            </Link>
+            {features.homePage && (
+              <Link
+                className={location.pathname === '/' ? 'nav-link active' : 'nav-link'}
+                to="/"
+                onClick={closeMenu}
+              >
+                <Home aria-hidden="true" size={17} />
+                Home
+              </Link>
+            )}
             <Link
               className={location.pathname.startsWith('/files') ? 'nav-link active' : 'nav-link'}
               to="/files/"
@@ -52,10 +57,16 @@ export default function AppShell() {
               <HardDrive aria-hidden="true" size={17} />
               Browse files
             </Link>
-            <Link className="nav-link nav-upload" to="/#upload" onClick={closeMenu}>
-              <Upload aria-hidden="true" size={17} />
-              Upload
-            </Link>
+            {features.upload && (
+              <Link
+                className="nav-link nav-upload"
+                to={features.homePage ? '/#upload' : '/upload'}
+                onClick={closeMenu}
+              >
+                <Upload aria-hidden="true" size={17} />
+                Upload
+              </Link>
+            )}
           </nav>
 
           <ThemeToggle />
@@ -63,7 +74,7 @@ export default function AppShell() {
       </header>
 
       <main className="page-container">
-        <Outlet />
+        <Outlet context={features} />
       </main>
 
       <footer className="app-footer">

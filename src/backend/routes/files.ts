@@ -7,6 +7,8 @@ import {
   decodeRoutePath,
   isAccessibleFilePath,
   isIncomingPath,
+  isPrivatePath,
+  isPrivateRealPath,
   isSafeExistingPath,
   resolveWithinDirectory
 } from '@/services/files';
@@ -49,6 +51,10 @@ async function handleFileRequest(
     response.status(403).json({ error: 'Access denied' });
     return;
   }
+  if (!runtime.features.privateFiles && isPrivatePath(runtime.paths, fullPath)) {
+    response.status(403).json({ error: 'Access denied' });
+    return;
+  }
 
   const stats = await fs.stat(fullPath).catch(() => null);
   if (!stats) {
@@ -57,7 +63,10 @@ async function handleFileRequest(
   }
 
   if (stats.isDirectory()) {
-    if (!(await isSafeExistingPath(runtime.paths.filesDir, fullPath))) {
+    if (
+      !(await isSafeExistingPath(runtime.paths.filesDir, fullPath)) ||
+      (!runtime.features.privateFiles && (await isPrivateRealPath(runtime.paths, fullPath)))
+    ) {
       await sendNotFoundPage(response, runtime);
       return;
     }
@@ -72,9 +81,10 @@ async function handleFileRequest(
     return;
   }
 
-  if (
-    !(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, [runtime.paths.incomingDir]))
-  ) {
+  const blockedDirectories = runtime.features.privateFiles
+    ? [runtime.paths.incomingDir]
+    : [runtime.paths.incomingDir, runtime.paths.privateDir];
+  if (!(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, blockedDirectories))) {
     await sendNotFoundPage(response, runtime);
     return;
   }

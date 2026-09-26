@@ -30,6 +30,14 @@ export function createUploadRouter(runtime: RuntimeConfig) {
     })
   });
 
+  router.post('/upload', (_request, response, next) => {
+    if (!runtime.features.upload) {
+      response.status(403).json({ error: 'Uploads are disabled' });
+      return;
+    }
+    next();
+  });
+
   router.post('/upload', upload.single('file'), async (request: Request, response) => {
     if (!request.file) {
       response.status(400).json({ error: 'No file uploaded' });

@@ -3,6 +3,12 @@ export interface FileEntry {
   isDirectory: boolean;
 }
 
+export interface RuntimeFeatures {
+  upload: boolean;
+  privateFiles: boolean;
+  homePage: boolean;
+}
+
 export interface SearchResult {
   file_name: string;
   file_path: string;

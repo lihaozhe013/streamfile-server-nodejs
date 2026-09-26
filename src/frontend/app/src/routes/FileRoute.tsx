@@ -8,6 +8,7 @@ import PageState from '@/components/PageState';
 import Toast, { type ToastTone } from '@/components/Toast';
 import UploadDialog from '@/components/UploadDialog';
 import { directoryHref, fileHref, getFileKind, parentDirectoryPath } from '@/lib/paths';
+import { useFeatures } from '@/lib/features';
 
 const MarkdownPage = lazy(() => import('@/routes/MarkdownPage'));
 const MediaPage = lazy(() => import('@/routes/MediaPage'));
@@ -31,6 +32,7 @@ export default function FileRoute() {
 }
 
 function DirectoryPage({ data }: { data: Extract<FileRouteData, { kind: 'directory' }> }) {
+  const features = useFeatures();
   const revalidator = useRevalidator();
   const [, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState(data.searchQuery);
@@ -63,10 +65,12 @@ function DirectoryPage({ data }: { data: Extract<FileRouteData, { kind: 'directo
           <Breadcrumbs path={data.path} />
         </div>
         <div className="page-actions">
-          <button className="button button-secondary" onClick={() => setIsUploadOpen(true)}>
-            <Upload aria-hidden="true" size={17} />
-            Upload here
-          </button>
+          {features.upload && (
+            <button className="button button-secondary" onClick={() => setIsUploadOpen(true)}>
+              <Upload aria-hidden="true" size={17} />
+              Upload here
+            </button>
+          )}
           <button
             className="button button-secondary"
             onClick={() => revalidator.revalidate()}
@@ -114,16 +118,18 @@ function DirectoryPage({ data }: { data: Extract<FileRouteData, { kind: 'directo
       ) : (
         <PageState
           kind="empty"
-          message="Upload a file here to get started."
+          message={features.upload ? 'Upload a file here to get started.' : 'No files here yet.'}
           action={
-            <button className="button button-primary" onClick={() => setIsUploadOpen(true)}>
-              Upload here
-            </button>
+            features.upload ? (
+              <button className="button button-primary" onClick={() => setIsUploadOpen(true)}>
+                Upload here
+              </button>
+            ) : undefined
           }
         />
       )}
 
-      {isUploadOpen && (
+      {features.upload && isUploadOpen && (
         <UploadDialog
           destination={data.path || '.'}
           onClose={() => setIsUploadOpen(false)}

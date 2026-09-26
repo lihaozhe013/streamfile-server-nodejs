@@ -15,8 +15,8 @@ export default function RouteErrorPage() {
       title="Unable to load this page"
       message={message}
       action={
-        <Link className="button button-primary" to="/">
-          Return home
+        <Link className="button button-primary" to="/files/">
+          Browse files
         </Link>
       }
     />

@@ -6,6 +6,7 @@ import {
   isAccessibleFilePath,
   isIncomingPath,
   isPrivatePath,
+  isPrivateRealPath,
   isSafeExistingPath,
   listPublicDirectory,
   resolveWithinDirectory
@@ -15,6 +16,11 @@ import { createVisibleDirectory } from '@/services/upload';
 
 export function createApiRouter(runtime: RuntimeConfig) {
   const router = express.Router();
+
+  router.get('/api/features', (_request, response) => {
+    response.setHeader('Cache-Control', 'no-store');
+    response.json(runtime.features);
+  });
 
   router.get(
     '/api/markdown-content',
@@ -34,14 +40,19 @@ export function createApiRouter(runtime: RuntimeConfig) {
         response.status(403).json({ error: 'Access denied' });
         return;
       }
+      if (!runtime.features.privateFiles && isPrivatePath(runtime.paths, fullPath)) {
+        response.status(403).json({ error: 'Access denied' });
+        return;
+      }
       if (path.extname(fullPath).toLowerCase() !== '.md') {
         response.status(404).json({ error: 'File not found or not a markdown file' });
         return;
       }
 
-      if (
-        !(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, [runtime.paths.incomingDir]))
-      ) {
+      const blockedDirectories = runtime.features.privateFiles
+        ? [runtime.paths.incomingDir]
+        : [runtime.paths.incomingDir, runtime.paths.privateDir];
+      if (!(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, blockedDirectories))) {
         response.status(404).json({ error: 'File not found or not a markdown file' });
         return;
       }
@@ -63,7 +74,11 @@ export function createApiRouter(runtime: RuntimeConfig) {
         response.status(400).json({ error: 'Invalid path' });
         return;
       }
-      if (isIncomingPath(runtime.paths, fullPath) || isPrivatePath(runtime.paths, fullPath)) {
+      if (
+        isIncomingPath(runtime.paths, fullPath) ||
+        isPrivatePath(runtime.paths, fullPath) ||
+        (!runtime.features.privateFiles && (await isPrivateRealPath(runtime.paths, fullPath)))
+      ) {
         response.status(403).json({ error: 'Access denied' });
         return;
       }
@@ -72,7 +87,9 @@ export function createApiRouter(runtime: RuntimeConfig) {
         return;
       }
 
-      response.json(await listPublicDirectory(fullPath, runtime.paths));
+      response.json(
+        await listPublicDirectory(fullPath, runtime.paths, runtime.features.privateFiles)
+      );
     })
   );
 
@@ -94,13 +111,19 @@ export function createApiRouter(runtime: RuntimeConfig) {
     if (
       isIncomingPath(runtime.paths, searchPath) ||
       isPrivatePath(runtime.paths, searchPath) ||
+      (!runtime.features.privateFiles && (await isPrivateRealPath(runtime.paths, searchPath))) ||
       !(await isSafeExistingPath(runtime.paths.filesDir, searchPath))
     ) {
       response.json({ error: 'Invalid search path' });
       return;
     }
 
-    const results = await searchFilesInPath(fileName, searchPath, runtime.paths);
+    const results = await searchFilesInPath(
+      fileName,
+      searchPath,
+      runtime.paths,
+      runtime.features.privateFiles
+    );
     response.json({
       query: { file_name: fileName, current_dir: currentDir },
       results,
@@ -110,6 +133,13 @@ export function createApiRouter(runtime: RuntimeConfig) {
 
   router.post(
     '/api/mkdir',
+    (_request, response, next) => {
+      if (!runtime.features.upload) {
+        response.status(403).json({ error: 'Uploads are disabled' });
+        return;
+      }
+      next();
+    },
     express.json({ limit: '16kb' }),
     asyncHandler(async (request, response) => {
       const body = request.body;

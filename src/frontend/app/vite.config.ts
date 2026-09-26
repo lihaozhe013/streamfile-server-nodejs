@@ -33,7 +33,12 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': backendProxy,
-      '/upload': backendProxy,
+      '/upload': {
+        ...backendProxy,
+        bypass(request: { method?: string; url?: string }) {
+          return request.method === 'POST' ? undefined : request.url;
+        }
+      },
       '/files': {
         ...backendProxy,
         bypass(request: { url?: string }) {

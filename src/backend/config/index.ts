@@ -2,7 +2,7 @@ import fsSync from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import type { Config, RuntimeConfig, RuntimePaths } from '@/types/index';
+import type { Config, RuntimeConfig, RuntimeFeatures, RuntimePaths } from '@/types/index';
 import { appendDebugLog } from '@/utils/logger';
 import defaultConfigTemplate from './default.yaml' with { type: 'text' };
 
@@ -33,6 +33,28 @@ function readPort(value: unknown): number {
   return value;
 }
 
+function readFeatures(value: unknown): RuntimeFeatures {
+  if (value === undefined) {
+    return { upload: true, privateFiles: true, homePage: true };
+  }
+  if (!isRecord(value) || Array.isArray(value)) {
+    throw new Error('Invalid config field: features');
+  }
+
+  const readFlag = (name: keyof RuntimeFeatures): boolean => {
+    const flag = value[name];
+    if (flag === undefined) return true;
+    if (typeof flag !== 'boolean') throw new Error(`Invalid config field: features.${name}`);
+    return flag;
+  };
+
+  return {
+    upload: readFlag('upload'),
+    privateFiles: readFlag('privateFiles'),
+    homePage: readFlag('homePage')
+  };
+}
+
 function readOptionalDirectory(value: unknown): string | null {
   if (value === undefined || value === null) return null;
   if (typeof value !== 'string') {
@@ -55,6 +77,7 @@ function parseConfig(value: unknown): Config {
       host: readString(server.host, 'server.host'),
       port: readPort(server.port)
     },
+    features: readFeatures(value.features),
     directories: {
       public: readOptionalDirectory(directories.public),
       upload: readString(directories.upload, 'directories.upload'),
@@ -218,6 +241,7 @@ export async function loadRuntimeConfig(options: LoadConfigOptions = {}): Promis
 
   return {
     server: config.server,
+    features: config.features,
     paths: toRuntimePaths(
       config,
       home,

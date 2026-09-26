@@ -8,6 +8,7 @@ export interface Config {
     host: string;
     port: number;
   };
+  features: RuntimeFeatures;
   directories: {
     /** Optional; resolved public asset source with an embedded fallback. */
     public: string | null;
@@ -15,6 +16,12 @@ export interface Config {
     incoming: string;
     private: string;
   };
+}
+
+export interface RuntimeFeatures {
+  upload: boolean;
+  privateFiles: boolean;
+  homePage: boolean;
 }
 
 export interface RuntimePaths {
@@ -33,6 +40,7 @@ export interface RuntimePaths {
 
 export interface RuntimeConfig {
   server: Config['server'];
+  features: RuntimeFeatures;
   paths: RuntimePaths;
   configPath: string;
 }

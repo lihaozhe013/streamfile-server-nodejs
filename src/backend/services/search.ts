@@ -39,9 +39,13 @@ async function scanCandidates(fileName: string, searchPath: string): Promise<str
 export async function searchFilesInPath(
   fileName: string,
   searchPath: string,
-  paths: RuntimePaths
+  paths: RuntimePaths,
+  privateFilesEnabled: boolean
 ): Promise<SearchResult[]> {
   const entries = await scanCandidates(fileName, searchPath);
+  const blockedDirectories = privateFilesEnabled
+    ? [paths.incomingDir]
+    : [paths.incomingDir, paths.privateDir];
 
   const query = fileName.toLowerCase();
   const candidates = entries
@@ -58,7 +62,7 @@ export async function searchFilesInPath(
 
   const results = await Promise.all(
     candidates.map(async (absolutePath) => {
-      if (!(await isAccessibleFilePath(paths.filesDir, absolutePath, [paths.incomingDir]))) {
+      if (!(await isAccessibleFilePath(paths.filesDir, absolutePath, blockedDirectories))) {
         return null;
       }
 

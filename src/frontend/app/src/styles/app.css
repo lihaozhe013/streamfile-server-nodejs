@@ -376,6 +376,16 @@ a {
   gap: 24px;
   margin-top: 32px;
 }
+.home-grid-single {
+  grid-template-columns: 1fr;
+}
+.upload-page {
+  width: min(680px, 100%);
+  margin: 0 auto;
+}
+.upload-page > .page-heading-row {
+  margin-bottom: 24px;
+}
 .panel {
   padding: 26px;
   border: 1px solid var(--border);

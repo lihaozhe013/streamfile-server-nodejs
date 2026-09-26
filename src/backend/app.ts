@@ -13,6 +13,9 @@ export function createApp(runtime: RuntimeConfig): Express {
   app.use(createFilesRouter(runtime));
   app.use(createApiRouter(runtime));
   app.use(createUploadRouter(runtime));
+  if (!runtime.features.homePage) {
+    app.get('/', (_request, response) => response.redirect(302, '/files/'));
+  }
   app.use(createPublicAssetRouter(runtime.paths));
   app.use('/public', createPublicAssetRouter(runtime.paths));
 

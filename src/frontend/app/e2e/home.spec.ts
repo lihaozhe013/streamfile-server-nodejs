@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { mockFeatures } from './mockFeatures';
 
 test('renders the SPA home page and navigates without a document reload', async ({ page }) => {
+  await mockFeatures(page);
   await page.route('**/api/list-files*', async (route) => {
     await route.fulfill({
       status: 200,

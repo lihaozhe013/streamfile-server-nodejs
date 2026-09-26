@@ -6,7 +6,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { createApp } from '@/app';
 import { ensureRuntimeDirectories } from '@/config';
-import type { RuntimeConfig, RuntimePaths } from '@/types/index';
+import type { RuntimeConfig, RuntimeFeatures, RuntimePaths } from '@/types/index';
 
 interface Fixture {
   rootDir: string;
@@ -14,7 +14,7 @@ interface Fixture {
   runtime: RuntimeConfig;
 }
 
-async function createFixture(): Promise<Fixture> {
+async function createFixture(features: Partial<RuntimeFeatures> = {}): Promise<Fixture> {
   const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'streamfile-backend-'));
   const publicDir = path.join(rootDir, 'public');
   const filesDir = path.join(rootDir, 'files');
@@ -52,6 +52,7 @@ async function createFixture(): Promise<Fixture> {
 
   const runtime: RuntimeConfig = {
     server: { host: '127.0.0.1', port: 0 },
+    features: { upload: true, privateFiles: true, homePage: true, ...features },
     paths,
     configPath: path.join(rootDir, 'config.yaml')
   };
@@ -60,9 +61,10 @@ async function createFixture(): Promise<Fixture> {
 }
 
 async function withServer(
-  callback: (baseUrl: string, fixture: Fixture) => Promise<void>
+  callback: (baseUrl: string, fixture: Fixture) => Promise<void>,
+  features: Partial<RuntimeFeatures> = {}
 ): Promise<void> {
-  const fixture = await createFixture();
+  const fixture = await createFixture(features);
   const server = createApp(fixture.runtime).listen(0, '127.0.0.1');
 
   try {
@@ -470,6 +472,139 @@ test('keeps API 404s separate from the SPA fallback', async () => {
   });
 });
 
+test('reports effective feature flags without caching', async () => {
+  await withServer(
+    async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/features`);
+      assert.equal(response.status, 200);
+      assert.equal(response.headers.get('cache-control'), 'no-store');
+      assert.deepEqual(await response.json(), {
+        upload: false,
+        privateFiles: false,
+        homePage: false
+      });
+    },
+    { upload: false, privateFiles: false, homePage: false }
+  );
+});
+
+test('rejects uploads and directory creation before writing when uploads are disabled', async () => {
+  await withServer(
+    async (baseUrl, fixture) => {
+      const stagedBefore = await fs.readdir(fixture.paths.incomingDir);
+      const uploaded = await uploadTo(baseUrl, 'blocked.txt', 'content', '.');
+      assert.equal(uploaded.status, 403);
+      assert.deepEqual(await uploaded.json(), { error: 'Uploads are disabled' });
+      assert.deepEqual(await fs.readdir(fixture.paths.incomingDir), stagedBefore);
+      await assert.rejects(fs.access(path.join(fixture.paths.filesDir, 'blocked.txt')));
+
+      const mkdir = await fetch(`${baseUrl}/api/mkdir`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ path: 'blocked-folder' })
+      });
+      assert.equal(mkdir.status, 403);
+      assert.deepEqual(await mkdir.json(), { error: 'Uploads are disabled' });
+      await assert.rejects(fs.access(path.join(fixture.paths.filesDir, 'blocked-folder')));
+    },
+    { upload: false }
+  );
+});
+
+test('blocks direct private files while keeping them on disk and hidden', async () => {
+  await withServer(
+    async (baseUrl, fixture) => {
+      await fs.writeFile(path.join(fixture.paths.privateDir, 'note.md'), '# Secret');
+      await fs.writeFile(path.join(fixture.paths.privateDir, 'clip.mp4'), 'video');
+      const blockedUrls = [
+        '/files/private-files/secret.txt',
+        '/files/private-files/secret.txt?raw=1',
+        '/files/private-files/note.md',
+        '/files/private-files/note.md?raw=1',
+        '/files/private-files/clip.mp4',
+        '/files/private-files/clip.mp4?raw=1',
+        '/files/private-files/'
+      ];
+      for (const url of blockedUrls) {
+        const response = await fetch(`${baseUrl}${url}`);
+        assert.equal(response.status, 403, url);
+        assert.deepEqual(await response.json(), { error: 'Access denied' });
+      }
+      const markdown = await fetch(`${baseUrl}/api/markdown-content?path=private-files/note.md`);
+      assert.equal(markdown.status, 403);
+      assert.deepEqual(await markdown.json(), { error: 'Access denied' });
+      assert.equal((await fetch(`${baseUrl}/api/list-files?path=private-files`)).status, 403);
+      const search = await fetch(`${baseUrl}/api/search?q=secret&dir=private-files`);
+      assert.equal(search.status, 200);
+      assert.deepEqual(await search.json(), { error: 'Invalid search path' });
+      assert.equal(
+        await fs.readFile(path.join(fixture.paths.privateDir, 'secret.txt'), 'utf8'),
+        'secret'
+      );
+      assert.equal((await fetch(`${baseUrl}/files/folder/note.txt`)).status, 200);
+    },
+    { privateFiles: false }
+  );
+});
+
+test('blocks symlink aliases into disabled private files', async (t) => {
+  await withServer(
+    async (baseUrl, fixture) => {
+      const fileAlias = path.join(fixture.paths.filesDir, 'secret-alias.txt');
+      const markdownAlias = path.join(fixture.paths.filesDir, 'secret-alias.md');
+      const directoryAlias = path.join(fixture.paths.filesDir, 'private-alias');
+      await fs.writeFile(path.join(fixture.paths.privateDir, 'secret.md'), '# Secret');
+      try {
+        await fs.symlink(path.join(fixture.paths.privateDir, 'secret.txt'), fileAlias);
+        await fs.symlink(path.join(fixture.paths.privateDir, 'secret.md'), markdownAlias);
+        await fs.symlink(fixture.paths.privateDir, directoryAlias, 'dir');
+      } catch (error) {
+        t.skip(`symlinks unavailable: ${String(error)}`);
+        return;
+      }
+
+      assert.equal((await fetch(`${baseUrl}/files/secret-alias.txt?raw=1`)).status, 404);
+      assert.equal(
+        (await fetch(`${baseUrl}/api/markdown-content?path=secret-alias.md`)).status,
+        404
+      );
+      assert.equal((await fetch(`${baseUrl}/files/private-alias/`)).status, 404);
+      assert.equal((await fetch(`${baseUrl}/files/private-alias/secret.txt?raw=1`)).status, 404);
+      assert.equal((await fetch(`${baseUrl}/api/list-files?path=private-alias`)).status, 403);
+      const listing = await fetch(`${baseUrl}/api/list-files`);
+      const entries = (await listing.json()) as Array<{ name: string }>;
+      assert.equal(
+        entries.some((entry) => entry.name.includes('alias')),
+        false
+      );
+      const search = await fetch(`${baseUrl}/api/search?q=secret-alias&dir=`);
+      assert.equal((await search.json()).count, 0);
+    },
+    { privateFiles: false }
+  );
+});
+
+test('redirects the root to files when the home page is disabled', async () => {
+  await withServer(
+    async (baseUrl, fixture) => {
+      await fs.writeFile(
+        path.join(fixture.paths.filesDir, 'index.html'),
+        '<title>Custom root</title>'
+      );
+      const root = await fetch(`${baseUrl}/`, { redirect: 'manual' });
+      assert.equal(root.status, 302);
+      assert.equal(root.headers.get('location'), '/files/');
+      const filesRoot = await fetch(`${baseUrl}/files/`);
+      assert.equal(filesRoot.status, 200);
+      assert.match(await filesRoot.text(), /Custom root/);
+      const missingApi = await fetch(`${baseUrl}/api/missing`);
+      assert.equal(missingApi.status, 404);
+      assert.deepEqual(await missingApi.json(), { error: 'API endpoint not found' });
+    },
+    { homePage: false }
+  );
+});
+
 test('serves paths through dot directories and direct dot files', async () => {
   const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'streamfile-dothome-'));
   try {
@@ -488,6 +623,7 @@ test('serves paths through dot directories and direct dot files', async () => {
 
     const runtime: RuntimeConfig = {
       server: { host: '127.0.0.1', port: 0 },
+      features: { upload: true, privateFiles: true, homePage: true },
       paths: {
         dataRoot: homeDir,
         publicDir,
