@@ -51,7 +51,8 @@ function isContentRequest(request: Request): boolean {
     isReadRequest(request) &&
     (request.path === '/files' ||
       request.path.startsWith('/files/') ||
-      request.path === '/api/markdown-content')
+      request.path === '/api/markdown-content' ||
+      request.path === '/api/subtitle-vtt')
   );
 }
 

@@ -102,6 +102,19 @@ run it; on first start it creates its config under `~/.config/stream-file-server
 and stores data under `~/.local/stream-file-server/`. Setting `$HOME` (or
 `%USERPROFILE%` on Windows) relocates both.
 
+## Video subtitles
+
+Place an SRT file beside a video with the same basename, such as `movie.mp4`
+and `movie.srt`, to show subtitles automatically. The player's subtitle menu
+also lists other SRT files in that directory, so viewers can switch tracks or
+turn subtitles off while playing full screen. Subtitles are converted to WebVTT
+when selected; UTF-8 and GB18030 files are supported. If text looks garbled,
+use the encoding control above the player.
+
+`private-files` cannot be listed. For a video there, enter the exact name of a
+known SRT file from the same directory to add it to the subtitle menu. This
+does not change the directory's access rules or add authentication.
+
 ## Configuration
 
 ```yaml

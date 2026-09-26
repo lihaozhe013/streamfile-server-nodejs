@@ -8,6 +8,22 @@ import type {
 } from '@/types';
 import { ApiError } from '@/types';
 
+export type SubtitleEncoding = 'auto' | 'utf-8' | 'gb18030';
+
+export function subtitleVttHref(filePath: string, encoding: SubtitleEncoding = 'auto'): string {
+  return `/api/subtitle-vtt?${new URLSearchParams({ path: filePath, encoding })}`;
+}
+
+export async function probeSubtitle(
+  filePath: string,
+  encoding: SubtitleEncoding = 'auto',
+  signal?: AbortSignal
+): Promise<void> {
+  const response = await fetch(subtitleVttHref(filePath, encoding), { method: 'HEAD', signal });
+  if (!response.ok)
+    throw new ApiError(`Subtitle request failed (${response.status})`, response.status);
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
   const text = await response.text();
   let payload: unknown = null;

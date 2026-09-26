@@ -3,6 +3,7 @@ import type { RuntimeConfig } from '@/types/index';
 import { errorHandler } from '@/middleware/errors';
 import { createApiRouter } from '@/routes/api';
 import { createFilesRouter, sendSpaShell } from '@/routes/files';
+import { createSubtitlesRouter } from '@/routes/subtitles';
 import { createPublicAssetRouter } from '@/services/publicAssets';
 import { createUploadRouter } from '@/routes/upload';
 import { PublicTrafficLimits } from '@/services/publicTrafficLimits';
@@ -18,6 +19,7 @@ export function createApp(runtime: RuntimeConfig): Express {
 
   app.use(createFilesRouter(runtime, trafficLimits));
   app.use(createApiRouter(runtime, trafficLimits));
+  app.use(createSubtitlesRouter(runtime, trafficLimits));
   app.use(createUploadRouter(runtime));
   if (!runtime.features.homePage) {
     app.get('/', (_request, response) => response.redirect(302, '/files/'));

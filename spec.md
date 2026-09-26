@@ -119,6 +119,15 @@ Errors are JSON `{ "error": string }`.
 - `GET /api/markdown-content?path=<relative .md>`: returns
   `{content, filename, path}` where `path` is POSIX-relative. 400 missing or
   invalid path, 403 incoming, 404 for non-`.md` or inaccessible files.
+- `GET/HEAD /api/subtitle-vtt?path=<relative .srt>&encoding=auto|utf-8|gb18030`:
+  returns UTF-8 WebVTT (`text/vtt`) for a directly accessible SRT file. The
+  encoding defaults to `auto`, which tries strict UTF-8 then GB18030. HEAD
+  validates the file without sending content. Missing/invalid parameters or
+  non-SRT paths return 400; incoming or disabled-private paths return 403;
+  missing/inaccessible files return 404; files above 5 MiB return 413; content
+  that cannot be decoded with the chosen encoding or parsed as SRT returns 422.
+  Errors use the normal JSON shape.
+  Regular-file symlinks retain the same direct-file access rule as `/files/*`.
 - `POST /api/mkdir` with JSON `{path}`, body limit 16kb: returns
   `{created, relativePath}`; an existing directory returns `created:false`.
   Rejects empty, `.`, traversal, dot segments, and incoming/private targets
@@ -136,15 +145,17 @@ Errors are JSON `{ "error": string }`.
   `X-Accel-Limit-Rate` or `X-Robots-Tag`.
 - When true, a per-process token bucket allows each client 10 requests/second
   (capacity 30), with a global 30 requests/second bucket (capacity 60). GET and
-  HEAD requests for `/files/*` and `/api/markdown-content` share a client
-  60 requests/minute bucket (capacity 20) and a global 10 requests/second
+  HEAD requests for `/files/*`, `/api/markdown-content`, and
+  `/api/subtitle-vtt` share a client 60 requests/minute bucket (capacity 20)
+  and a global 10 requests/second
   bucket (capacity 20). `/api/list-files` has a client 30 requests/minute
   bucket (capacity 10). Both search URL forms share a client 6 requests/minute
   bucket (capacity 3) and a global 30 requests/minute bucket (capacity 10).
   Exceeding any bucket returns 429 JSON `{ "error": "Too many requests" }`,
   `Retry-After: 60`, and `Cache-Control: no-store`.
-- Actual file responses and Markdown API responses backed by files larger than
-  1 MiB have at most four concurrent transfers per client and 16 globally.
+- Actual file responses, Markdown API responses, and subtitle VTT responses
+  backed by files larger than 1 MiB have at most four concurrent transfers per
+  client and 16 globally.
   Slots are released on completion or connection close. These responses emit
   `X-Accel-Limit-Rate: 524288` and `X-Accel-Buffering: yes` for Nginx to cap
   transfer speed at 512 KiB/s while keeping disk buffering disabled.
@@ -192,6 +203,14 @@ Errors are JSON `{ "error": string }`.
   listing falls back to a resource page.
 - `image` extensions are linked directly to `/files/<path>` (no `?raw=1`) and
   rendered by the browser; backend serves them as bytes.
+- Video pages list same-directory `.srt` files and add them to the Video.js
+  subtitle menu. A subtitle with exactly the video basename is enabled by
+  default; viewers can switch tracks or turn subtitles off, including in full
+  screen. Subtitle tracks load on selection. If directory listing is forbidden,
+  the page probes only the same-name SRT and lets the viewer enter a known SRT
+  filename from that directory. The encoding control applies to the active
+  track and offers automatic detection, UTF-8, or GB18030. Audio pages have no
+  subtitle controls. Subtitle failures do not stop media playback.
 - Markdown pipeline order is `remarkGfm`, `remarkMath`, then rehype
   `raw -> sanitize -> katex` in `MarkdownContent.tsx`. Relative links and
   images resolve against the current file and get `?raw=1` for assets.
