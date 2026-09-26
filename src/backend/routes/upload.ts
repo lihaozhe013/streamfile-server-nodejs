@@ -43,7 +43,7 @@ export function createUploadRouter(runtime: RuntimeConfig) {
       // Never leave a rejected upload behind in the staging directory.
       void fs.unlink(stagedPath).catch(() => undefined);
       void appendDebugLog(
-        runtime.paths.rootDir,
+        runtime.paths.dataRoot,
         `[upload] result=rejected status=${status} bytes=${request.file?.size ?? 0}`
       );
       response.status(status).json({ error: message });
@@ -64,7 +64,7 @@ export function createUploadRouter(runtime: RuntimeConfig) {
 
     if (destination.mode === 'incoming') {
       void appendDebugLog(
-        runtime.paths.rootDir,
+        runtime.paths.dataRoot,
         `[upload] result=ok target=incoming bytes=${request.file.size}`
       );
       response.send({
@@ -81,7 +81,7 @@ export function createUploadRouter(runtime: RuntimeConfig) {
       request.file.path = path.join(destination.absolutePath, finalName);
       const relativePath = [destination.relativePath, finalName].filter(Boolean).join('/');
       void appendDebugLog(
-        runtime.paths.rootDir,
+        runtime.paths.dataRoot,
         `[upload] result=ok target=visible renamed=${
           finalName !== stagedName
         } bytes=${request.file.size}`

@@ -11,6 +11,7 @@ import {
   resolveWithinDirectory
 } from '@/services/files';
 import { isMediaExtension } from '@/utils/isMediaExtension';
+import { sendPublicFile } from '@/services/publicAssets';
 
 export function createFilesRouter(runtime: RuntimeConfig): Router {
   const router = express.Router();
@@ -51,13 +52,13 @@ async function handleFileRequest(
 
   const stats = await fs.stat(fullPath).catch(() => null);
   if (!stats) {
-    response.status(404).sendFile(runtime.paths.notFoundPath);
+    await sendNotFoundPage(response, runtime);
     return;
   }
 
   if (stats.isDirectory()) {
     if (!(await isSafeExistingPath(runtime.paths.filesDir, fullPath))) {
-      response.status(404).sendFile(runtime.paths.notFoundPath);
+      await sendNotFoundPage(response, runtime);
       return;
     }
 
@@ -74,7 +75,7 @@ async function handleFileRequest(
   if (
     !(await isAccessibleFilePath(runtime.paths.filesDir, fullPath, [runtime.paths.incomingDir]))
   ) {
-    response.status(404).sendFile(runtime.paths.notFoundPath);
+    await sendNotFoundPage(response, runtime);
     return;
   }
 
@@ -94,20 +95,29 @@ async function handleFileRequest(
 
 export function sendFile(response: Response, filePath: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    response.sendFile(filePath, (error) => {
+    // Home-based data paths contain dot directories (e.g. ~/.local), which
+    // send would otherwise hide behind its dotfile protection.
+    response.sendFile(filePath, { dotfiles: 'allow' }, (error) => {
       if (error) reject(error);
       else resolve();
     });
   });
 }
 
+export async function sendNotFoundPage(response: Response, runtime: RuntimeConfig): Promise<void> {
+  response.status(404);
+  await sendPublicFile(response, runtime.paths, runtime.paths.notFoundPath);
+}
+
 export async function sendSpaShell(response: Response, runtime: RuntimeConfig): Promise<void> {
-  try {
-    await fs.access(runtime.paths.spaShellPath);
-  } catch {
-    throw new Error(
-      `SPA shell is missing at ${runtime.paths.spaShellPath}. Run bun run build before starting the production server.`
-    );
+  if (!runtime.paths.publicEmbedded) {
+    try {
+      await fs.access(runtime.paths.spaShellPath);
+    } catch {
+      throw new Error(
+        `SPA shell is missing at ${runtime.paths.spaShellPath}. Run bun run build before starting the production server.`
+      );
+    }
   }
-  await sendFile(response, runtime.paths.spaShellPath);
+  await sendPublicFile(response, runtime.paths, runtime.paths.spaShellPath);
 }

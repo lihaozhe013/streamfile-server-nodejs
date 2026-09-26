@@ -9,7 +9,8 @@ export interface Config {
     port: number;
   };
   directories: {
-    public: string;
+    /** Optional; resolved public asset source with an embedded fallback. */
+    public: string | null;
     upload: string;
     incoming: string;
     private: string;
@@ -17,8 +18,12 @@ export interface Config {
 }
 
 export interface RuntimePaths {
-  rootDir: string;
+  /** Home-relative data root holding files/, debug.log, and the optional public override. */
+  dataRoot: string;
+  /** Effective public asset directory: on disk or inside the standalone executable. */
   publicDir: string;
+  /** True when publicDir points into the standalone executable's embedded assets. */
+  publicEmbedded: boolean;
   filesDir: string;
   incomingDir: string;
   privateDir: string;

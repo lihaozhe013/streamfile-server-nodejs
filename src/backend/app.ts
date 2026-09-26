@@ -3,6 +3,7 @@ import type { RuntimeConfig } from '@/types/index';
 import { errorHandler } from '@/middleware/errors';
 import { createApiRouter } from '@/routes/api';
 import { createFilesRouter, sendSpaShell } from '@/routes/files';
+import { createPublicAssetRouter } from '@/services/publicAssets';
 import { createUploadRouter } from '@/routes/upload';
 
 export function createApp(runtime: RuntimeConfig): Express {
@@ -12,8 +13,8 @@ export function createApp(runtime: RuntimeConfig): Express {
   app.use(createFilesRouter(runtime));
   app.use(createApiRouter(runtime));
   app.use(createUploadRouter(runtime));
-  app.use(express.static(runtime.paths.publicDir));
-  app.use('/public', express.static(runtime.paths.publicDir));
+  app.use(createPublicAssetRouter(runtime.paths));
+  app.use('/public', createPublicAssetRouter(runtime.paths));
 
   app.get('/{*splat}', async (request, response, next) => {
     if (request.path === '/api' || request.path.startsWith('/api/')) {

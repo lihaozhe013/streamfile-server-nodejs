@@ -28,13 +28,14 @@ everything.
 Backend (`src/backend`):
 
 - `server.ts` bootstrap; `app.ts` middleware order (files -> api -> upload ->
-  static -> SPA fallback -> errors)
+  public assets -> SPA fallback -> errors)
 - `routes/files.ts` file serving; `routes/api.ts` JSON API; `routes/upload.ts`
   `POST /upload`
 - `services/files.ts` path guards; `services/upload.ts` destinations and
-  renames; `services/search.ts` search
+  renames; `services/search.ts` search; `services/publicAssets.ts` public
+  asset routing (disk static vs embedded `Bun.file`)
 - `config/index.ts` + `config/default.yaml`; `middleware/errors.ts`;
-  `utils/logger.ts`
+  `utils/logger.ts`; `types/yaml.d.ts` for the template text import
 - `tests/*.test.ts` node:test integration tests executed by `bun test`
 
 Frontend (`src/frontend/app`):
@@ -47,21 +48,24 @@ Frontend (`src/frontend/app`):
   directory/media/resource UI
 - `tests/` vitest; `e2e/` Playwright
 
-Runtime-owned and git-ignored (never commit, do not delete blindly): repo-root
-`config.yaml`, `files/`, `public/`, `dist/`, `debug.log`.
+Runtime-owned and git-ignored (never commit): repo-root `dist/` and the
+home-based layout created on first run — `~/.config/stream-file-server/` and
+`~/.local/stream-file-server/` (config, files, logs, and dev SPA stubs). The
+repo root no longer holds runtime state.
 
 ## Commands
 
-| Command                                | Purpose                                                                                  |
-| -------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `bun install`                          | install every workspace package                                                          |
-| `bun run dev`                          | backend (`bun --watch`, :3000) + Vite (:5173); sets `STREAMFILE_ROOT_DIR`, `BACKEND_URL` |
-| `bun run dev:backend` / `dev:frontend` | run one side only                                                                        |
-| `bun run typecheck`                    | `tsc --noEmit` in both packages                                                          |
-| `bun run test`                         | backend `bun test` + frontend vitest                                                     |
-| `bun run test:e2e`                     | Playwright on :4173 with mocked APIs (no backend needed)                                 |
-| `bun run build`                        | `scripts/build/build.ts`: typecheck, `Bun.build` backend, Vite -> `dist/public`, verify  |
-| `bun run format`                       | Prettier over the repository                                                             |
+| Command                                | Purpose                                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------- |
+| `bun install`                          | install every workspace package                                                         |
+| `bun run dev`                          | backend (`bun --watch`, :3000) + Vite (:5173); sets `BACKEND_URL`                       |
+| `bun run dev:backend` / `dev:frontend` | run one side only                                                                       |
+| `bun run typecheck`                    | `tsc --noEmit` in both packages                                                         |
+| `bun run test`                         | backend `bun test` + frontend vitest                                                    |
+| `bun run test:e2e`                     | Playwright on :4173 with mocked APIs (no backend needed)                                |
+| `bun run build`                        | `scripts/build/build.ts`: typecheck, `Bun.build` backend, Vite -> `dist/public`, verify |
+| `bun run build:binaries`               | `scripts/build/build-binaries.ts`: build + compile 4-platform standalone binaries       |
+| `bun run format`                       | Prettier over the repository                                                            |
 
 Ports: backend 3000, Vite dev 5173, Playwright 4173. Vite, Vitest, Playwright,
 and `tsc` still run on Node 24+, so a Node installation is required for those
@@ -77,7 +81,7 @@ need `bunx playwright install chromium` from `src/frontend/app`.
 | uploads, mkdir, destinations              | `src/backend/routes/upload.ts`, `src/backend/services/upload.ts`, tests                                                                        |
 | config, logging, startup, build packaging | `src/backend/config/index.ts`, `src/backend/server.ts`, `src/backend/config/default.yaml`, `src/backend/build/bundle-backend.ts`, config tests |
 | directory, markdown, media UI             | `src/frontend/app/src/routes/`, `src/frontend/app/src/lib/paths.ts`, `e2e/`                                                                    |
-| build, release, containers                | `scripts/build/build.ts`, `.container/`, `.github/workflows/build.yml`, `VERSION`                                                              |
+| build, release, containers                | `scripts/build/build.ts`, `scripts/build/build-binaries.ts`, `.container/`, `.github/workflows/build.yml`, `VERSION`                           |
 
 ## Guardrails
 
@@ -94,27 +98,37 @@ need `bunx playwright install chromium` from `src/frontend/app`.
 - Keep unknown `/api/*` JSON 404s separate from the SPA fallback.
 - Keep `server.ts`, `app.ts`, and route coordinators thin; backend behavior
   goes into routes and services with tests.
-- Logs go to `debug.log` in the runtime root, never stdout. Keep the stable
-  bracketed prefixes (`[backend_server]`, `[backend_config]`, `[upload]`,
-  `[global_dev]`, `[backend_dev]`) so log lines stay filterable. `LOG_LEVEL` is
-  a reserved name only; no log-level override exists today.
-- `dist/config.yaml`, `dist/files/`, and `dist/debug.log` are runtime-owned and
-  must survive builds; `dist/server.js`, `dist/default.yaml`, and
-  `dist/public/**` are build-owned.
+- Logs go to `debug.log` in the data root (`~/.local/stream-file-server/`),
+  never stdout. Keep the stable bracketed prefixes (`[backend_server]`,
+  `[backend_config]`, `[upload]`, `[global_dev]`, `[backend_dev]`) so log lines
+  stay filterable. `LOG_LEVEL` is a reserved name only; no log-level override
+  exists today.
+- `dist/server.js`, `dist/public/**`, and `dist/bin/**` are build-owned.
+  Runtime state lives only in the home-based layout, never in `dist/`.
 
 ## Traps
 
 - Express 5 wildcard syntax is `/{*splat}`; async route handlers must catch and
   forward errors (see `asyncHandler` in `routes/api.ts`).
-- Production runtime root is the directory containing `server.js`, not the cwd.
-  The Bun bundle reads `default.yaml` from its own directory; keep the packaging
-  step in `build/bundle-backend.ts` in sync.
+- Config, data, and logs resolve through the home-based layout
+  (`~/.config/stream-file-server/`, `~/.local/stream-file-server/`), not the
+  cwd or the directory of `server.js`. Containers relocate everything by
+  setting `HOME` (the image sets `HOME=/app/data`).
+- `res.sendFile` uses the `send` library, which 404s any path containing a dot
+  directory or dot file segment (e.g. `~/.local/...`) unless
+  `{ dotfiles: 'allow' }` is passed. Both call sites (`routes/files.ts`,
+  `services/publicAssets.ts`) must keep that option.
+- Standalone executables serve embedded `public/` through `Bun.file()` because
+  `fs.createReadStream` (express.static / res.sendFile) cannot read `/$bunfs`
+  paths; see `services/publicAssets.ts`. Verify binary changes with
+  `bun run build:binaries` plus a smoke run of the built executable.
 - The bundle and backend runtime use Bun globals (`Bun.build`, `Bun.YAML`,
   `Bun.Glob`); run backend tests with `bun test` and production with `bun`, not
-  Node. The `dist/server.js` bundle is Bun-only.
+  Node. The `dist/server.js` bundle and binaries are Bun-only.
 - Config is never searched upward and never overwritten (even invalid files are
-  preserved and fail startup). Missing config is generated from
-  `config/default.yaml`.
+  preserved and fail startup). A missing config is generated at
+  `~/.config/stream-file-server/config.yaml` from the template inlined into
+  the backend (`config/default.yaml` via `with { type: 'text' }`).
 - The dev SPA runs on :5173 and Vite answers non-raw `/files` requests itself;
   only `?raw=1` reaches the backend. Verify file-serving changes on :3000 or
   through `bun run test`.
@@ -128,10 +142,14 @@ need `bunx playwright install chromium` from `src/frontend/app`.
   paths with HTTP 200 `{error}`; both are existing behavior.
 - `.gitignore` ignores the root `public/` directory only; `src/frontend/public/`
   is the Vite static directory and must stay tracked.
-- `VERSION`, not `package.json`, drives the Docker image tag in CI.
-- Local `files/` may contain symlinks to files outside the repository. Treat
-  its contents as user data.
+- `VERSION`, not `package.json`, drives the Docker image tag and the binary
+  artifact names in CI.
+- `files/` (under the data root) may contain symlinks to files outside the
+  repository. Treat its contents as user data.
 - `/files/<dir>/` serves a custom `index.html` when present instead of the SPA.
+- `bun run dev` creates SPA stubs in `~/.local/stream-file-server/public/`;
+  that directory overrides embedded assets in standalone binaries, so delete
+  it before running local binary builds.
 
 ## Verification and handoff
 
@@ -139,6 +157,7 @@ need `bunx playwright install chromium` from `src/frontend/app`.
 | ----------------- | ---------------------------------------------------------------------------------- |
 | backend behavior  | `bun run typecheck`, `bun run test`; add `bun run build` for bundle/config changes |
 | frontend behavior | `bun run typecheck`, `bun run test`, `bun run test:e2e`                            |
+| binaries          | `bun run build:binaries` + smoke run of one built executable                       |
 | docs only         | Prettier on changed files                                                          |
 
 Regression-prone cases: Unicode names, spaces, nested paths, deep SPA

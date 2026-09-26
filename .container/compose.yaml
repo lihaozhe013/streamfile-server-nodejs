@@ -3,8 +3,7 @@ services:
     image: lihaozhe013/streamfile-server:latest
     container_name: streamfile-server-instance
     volumes:
-      - ./config.yaml:/app/config.yaml
-      - ./files:/app/files
+      - ~/.config/stream-file-server:/app/data/.config/stream-file-server
+      - ~/.local/stream-file-server:/app/data/.local/stream-file-server
     ports:
       - '3000:3000'
-    command: bun server.js

@@ -7,7 +7,6 @@ const distDirectory = path.join(projectDirectory, 'dist');
 
 const requiredArtifacts = [
   path.join(distDirectory, 'server.js'),
-  path.join(distDirectory, 'default.yaml'),
   path.join(distDirectory, 'public', 'index.html'),
   path.join(distDirectory, 'public', '404-index.html'),
 ];

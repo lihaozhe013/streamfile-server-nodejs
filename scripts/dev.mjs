@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import process from 'node:process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,13 +8,13 @@ import { fileURLToPath } from 'node:url';
 const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const backendUrl = process.env.BACKEND_URL ?? 'http://127.0.0.1:3000';
 
-await ensureDevSpaShell(projectDirectory);
+await ensureDevSpaShell();
 
 const commands = [
   {
     label: 'backend',
     cwd: path.join(projectDirectory, 'src', 'backend'),
-    env: { ...process.env, STREAMFILE_ROOT_DIR: projectDirectory }
+    env: process.env
   },
   {
     label: 'frontend',
@@ -83,8 +84,8 @@ await new Promise((resolve) => {
 
 process.exitCode = exitCode;
 
-async function ensureDevSpaShell(rootDir) {
-  const publicDir = path.join(rootDir, 'public');
+async function ensureDevSpaShell() {
+  const publicDir = path.join(os.homedir(), '.local', 'stream-file-server', 'public');
   const stubs = ['index.html', '404-index.html'];
   for (const name of stubs) {
     const filePath = path.join(publicDir, name);
@@ -93,7 +94,10 @@ async function ensureDevSpaShell(rootDir) {
     } catch {
       await fs.mkdir(publicDir, { recursive: true });
       await fs.writeFile(filePath, '<!-- Development SPA shell stub -->\n', 'utf-8');
-      console.log(`[global_dev] Created stub public/${name} for development`);
+      console.log(`[global_dev] Created stub public/${name} in ${publicDir} for development`);
     }
   }
+  console.log(
+    '[global_dev] Note: this directory overrides embedded assets in standalone binaries; delete it before distributing local builds'
+  );
 }

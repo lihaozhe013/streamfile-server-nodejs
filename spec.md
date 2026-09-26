@@ -6,27 +6,45 @@ file in the same change. If code and this document disagree, fix both.
 
 ## Runtime model
 
-- Bun 1.4+ runs the backend, bundle, and backend tests; the frontend tooling
-  (Vite, Vitest, Playwright, `tsc`) still runs on Node.js 24+. ESM. The backend
-  listens on `server.host:server.port` (default `0.0.0.0:3000`). There is no
-  authentication, TLS, database, or user management.
-- Runtime root: `STREAMFILE_ROOT_DIR` when set (the dev launchers set it to the
-  repository root); otherwise the directory containing the running `server.js`.
-  The process cwd is irrelevant.
-- Configuration is `<runtime root>/config.yaml` only; parent directories are
-  never searched. A missing file is generated from the packaged `default.yaml`
-  (`src/backend/config/default.yaml`, copied to `dist/default.yaml` by the
-  build). Existing files are never overwritten, even when invalid; invalid
-  configuration fails startup with the validation error.
+- Bun 1.4+ runs the backend, bundle, binaries, and backend tests; the frontend
+  tooling (Vite, Vitest, Playwright, `tsc`) still runs on Node.js 24+. ESM. The
+  backend listens on `server.host:server.port` (default `0.0.0.0:3000`). There
+  is no authentication, TLS, database, or user management.
+- All platforms use one home-based layout derived from `os.homedir()`:
+  configuration lives at `~/.config/stream-file-server/config.yaml` and the
+  data root at `~/.local/stream-file-server/` (holds `files/`,
+  `files/incoming/`, `files/private-files/`, and `debug.log`). The process cwd
+  is irrelevant. On Linux/macOS `os.homedir()` honors `$HOME`, which is how
+  containers relocate everything (the Docker image sets `HOME=/app/data`).
+- Configuration is that single file only; parent directories are never
+  searched. A missing file is generated from the template embedded in the
+  backend (`src/backend/config/default.yaml` inlined via
+  `with { type: 'text' }`; there is no on-disk template artifact). Existing
+  files are never overwritten, even when invalid; invalid configuration fails
+  startup with the validation error.
 - Config requires `server.host` (non-empty string), `server.port` (integer
-  1-65535), and non-empty `directories.public/upload/incoming/private`
-  resolved relative to the runtime root.
-- Startup creates `files/`, `files/incoming/`, and `files/private-files/`.
-  When `public/404-index.html` exists, it is copied to
-  `files/incoming/index.html` and `files/private-files/index.html` if missing.
-- Logging is a best-effort append to `<runtime root>/debug.log`; write failures
+  1-65535), and non-empty `directories.upload/incoming/private`.
+  `directories.public` is optional. Directory values resolve as: absolute
+  paths pass through, a leading `~/` expands to the home directory, and
+  relative paths resolve against the data root. The template ships with
+  explicit `~/.local/stream-file-server/...` values.
+- Public assets resolve in order: (1) the configured public directory when it
+  exists on disk (operator override/theme); (2) otherwise the `public`
+  directory next to the entry point — `dist/public` for `bun dist/server.js`,
+  or the asset tree embedded in a standalone executable via
+  `bun build --compile --asset` (import.meta.dir based). When only the
+  embedded source exists, `paths.publicEmbedded` is true and assets are served
+  through a custom router reading via `Bun.file()` because `send`'s streaming
+  cannot read embedded files.
+- Startup creates `files/`, `files/incoming/`, and `files/private-files/`
+  under the data root. When the resolved public source provides
+  `404-index.html`, its contents are written to `files/incoming/index.html`
+  and `files/private-files/index.html` if missing.
+- Logging is a best-effort append to `<data root>/debug.log`; write failures
   are swallowed. 5xx errors also emit `[backend_error]` to stderr. `LOG_LEVEL`
   is a reserved name only; no log-level override is implemented.
+- Tests and callers can inject `loadRuntimeConfig({ homeDir, configPath })`;
+  there are no `STREAMFILE_*` environment variables.
 
 ## File access contract
 
@@ -51,9 +69,12 @@ file in the same change. If code and this document disagree, fix both.
   real target is outside the file root; links whose target is inside
   `incoming/` stay blocked. Directory symlinks and broken links stay
   inaccessible. Do not weaken or "fix" this without an explicit request.
-- `express.static` is mounted at both `/` and `/public`; both keep serving SPA
-  assets. Unknown `/api/*` returns JSON `{error:'API endpoint not found'}`, never
-  the SPA shell. Every other unmatched route returns the SPA shell.
+- Public assets are mounted at both `/` and `/public` via
+  `createPublicAssetRouter` (`src/backend/services/publicAssets.ts`): disk
+  sources use `express.static`; embedded sources use a `Bun.file()`-based
+  router. Both keep serving SPA assets. Unknown `/api/*` returns JSON
+  `{error:'API endpoint not found'}`, never the SPA shell. Every other
+  unmatched route returns the SPA shell.
 - `public/index.html` must exist in production; a missing shell returns 500
   with an error telling the operator to run `bun run build`.
 - `?raw=1` is the only raw switch; `?raw=true` is not recognized.
@@ -117,24 +138,35 @@ Errors are JSON `{ "error": string }`.
 
 ## Build, distribution, release
 
-- `bun run build` -> `scripts/build/build.ts`: cleans `dist/public`, deletes
-  `dist/server.js` and `dist/default.yaml`, typechecks the backend, bundles
-  `src/backend/server.ts` with `Bun.build` (target `bun`, ESM, minified) to
-  `dist/server.js`, copies `src/backend/config/default.yaml` to
-  `dist/default.yaml`, then typechecks the frontend and runs `vite build` into
-  `dist/public`, finally verifying `server.js`, `default.yaml`,
-  `public/index.html`, and `public/404-index.html` exist.
-- Build-owned: `dist/server.js`, `dist/default.yaml`, `dist/public/**`.
-  Runtime-owned and preserved by builds: `dist/config.yaml`, `dist/files/`,
-  `dist/debug.log`.
+- `bun run build` -> `scripts/build/build.ts`: cleans `dist/public` and
+  `dist/server.js` (also deleting a legacy `dist/default.yaml`), typechecks
+  the backend, bundles `src/backend/server.ts` with `Bun.build` (target `bun`,
+  ESM, minified) to `dist/server.js` with the config template inlined, then
+  typechecks the frontend and runs `vite build` into `dist/public`, finally
+  verifying `server.js`, `public/index.html`, and `public/404-index.html`
+  exist.
+- `bun run build:binaries` -> `scripts/build/build-binaries.ts`: runs
+  `bun run build` first, then compiles `dist/server.js` with
+  `Bun.build({ compile: { assets: ['public'] } })` (cwd `dist`, minified) into
+  `dist/bin/streamfile-server-<VERSION>-<target>` for `bun-windows-x64`,
+  `bun-linux-x64`, `bun-linux-arm64`, and `bun-darwin-arm64`. Each executable
+  embeds the whole SPA; no runtime files ship beside it. Binaries are also
+  Bun-only.
+- Build-owned: `dist/server.js`, `dist/public/**`, `dist/bin/**`. Runtime
+  state (config, files, logs) never lives in `dist/`; it always resolves
+  through the home-based layout. Legacy `dist/config.yaml`, `dist/files/`, and
+  `dist/debug.log` are ignored by the new mechanism.
 - Production: `cd dist && bun server.js`. The `dist/server.js` bundle is
   Bun-only (it carries the `// @bun` pragma and `import.meta.require` interop),
-  so Node.js cannot execute it. The Dockerfile copies only `dist/` into `/app`
-  of an `oven/bun` image; `.container/compose.yaml` mounts `config.yaml` and
-  `files/` and starts `bun server.js`.
+  so Node.js cannot execute it. The Dockerfile copies `dist/server.js` and
+  `dist/public/` into `/app` of an `oven/bun` image and sets `HOME=/app/data`;
+  `.container/compose.yaml` mounts the host `~/.config/stream-file-server` and
+  `~/.local/stream-file-server` directories at the matching paths under
+  `/app/data`, so the container shares the same layout as a native binary.
 - CI (`.github/workflows/build.yml`) runs on pushes to the `build` branch with
   `oven-sh/setup-bun` (plus Node.js for Vite, Vitest, Playwright, and `tsc`),
-  runs `bun install --frozen-lockfile`, `bun run test`, and the Bun build, and
+  runs `bun install --frozen-lockfile`, `bun run test`, the Bun build, and
+  `bun run build:binaries`, uploads `dist/bin/*` as a versioned artifact, and
   pushes Docker Hub tags `latest` and the repo-root `VERSION` value. Package
   versions do not drive the tag.
 
@@ -142,7 +174,8 @@ Errors are JSON `{ "error": string }`.
 
 - Backend (`src/backend/tests`): node:test files executed by `bun test` in the
   Bun runtime. Each test builds a temporary runtime fixture and calls `createApp`
-  on an ephemeral port; no shared config or network state.
+  on an ephemeral port; no shared config or network state. Config tests inject
+  isolated homes via `loadRuntimeConfig({ homeDir, configPath })`.
 - Frontend unit (`src/frontend/app/tests`): vitest on Node, `environment: node`,
   alias `@` -> `src`.
 - E2E (`src/frontend/app/e2e`): Playwright Chromium on 4173; only Vite is
@@ -159,5 +192,5 @@ Do not change these without an explicit request and a matching `spec.md` entry:
 - Public URL shapes, percent-encoding, and `?raw=1` behavior.
 - API response fields, status codes, and JSON error shape.
 - File access tiers, hidden-entry semantics, and the file-symlink exception.
-- Config generation/validation semantics and `dist/` runtime-file preservation.
+- Config generation/validation semantics and the home-based path layout.
 - Legacy search URL compatibility and the `/public` static mount.

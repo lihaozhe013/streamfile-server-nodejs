@@ -21,8 +21,9 @@ async function createFixture(): Promise<Fixture> {
   const incomingDir = path.join(filesDir, 'incoming');
   const privateDir = path.join(filesDir, 'private-files');
   const paths: RuntimePaths = {
-    rootDir,
+    dataRoot: rootDir,
     publicDir,
+    publicEmbedded: false,
     filesDir,
     incomingDir,
     privateDir,
@@ -467,4 +468,75 @@ test('keeps API 404s separate from the SPA fallback', async () => {
     assert.equal(spaResponse.status, 200);
     assert.match(await spaResponse.text(), /<title>SPA<\/title>/);
   });
+});
+
+test('serves paths through dot directories and direct dot files', async () => {
+  const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'streamfile-dothome-'));
+  try {
+    // Simulate home-based layout: every sendFile target sits under a dot
+    // directory, which the send library would otherwise answer with 404.
+    const homeDir = path.join(rootDir, '.home');
+    const publicDir = path.join(homeDir, '.local', 'stream-file-server', 'public');
+    const filesDir = path.join(homeDir, '.local', 'stream-file-server', 'files');
+    await fs.mkdir(path.join(publicDir, 'assets'), { recursive: true });
+    await fs.mkdir(filesDir, { recursive: true });
+    await fs.writeFile(path.join(publicDir, 'index.html'), '<!doctype html><title>SPA</title>');
+    await fs.writeFile(path.join(publicDir, '404-index.html'), '<!doctype html><title>404</title>');
+    await fs.writeFile(path.join(publicDir, 'assets', 'app.js'), 'console.log("app");\n');
+    await fs.writeFile(path.join(filesDir, '.hidden'), 'hidden');
+    await fs.writeFile(path.join(filesDir, 'note.txt'), 'plain text');
+
+    const runtime: RuntimeConfig = {
+      server: { host: '127.0.0.1', port: 0 },
+      paths: {
+        dataRoot: homeDir,
+        publicDir,
+        publicEmbedded: false,
+        filesDir,
+        incomingDir: path.join(filesDir, 'incoming'),
+        privateDir: path.join(filesDir, 'private-files'),
+        spaShellPath: path.join(publicDir, 'index.html'),
+        notFoundPath: path.join(publicDir, '404-index.html')
+      },
+      configPath: path.join(homeDir, '.config', 'stream-file-server', 'config.yaml')
+    };
+    await ensureRuntimeDirectories(runtime);
+    const server = createApp(runtime).listen(0, '127.0.0.1');
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        server.once('listening', () => resolve());
+        server.once('error', reject);
+      });
+      const address = server.address();
+      if (!address || typeof address === 'string') {
+        throw new Error('Test server did not expose an address');
+      }
+      const baseUrl = `http://127.0.0.1:${address.port}`;
+
+      const spaResponse = await fetch(`${baseUrl}/client/deep/link`);
+      assert.equal(spaResponse.status, 200);
+      assert.match(await spaResponse.text(), /<title>SPA<\/title>/);
+
+      const notFoundResponse = await fetch(`${baseUrl}/files/missing.txt`);
+      assert.equal(notFoundResponse.status, 404);
+      assert.match(await notFoundResponse.text(), /<title>404<\/title>/);
+
+      const rawResponse = await fetch(`${baseUrl}/files/note.txt?raw=1`);
+      assert.equal(rawResponse.status, 200);
+      assert.equal(await rawResponse.text(), 'plain text');
+
+      const dotFileResponse = await fetch(`${baseUrl}/files/.hidden`);
+      assert.equal(dotFileResponse.status, 200);
+      assert.equal(await dotFileResponse.text(), 'hidden');
+
+      const assetResponse = await fetch(`${baseUrl}/assets/app.js`);
+      assert.equal(assetResponse.status, 200);
+      assert.equal(await assetResponse.text(), 'console.log("app");\n');
+    } finally {
+      await closeServer(server);
+    }
+  } finally {
+    await fs.rm(rootDir, { recursive: true, force: true });
+  }
 });

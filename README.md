@@ -20,11 +20,10 @@ user management.
 bun install
 ```
 
-The backend creates `config.yaml` and the configured runtime directories on
-first startup when they do not exist. The generated defaults use port 3000,
-`files/` for uploads, and `public/` for the production SPA. To customize
-development values, copy `config.yaml.example` to the repository root as
-`config.yaml`. The local file is intentionally ignored by Git.
+On first startup the backend creates `~/.config/stream-file-server/config.yaml`
+and the data directories under `~/.local/stream-file-server/`. All platforms
+use the same home-based layout; on Linux and macOS `$HOME` relocates it, which
+is how the Docker image redirects everything.
 
 ## Development
 
@@ -42,6 +41,13 @@ are served by Vite itself. Override the proxy target with `BACKEND_URL`:
 BACKEND_URL=http://127.0.0.1:3001 bun run dev
 ```
 
+Development uses the real home layout: configuration is read from
+`~/.config/stream-file-server/config.yaml` and uploads land in
+`~/.local/stream-file-server/files/`. The dev launchers also create minimal SPA
+stubs in `~/.local/stream-file-server/public/`. That directory overrides the
+embedded assets of standalone binaries, so delete it before running a locally
+built binary.
+
 The backend runs on Bun with `bun --watch`; the Vite dev server, Vitest, and
 Playwright still run on Node. Run either side separately when needed:
 
@@ -57,6 +63,7 @@ bun run typecheck
 bun run test
 bun run test:e2e
 bun run build
+bun run build:binaries
 ```
 
 `bun run test` runs backend integration tests under `bun test` and frontend
@@ -64,10 +71,10 @@ unit tests under Vitest. The browser test suite uses Playwright on port 4173
 with mocked APIs; it runs headed locally and headless when `CI` is set, and
 browsers can be installed with `bunx playwright install chromium` from
 `src/frontend/app` if needed.
-`bun run build` type-checks both packages, bundles the backend with `Bun.build`,
-builds the Vite SPA directly into `dist/public`, and verifies the required
-production files while preserving runtime-owned files in `dist` (`config.yaml`,
-`files/`, `debug.log`).
+
+`bun run build` type-checks both packages, bundles the backend with `Bun.build`
+(config template inlined), builds the Vite SPA into `dist/public`, and verifies
+the required production files.
 
 ## Production
 
@@ -77,16 +84,24 @@ cd dist
 bun server.js
 ```
 
-The production server uses the directory containing `server.js` as its runtime
-root, regardless of the current working directory. It reads or generates
-`dist/config.yaml` and serves the SPA from `dist/public`. Production never
-searches parent directories for configuration; copy `config.yaml.example` to
-`dist/config.yaml` to customize it.
+Configuration always resolves through the home-based layout regardless of the
+working directory; production never searches parent directories. To customize,
+copy `config.yaml.example` to `~/.config/stream-file-server/config.yaml`.
+
+## Standalone binaries
+
+```bash
+bun run build:binaries
+```
+
+Compiles four single-file executables into `dist/bin/` —
+`streamfile-server-<version>-windows-x64.exe`, `-linux-x64`, `-linux-arm64`,
+and `-darwin-arm64` — each with the SPA assets embedded. Copy one anywhere and
+run it; on first start it creates its config under `~/.config/stream-file-server/`
+and stores data under `~/.local/stream-file-server/`. Setting `$HOME` (or
+`%USERPROFILE%` on Windows) relocates both.
 
 ## Configuration
-
-The configuration is resolved from the runtime root: the repository root during
-development and `dist/` in production.
 
 ```yaml
 server:
@@ -94,23 +109,39 @@ server:
   port: 3000
 
 directories:
-  public: 'public'
-  upload: 'files'
-  incoming: 'files/incoming'
-  private: 'files/private-files'
+  public: '~/.local/stream-file-server/public'
+  upload: '~/.local/stream-file-server/files'
+  incoming: '~/.local/stream-file-server/files/incoming'
+  private: '~/.local/stream-file-server/files/private-files'
 ```
+
+Directory values support `~/` expansion; absolute paths pass through, and
+relative paths resolve against `~/.local/stream-file-server/`.
+`directories.public` is optional: when the directory exists it overrides the
+bundled/embedded SPA (custom themes), otherwise the packaged assets are served.
 
 An existing configuration is never overwritten, including when it is invalid;
 the backend reports the validation error so the file can be corrected. Runtime
-directories are created after a valid configuration is loaded. The fallback
-template is `src/backend/config/default.yaml` and is packaged next to
-`server.js` as `default.yaml`.
+directories are created after a valid configuration is loaded.
 
 ## Containers and CI
 
-`.container/Dockerfile` copies only `dist/` into the image;
-`.container/compose.yaml` mounts `config.yaml` and `files/`. Pushes to the
-`build` branch publish the image tagged with the repo-root `VERSION` file.
+`.container/Dockerfile` copies `dist/server.js` and `dist/public/` into an
+`oven/bun` image and sets `HOME=/app/data`. `.container/compose.yaml` mounts
+the host home directories so container and native installs share one layout:
+
+```yaml
+volumes:
+  - ~/.config/stream-file-server:/app/data/.config/stream-file-server
+  - ~/.local/stream-file-server:/app/data/.local/stream-file-server
+```
+
+Requires Docker Compose v2.21+ for `~` expansion; `${HOME}/...` works on older
+versions. The container runs as root, so files it creates in the mounted
+directories are root-owned on Linux; add a `user:` override if that matters.
+
+Pushes to the `build` branch publish the image tagged with the repo-root
+`VERSION` file and upload the standalone binaries as a versioned artifact.
 
 ## Documentation
 

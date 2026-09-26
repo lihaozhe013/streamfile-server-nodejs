@@ -17,7 +17,8 @@
     "typecheck": "bun run --cwd src/backend typecheck && bun run --cwd src/frontend/app typecheck",
     "test": "bun run --cwd src/backend test && bun run --cwd src/frontend/app test",
     "test:e2e": "bun run --cwd src/frontend/app test:e2e",
-    "build": "bun scripts/build/build.ts"
+    "build": "bun scripts/build/build.ts",
+    "build:binaries": "bun scripts/build/build-binaries.ts"
   },
   "devDependencies": {
     "prettier": "3.9.9"

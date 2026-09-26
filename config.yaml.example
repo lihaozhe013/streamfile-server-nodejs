@@ -3,7 +3,7 @@ server:
   port: 3000
 
 directories:
-  public: "public"
-  upload: "files"
-  incoming: "files/incoming"
-  private: "files/private-files"
+  public: "~/.local/stream-file-server/public"
+  upload: "~/.local/stream-file-server/files"
+  incoming: "~/.local/stream-file-server/files/incoming"
+  private: "~/.local/stream-file-server/files/private-files"
