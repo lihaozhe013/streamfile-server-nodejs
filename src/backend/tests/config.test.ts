@@ -39,7 +39,7 @@ test('generates a default config under the home directories when missing', async
     assert.equal(runtime.paths.filesDir, path.join(dataRoot, 'files'));
     assert.match(
       await fs.readFile(configPath, 'utf8'),
-      /directories:\n  public: "~\/\.local\/stream-file-server\/public"/
+      /directories:\r?\n  public: "~\/\.local\/stream-file-server\/public"/
     );
 
     await ensureRuntimeDirectories(runtime);

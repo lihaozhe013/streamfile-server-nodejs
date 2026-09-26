@@ -161,8 +161,11 @@ Requires Docker Compose v2.21+ for `~` expansion; `${HOME}/...` works on older
 versions. The container runs as root, so files it creates in the mounted
 directories are root-owned on Linux; add a `user:` override if that matters.
 
-Pushes to the `build` branch publish the image tagged with the repo-root
-`VERSION` file and upload the standalone binaries as a versioned artifact.
+Pushes to the `build` branch, or a manual workflow run, publish the Docker Hub
+image with `latest` and the repo-root `VERSION` tag. After the image is pushed,
+CI updates the [`nightly` prerelease](https://github.com/lihaozhe013/streamfile-server-nodejs/releases/tag/nightly)
+to the build commit. Download the Windows x64, Linux x64, Linux arm64, or macOS
+arm64 executable separately; `SHA256SUMS.txt` contains their checksums.
 
 ## Documentation
 

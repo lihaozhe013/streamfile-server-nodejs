@@ -226,12 +226,13 @@ Errors are JSON `{ "error": string }`.
   `.container/compose.yaml` mounts the host `~/.config/stream-file-server` and
   `~/.local/stream-file-server` directories at the matching paths under
   `/app/data`, so the container shares the same layout as a native binary.
-- CI (`.github/workflows/build.yml`) runs on pushes to the `build` branch with
-  `oven-sh/setup-bun` (plus Node.js for Vite, Vitest, Playwright, and `tsc`),
-  runs `bun install --frozen-lockfile`, `bun run test`, the Bun build, and
-  `bun run build:binaries`, uploads `dist/bin/*` as a versioned artifact, and
-  pushes Docker Hub tags `latest` and the repo-root `VERSION` value. Package
-  versions do not drive the tag.
+- CI (`.github/workflows/build.yml`) runs on pushes to the `build` branch or
+  manual dispatch. It installs Bun 1.4.2 and Node.js 24, runs tests, then builds
+  the Docker input and four binaries once. Docker Hub receives `latest` and the
+  repo-root `VERSION` tag; package versions do not drive the tag. After the
+  Docker push succeeds, CI replaces the `nightly` prerelease and moves its tag
+  to the build commit. The release contains separate Windows x64, Linux x64,
+  Linux arm64, and macOS arm64 executables plus `SHA256SUMS.txt`.
 
 ## Testing contract
 

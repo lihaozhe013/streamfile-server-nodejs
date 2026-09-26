@@ -1,70 +1,219 @@
-name: Build Image
+name: Build and publish
+
 on:
   push:
     branches:
       - build
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  workflow_dispatch:
 
-      - name: Setup Bun
+concurrency:
+  group: streamfile-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Test and build
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
         with:
-          node-version: 24.x
+          node-version: '24'
+          package-manager-cache: false
 
-      - name: Cache Bun install
-        uses: actions/cache@v4
+      - name: Cache Bun packages
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
-      - name: Install dependencies, test, and build project
-        run: |
-          bun install --frozen-lockfile
-          bun run test
-          bun run build
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
-      - name: Build standalone binaries
+      - name: Run tests
+        run: bun run test
+
+      - name: Build standalone binaries and Docker input
         run: bun run build:binaries
 
-      - name: Read version from file
-        id: get_version
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(<VERSION)"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Upload standalone binaries
-        uses: actions/upload-artifact@v4
+      - name: Verify release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          version='${{ steps.version.outputs.version }}'
+          for target in windows-x64.exe linux-x64 linux-arm64 darwin-arm64; do
+            test -s "dist/bin/streamfile-server-${version}-${target}"
+          done
+          test -s dist/server.js
+          test -s dist/public/index.html
+          test -s dist/public/404-index.html
+
+      - name: Upload Docker input
+        uses: actions/upload-artifact@v7
         with:
-          name: streamfile-server-binaries-${{ steps.get_version.outputs.VERSION }}
-          path: dist/bin/*
+          name: docker-input
+          path: |
+            dist/server.js
+            dist/public/
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Upload Windows binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-windows-x64
+          path: dist/bin/streamfile-server-${{ steps.version.outputs.version }}-windows-x64.exe
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Linux x64 binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-linux-x64
+          path: dist/bin/streamfile-server-${{ steps.version.outputs.version }}-linux-x64
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Linux arm64 binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-linux-arm64
+          path: dist/bin/streamfile-server-${{ steps.version.outputs.version }}-linux-arm64
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload macOS arm64 binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-darwin-arm64
+          path: dist/bin/streamfile-server-${{ steps.version.outputs.version }}-darwin-arm64
+          if-no-files-found: error
+          retention-days: 7
+
+  docker:
+    name: Publish Docker Hub image
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Download Docker input
+        uses: actions/download-artifact@v8
+        with:
+          name: docker-input
+          path: dist
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
+      - name: Build and push image
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: .container/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/streamfile-server:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/streamfile-server:${{ steps.get_version.outputs.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/streamfile-server:${{ needs.build.outputs.version }}
+
+  release:
+    name: Publish nightly release
+    needs: [build, docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download platform binaries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: binary-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Verify and checksum binaries
+        shell: bash
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          cd release-assets
+          files=(
+            "streamfile-server-${VERSION}-windows-x64.exe"
+            "streamfile-server-${VERSION}-linux-x64"
+            "streamfile-server-${VERSION}-linux-arm64"
+            "streamfile-server-${VERSION}-darwin-arm64"
+          )
+          for file in "${files[@]}"; do
+            test -s "$file"
+          done
+          sha256sum "${files[@]}" > SHA256SUMS.txt
+
+      - name: Replace nightly release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          releases_api="repos/${REPOSITORY}/releases"
+          tag_api="repos/${REPOSITORY}/git/ref/tags/nightly"
+
+          if ! gh api "$tag_api" >/dev/null 2>&1; then
+            gh api --method POST "repos/${REPOSITORY}/git/refs" \
+              -f ref=refs/tags/nightly -f "sha=${COMMIT_SHA}" >/dev/null
+          fi
+
+          if release_id="$(gh api "${releases_api}/tags/nightly" --jq '.id' 2>/dev/null)"; then
+            gh api --method PATCH "${releases_api}/${release_id}" \
+              -f name='StreamFile Server Nightly' -F draft=true \
+              -F prerelease=true -f make_latest=false >/dev/null
+            gh api --paginate "${releases_api}/${release_id}/assets?per_page=100" \
+              --jq '.[].id' | while read -r asset_id; do
+                gh api --method DELETE "${releases_api}/assets/${asset_id}" >/dev/null
+              done
+          else
+            release_id="$(gh api --method POST "$releases_api" \
+              -f tag_name=nightly -f name='StreamFile Server Nightly' \
+              -f "target_commitish=${COMMIT_SHA}" -F draft=true \
+              -F prerelease=true -f make_latest=false --jq '.id')"
+          fi
+
+          gh release upload nightly release-assets/* --repo "$REPOSITORY"
+
+          gh api --method PATCH "repos/${REPOSITORY}/git/refs/tags/nightly" \
+            -f "sha=${COMMIT_SHA}" -F force=true >/dev/null
+          gh api --method PATCH "${releases_api}/${release_id}" \
+            -f "body=Automated nightly build for commit ${COMMIT_SHA}. Four platform binaries and SHA-256 checksums are attached." \
+            -F draft=false -F prerelease=true -f make_latest=false >/dev/null
