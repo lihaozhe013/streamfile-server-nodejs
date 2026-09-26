@@ -147,9 +147,12 @@ need `bunx playwright install chromium` from `src/frontend/app`.
 - `files/` (under the data root) may contain symlinks to files outside the
   repository. Treat its contents as user data.
 - `/files/<dir>/` serves a custom `index.html` when present instead of the SPA.
-- `bun run dev` creates SPA stubs in `~/.local/stream-file-server/public/`;
-  that directory overrides embedded assets in standalone binaries, so delete
-  it before running local binary builds.
+- `bun run dev` creates SPA stubs plus a `.streamfile-dev-stub` marker in
+  `~/.local/stream-file-server/public/`; public resolution skips directories
+  with that marker or without an `index.html`, so packaged servers always use
+  their bundled or embedded assets and never need manual stub cleanup. Keep
+  the marker name in sync with `DEV_STUB_MARKER_FILENAME` in
+  `src/backend/config/index.ts` when editing the launchers.
 
 ## Verification and handoff
 

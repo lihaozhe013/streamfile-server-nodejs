@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
-import { ensureRuntimeDirectories, loadRuntimeConfig } from '@/config';
+import { DEV_STUB_MARKER_FILENAME, ensureRuntimeDirectories, loadRuntimeConfig } from '@/config';
 
 async function createTempHome(): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), 'streamfile-config-'));
@@ -115,6 +115,97 @@ test('uses an existing public directory from disk when present', async () => {
     assert.equal(runtime.paths.publicDir, publicDir);
     assert.equal(runtime.paths.publicEmbedded, false);
     assert.equal(runtime.paths.spaShellPath, path.join(publicDir, 'index.html'));
+  } finally {
+    await fs.rm(homeDir, { recursive: true, force: true });
+  }
+});
+
+test('skips dev stub directories in favor of bundled assets', async () => {
+  const homeDir = await createTempHome();
+  try {
+    const entryDir = path.join(homeDir, 'bundled');
+    const bundledPublic = path.join(entryDir, 'public');
+    await fs.mkdir(bundledPublic, { recursive: true });
+    await fs.writeFile(
+      path.join(bundledPublic, 'index.html'),
+      '<!doctype html><title>Bundled</title>'
+    );
+
+    const stubDir = path.join(homeDir, '.local', 'stream-file-server', 'public');
+    await fs.mkdir(stubDir, { recursive: true });
+    await fs.writeFile(path.join(stubDir, 'index.html'), '<!doctype html><title>Stub</title>');
+    await fs.writeFile(path.join(stubDir, DEV_STUB_MARKER_FILENAME), 'created by dev\n');
+
+    const runtime = await loadRuntimeConfig({
+      homeDir,
+      publicSourceEnvironment: { entryDir, standalone: false }
+    });
+    assert.equal(runtime.paths.publicDir, bundledPublic);
+    assert.equal(runtime.paths.publicEmbedded, false);
+  } finally {
+    await fs.rm(homeDir, { recursive: true, force: true });
+  }
+});
+
+test('keeps dev stub directories for development when no bundled source exists', async () => {
+  const homeDir = await createTempHome();
+  try {
+    const stubDir = path.join(homeDir, '.local', 'stream-file-server', 'public');
+    await fs.mkdir(stubDir, { recursive: true });
+    await fs.writeFile(path.join(stubDir, 'index.html'), '<!doctype html><title>Stub</title>');
+    await fs.writeFile(path.join(stubDir, DEV_STUB_MARKER_FILENAME), 'created by dev\n');
+
+    const runtime = await loadRuntimeConfig({
+      homeDir,
+      publicSourceEnvironment: { entryDir: path.join(homeDir, 'missing-entry'), standalone: false }
+    });
+    assert.equal(runtime.paths.publicDir, stubDir);
+    assert.equal(runtime.paths.publicEmbedded, false);
+  } finally {
+    await fs.rm(homeDir, { recursive: true, force: true });
+  }
+});
+
+test('prefers embedded assets over dev stub directories in standalone executables', async () => {
+  const homeDir = await createTempHome();
+  try {
+    const stubDir = path.join(homeDir, '.local', 'stream-file-server', 'public');
+    await fs.mkdir(stubDir, { recursive: true });
+    await fs.writeFile(path.join(stubDir, 'index.html'), '<!doctype html><title>Stub</title>');
+    await fs.writeFile(path.join(stubDir, DEV_STUB_MARKER_FILENAME), 'created by dev\n');
+
+    const entryDir = path.join(homeDir, 'entry');
+    const runtime = await loadRuntimeConfig({
+      homeDir,
+      publicSourceEnvironment: { entryDir, standalone: true }
+    });
+    assert.equal(runtime.paths.publicDir, path.join(entryDir, 'public'));
+    assert.equal(runtime.paths.publicEmbedded, true);
+  } finally {
+    await fs.rm(homeDir, { recursive: true, force: true });
+  }
+});
+
+test('skips override directories without an index.html', async () => {
+  const homeDir = await createTempHome();
+  try {
+    const entryDir = path.join(homeDir, 'bundled');
+    const bundledPublic = path.join(entryDir, 'public');
+    await fs.mkdir(bundledPublic, { recursive: true });
+    await fs.writeFile(
+      path.join(bundledPublic, 'index.html'),
+      '<!doctype html><title>Bundled</title>'
+    );
+
+    const partialDir = path.join(homeDir, '.local', 'stream-file-server', 'public');
+    await fs.mkdir(partialDir, { recursive: true });
+    await fs.writeFile(path.join(partialDir, 'style.css'), 'body {}');
+
+    const runtime = await loadRuntimeConfig({
+      homeDir,
+      publicSourceEnvironment: { entryDir, standalone: false }
+    });
+    assert.equal(runtime.paths.publicDir, bundledPublic);
   } finally {
     await fs.rm(homeDir, { recursive: true, force: true });
   }

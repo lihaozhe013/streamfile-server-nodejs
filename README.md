@@ -43,10 +43,11 @@ BACKEND_URL=http://127.0.0.1:3001 bun run dev
 
 Development uses the real home layout: configuration is read from
 `~/.config/stream-file-server/config.yaml` and uploads land in
-`~/.local/stream-file-server/files/`. The dev launchers also create minimal SPA
-stubs in `~/.local/stream-file-server/public/`. That directory overrides the
-embedded assets of standalone binaries, so delete it before running a locally
-built binary.
+`~/.local/stream-file-server/files/`. The dev launchers also create minimal
+SPA stubs (with a `.streamfile-dev-stub` marker) in
+`~/.local/stream-file-server/public/`; packaged servers automatically ignore
+that directory, so locally built binaries keep serving their embedded assets.
+Delete the marker file to promote the directory into a real public override.
 
 The backend runs on Bun with `bun --watch`; the Vite dev server, Vitest, and
 Playwright still run on Node. Run either side separately when needed:
@@ -117,8 +118,9 @@ directories:
 
 Directory values support `~/` expansion; absolute paths pass through, and
 relative paths resolve against `~/.local/stream-file-server/`.
-`directories.public` is optional: when the directory exists it overrides the
-bundled/embedded SPA (custom themes), otherwise the packaged assets are served.
+`directories.public` is optional: when the directory contains an `index.html`
+(and no `.streamfile-dev-stub` marker) it overrides the bundled/embedded SPA
+(custom themes), otherwise the packaged assets are served.
 
 An existing configuration is never overwritten, including when it is invalid;
 the backend reports the validation error so the file can be corrected. Runtime

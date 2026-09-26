@@ -11,6 +11,8 @@ const APP_DIRECTORY_NAME = 'stream-file-server';
 interface LoadConfigOptions {
   configPath?: string;
   homeDir?: string;
+  /** Overrides entry-point detection for tests; defaults to Bun's own values. */
+  publicSourceEnvironment?: PublicSourceEnvironment;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -84,34 +86,72 @@ function resolveHomeDirectory(explicitHomeDir?: string): string {
 }
 
 /**
- * Public assets prefer a directory that exists on disk so operators can
- * override the packaged SPA; otherwise they fall back to the directory that
- * ships next to the entry point, which is the executable's embedded asset tree
- * in standalone builds.
+ * Marker written next to the dev launchers' SPA stubs. Public resolution treats
+ * marked directories as absent so packaged servers keep their bundled or
+ * embedded assets; the launchers in scripts/dev*.mjs duplicate this name.
+ */
+export const DEV_STUB_MARKER_FILENAME = '.streamfile-dev-stub';
+
+export interface PublicSourceEnvironment {
+  /** Directory of the entry point; bundled assets live at <entryDir>/public. */
+  entryDir: string;
+  /** True when running as a compiled standalone executable. */
+  standalone: boolean;
+}
+
+function defaultPublicSourceEnvironment(): PublicSourceEnvironment {
+  return {
+    entryDir: path.dirname(Bun.main),
+    standalone: Bun.isStandaloneExecutable
+  };
+}
+
+/**
+ * A disk directory counts as a public override only when it actually serves a
+ * SPA shell, so empty or partial directories fall through to the packaged
+ * assets instead of breaking the SPA, and dev stub directories are ignored.
+ */
+function isUsableOverrideDirectory(publicDir: string): boolean {
+  return (
+    fsSync.existsSync(path.join(publicDir, 'index.html')) &&
+    !fsSync.existsSync(path.join(publicDir, DEV_STUB_MARKER_FILENAME))
+  );
+}
+
+/**
+ * Public assets prefer a usable override directory on disk; otherwise they
+ * fall back to the directory that ships next to the entry point, which is the
+ * executable's embedded asset tree in standalone builds.
  */
 function resolvePublicSource(
   configuredValue: string | null,
   home: string,
-  dataRoot: string
+  dataRoot: string,
+  environment: PublicSourceEnvironment = defaultPublicSourceEnvironment()
 ): { publicDir: string; publicEmbedded: boolean } {
   const configuredDir = configuredValue
     ? resolveConfiguredDirectory(configuredValue, home, dataRoot)
     : path.join(dataRoot, 'public');
 
-  if (fsSync.existsSync(configuredDir)) {
+  if (isUsableOverrideDirectory(configuredDir)) {
     return { publicDir: configuredDir, publicEmbedded: false };
   }
 
-  const bundledDir = path.join(path.dirname(Bun.main), 'public');
-  if (Bun.isStandaloneExecutable || fsSync.existsSync(bundledDir)) {
-    return { publicDir: bundledDir, publicEmbedded: Bun.isStandaloneExecutable };
+  const bundledDir = path.join(environment.entryDir, 'public');
+  if (environment.standalone || fsSync.existsSync(bundledDir)) {
+    return { publicDir: bundledDir, publicEmbedded: environment.standalone };
   }
 
   return { publicDir: configuredDir, publicEmbedded: false };
 }
 
-function toRuntimePaths(config: Config, home: string, dataRoot: string): RuntimePaths {
-  const publicSource = resolvePublicSource(config.directories.public, home, dataRoot);
+function toRuntimePaths(
+  config: Config,
+  home: string,
+  dataRoot: string,
+  environment: PublicSourceEnvironment
+): RuntimePaths {
+  const publicSource = resolvePublicSource(config.directories.public, home, dataRoot, environment);
   const filesDir = resolveConfiguredDirectory(config.directories.upload, home, dataRoot);
   const incomingDir = resolveConfiguredDirectory(config.directories.incoming, home, dataRoot);
   const privateDir = resolveConfiguredDirectory(config.directories.private, home, dataRoot);
@@ -178,7 +218,12 @@ export async function loadRuntimeConfig(options: LoadConfigOptions = {}): Promis
 
   return {
     server: config.server,
-    paths: toRuntimePaths(config, home, dataRoot),
+    paths: toRuntimePaths(
+      config,
+      home,
+      dataRoot,
+      options.publicSourceEnvironment ?? defaultPublicSourceEnvironment()
+    ),
     configPath
   };
 }

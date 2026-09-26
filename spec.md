@@ -29,13 +29,19 @@ file in the same change. If code and this document disagree, fix both.
   relative paths resolve against the data root. The template ships with
   explicit `~/.local/stream-file-server/...` values.
 - Public assets resolve in order: (1) the configured public directory when it
-  exists on disk (operator override/theme); (2) otherwise the `public`
-  directory next to the entry point — `dist/public` for `bun dist/server.js`,
-  or the asset tree embedded in a standalone executable via
-  `bun build --compile --asset` (import.meta.dir based). When only the
+  exists on disk, contains `index.html`, and carries no
+  `.streamfile-dev-stub` marker (operator override/theme); (2) otherwise the
+  `public` directory next to the entry point — `dist/public` for
+  `bun dist/server.js`, or the asset tree embedded in a standalone executable
+  via `bun build --compile --asset` (import.meta.dir based). When only the
   embedded source exists, `paths.publicEmbedded` is true and assets are served
   through a custom router reading via `Bun.file()` because `send`'s streaming
   cannot read embedded files.
+- The dev launchers create SPA stubs together with a `.streamfile-dev-stub`
+  marker in `~/.local/stream-file-server/public/`; because resolution skips
+  marked or shell-less directories, packaged servers (bundle, binaries)
+  automatically ignore the stubs and no manual cleanup is needed before
+  running a locally built binary.
 - Startup creates `files/`, `files/incoming/`, and `files/private-files/`
   under the data root. When the resolved public source provides
   `404-index.html`, its contents are written to `files/incoming/index.html`
