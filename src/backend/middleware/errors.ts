@@ -1,21 +1,23 @@
 import multer from 'multer';
 import type { ErrorRequestHandler } from 'express';
+import { ReportableError } from '@/utils/reportableError';
 
 export const errorHandler: ErrorRequestHandler = (error, _request, response, next) => {
   if (response.headersSent) return next(error);
 
   if (error instanceof multer.MulterError) {
+    // Client mistakes (unexpected field, part limits); messages carry no
+    // server-side details.
     return response.status(400).json({ error: error.message });
   }
 
-  const status =
-    typeof error === 'object' && error !== null && 'status' in error
-      ? Number((error as { status?: unknown }).status)
-      : 500;
-  const message = error instanceof Error ? error.message : 'Internal server error';
+  if (error instanceof ReportableError) {
+    return response.status(error.status).json({ error: error.message });
+  }
 
-  if (status >= 500) console.error(`[backend_error] ${message}`);
-  return response.status(status >= 400 && status < 600 ? status : 500).json({
-    error: message
-  });
+  // Unexpected internal failures may contain filesystem details; summarize
+  // them for the client and keep the real error on the server-side log.
+  const detail = error instanceof Error ? error.message : 'Internal server error';
+  console.error(`[backend_error] ${detail}`);
+  return response.status(500).json({ error: 'Internal server error' });
 };

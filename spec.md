@@ -186,7 +186,9 @@ Errors are JSON `{ "error": string }`.
 - Recursive folder uploads reuse this endpoint: the client sends one request
   per file with `destination` set to the upload target joined with the file's
   relative directory, so intermediate directories are created server-side.
-- Rejected uploads are deleted from staging. Errors are JSON 400/500. No upload
+- Rejected uploads are deleted from staging. Errors are JSON 400/500; Multer
+  client mistakes keep their message, unexpected 500s return only
+  `{error:'Internal server error'}` with details logged server-side. No upload
   size limit is configured.
 - When `features.upload` is false, `POST /upload` returns 403
   `{error:'Uploads are disabled'}` before Multer stages a file.

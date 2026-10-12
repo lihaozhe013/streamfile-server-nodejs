@@ -13,6 +13,7 @@ import {
   resolveWithinDirectory
 } from '@/services/files';
 import { isMediaExtension } from '@/utils/isMediaExtension';
+import { ReportableError } from '@/utils/reportableError';
 import { sendPublicFile } from '@/services/publicAssets';
 import {
   LARGE_TRANSFER_BYTES,
@@ -161,7 +162,7 @@ export async function sendSpaShell(response: Response, runtime: RuntimeConfig): 
     try {
       await fs.access(runtime.paths.spaShellPath);
     } catch {
-      throw new Error(
+      throw new ReportableError(
         `SPA shell is missing at ${runtime.paths.spaShellPath}. Run bun run build before starting the production server.`
       );
     }

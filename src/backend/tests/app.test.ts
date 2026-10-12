@@ -296,6 +296,18 @@ test('uploads Unicode filenames and reports malformed uploads', async () => {
   });
 });
 
+test('summarizes unexpected staging failures without leaking server details', async () => {
+  await withServer(async (baseUrl, fixture) => {
+    await fs.rm(fixture.paths.incomingDir, { recursive: true, force: true });
+
+    const response = await uploadTo(baseUrl, 'staging.txt', 'content', '.');
+    assert.equal(response.status, 500);
+    const body = (await response.json()) as { error: string };
+    assert.equal(body.error, 'Internal server error');
+    assert.doesNotMatch(body.error, /[A-Za-z]:[\\/]|incoming|staging\.txt/);
+  });
+});
+
 async function uploadTo(
   baseUrl: string,
   fileName: string,
