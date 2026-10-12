@@ -133,10 +133,13 @@ function DirectoryPage({ data }: { data: Extract<FileRouteData, { kind: 'directo
         <UploadDialog
           destination={data.path || '.'}
           onClose={() => setIsUploadOpen(false)}
-          onUploaded={(relativePath) => {
+          onUploaded={({ count, relativePath }) => {
             revalidator.revalidate();
             setToast({
-              message: `Uploaded to ${relativePath}.`,
+              message:
+                count > 1
+                  ? `Uploaded ${count} files to ${data.path || 'root'}.`
+                  : `Uploaded to ${relativePath}.`,
               tone: 'success'
             });
           }}

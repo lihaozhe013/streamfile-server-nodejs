@@ -41,7 +41,7 @@ test('home page uploads to a folder picked in the directory dialog', async ({ pa
   await dialog.getByRole('button', { name: 'photos' }).click();
   await dialog.getByRole('button', { name: /Upload to/ }).click();
 
-  await page.locator('.upload-panel input[type="file"]').setInputFiles({
+  await page.locator('.upload-panel .upload-files-input').setInputFiles({
     name: 'shot.png',
     mimeType: 'image/png',
     buffer: Buffer.from('png')
@@ -86,7 +86,7 @@ test('directory page uploads here with the current path as destination', async (
 
   const dialog = page.getByRole('dialog', { name: 'Upload a file here' });
   await expect(dialog).toContainText('Destination: /root');
-  await dialog.locator('input[type="file"]').setInputFiles({
+  await dialog.locator('.upload-files-input').setInputFiles({
     name: 'dropped.txt',
     mimeType: 'text/plain',
     buffer: Buffer.from('hi')
@@ -98,4 +98,51 @@ test('directory page uploads here with the current path as destination', async (
     page.getByRole('status').filter({ hasText: 'Uploaded to dropped.txt.' })
   ).toBeVisible();
   expect(uploadBody).toMatch(/name="destination"\r\n\r\n\./);
+});
+
+test('home page uploads multiple selected files to the picked folder', async ({ page }) => {
+  await mockFeatures(page);
+  await page.route('**/api/list-files*', async (route) => {
+    const requestedPath = new URL(route.request().url()).searchParams.get('path') ?? '';
+    const payload = requestedPath === '' ? [{ name: 'photos', isDirectory: true }] : [];
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(payload)
+    });
+  });
+
+  const uploadBodies: string[] = [];
+  await page.route('**/upload', async (route) => {
+    uploadBodies.push(route.request().postDataBuffer()?.toString('latin1') ?? '');
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: 'File uploaded successfully!',
+        relativePath: 'photos/batch.png',
+        url: '/files/photos/batch.png'
+      })
+    });
+  });
+
+  await page.goto('/');
+  await page.getByRole('radio', { name: /Files folder/ }).check();
+  const dialog = page.getByRole('dialog', { name: 'Choose upload folder' });
+  await dialog.getByRole('button', { name: 'photos' }).click();
+  await dialog.getByRole('button', { name: /Upload to/ }).click();
+
+  await page.locator('.upload-panel .upload-files-input').setInputFiles([
+    { name: 'first.png', mimeType: 'image/png', buffer: Buffer.from('one') },
+    { name: 'second.png', mimeType: 'image/png', buffer: Buffer.from('two') }
+  ]);
+  await expect(page.locator('.drop-zone')).toContainText('2 files selected');
+  await page.getByRole('button', { name: 'Upload 2 files' }).click();
+
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Uploaded 2 files to photos.' })
+  ).toBeVisible();
+  expect(uploadBodies).toHaveLength(2);
+  expect(uploadBodies[0]).toMatch(/name="destination"\r\n\r\nphotos/);
+  expect(uploadBodies[1]).toMatch(/name="destination"\r\n\r\nphotos/);
 });

@@ -453,6 +453,39 @@ a {
   border-radius: 16px;
   background: var(--drop-icon-bg);
 }
+.upload-choice-row {
+  display: inline-flex;
+  margin-top: 2px;
+}
+.upload-file-list {
+  max-height: 108px;
+  margin: 2px 0 0;
+  padding: 0 22px;
+  overflow-y: auto;
+  text-align: left;
+  font-size: 0.76rem;
+  color: var(--muted);
+  list-style: disc;
+}
+.upload-file-list li {
+  margin: 1px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.upload-structure-note {
+  margin: -8px 0 14px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.progress-file {
+  margin: -3px 0 5px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .browse-panel {
   display: flex;
   flex-direction: column;

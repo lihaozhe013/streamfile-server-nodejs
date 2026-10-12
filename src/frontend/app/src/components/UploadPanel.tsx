@@ -1,23 +1,36 @@
-import { CloudUpload, FolderOpen, Inbox } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { uploadFile } from '@/lib/api';
+import { CloudUpload, FolderOpen, FolderUp, Inbox } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import DirectoryPickerDialog from '@/components/DirectoryPickerDialog';
 import Toast, { type ToastTone } from '@/components/Toast';
+import {
+  collectDroppedFiles,
+  filterUploadItems,
+  formatFileSize,
+  itemsFromFileList,
+  runUploadQueue,
+  UploadQueueError,
+  type UploadItem,
+  type UploadQueueProgress
+} from '@/lib/uploads';
 
 type UploadTarget = { kind: 'inbox' } | { kind: 'folder'; path: string };
 
+const PREVIEW_FILE_COUNT = 5;
+
 export default function UploadPanel() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [items, setItems] = useState<UploadItem[]>([]);
+  const [skippedCount, setSkippedCount] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState<UploadQueueProgress | null>(null);
   const [target, setTarget] = useState<UploadTarget>({ kind: 'inbox' });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     tone: ToastTone;
   } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const filesInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (window.location.hash === '#upload') {
@@ -25,39 +38,76 @@ export default function UploadPanel() {
     }
   }, []);
 
-  const chooseFile = (file: File | undefined) => {
-    if (file) setSelectedFile(file);
+  // React has no prop for directory picking; the attribute enables it.
+  useEffect(() => {
+    const input = folderInputRef.current;
+    if (!input) return;
+    input.setAttribute('webkitdirectory', '');
+    input.setAttribute('directory', '');
+  }, []);
+
+  const totalBytes = useMemo(() => items.reduce((sum, item) => sum + item.file.size, 0), [items]);
+  const hasFolders = useMemo(() => items.some((item) => item.relativePath.includes('/')), [items]);
+
+  const acceptItems = (incoming: UploadItem[]) => {
+    const filtered = filterUploadItems(incoming);
+    setItems(filtered.items);
+    setSkippedCount(filtered.skippedCount);
+  };
+
+  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    acceptItems(itemsFromFileList(event.target.files ?? [], false));
+    event.target.value = '';
+  };
+
+  const openPicker = (ref: React.RefObject<HTMLInputElement | null>) => {
+    ref.current?.click();
   };
 
   const submitUpload = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selectedFile || isUploading) return;
+    if (items.length === 0 || isUploading) return;
 
+    const batch = items;
+    const base = target.kind === 'inbox' ? '' : target.path;
     setIsUploading(true);
-    setProgress(0);
+    setProgress(null);
     setToast(null);
-    const destination = target.kind === 'inbox' ? '' : target.path;
     try {
-      const response = await uploadFile(selectedFile, destination, setProgress);
+      const responses = await runUploadQueue(batch, base, setProgress);
+      const label = target.kind === 'inbox' ? 'inbox' : target.path === '.' ? 'root' : target.path;
+      const response = responses[0];
       setToast({
         message:
-          target.kind === 'folder' && response.relativePath
-            ? `Uploaded to ${response.relativePath}.`
-            : response.message || 'File uploaded successfully.',
+          batch.length === 1
+            ? target.kind === 'folder' && response?.relativePath
+              ? `Uploaded to ${response.relativePath}.`
+              : response?.message || 'File uploaded successfully.'
+            : `Uploaded ${batch.length} files to ${label}.`,
         tone: 'success'
       });
-      setSelectedFile(null);
-      if (inputRef.current) inputRef.current.value = '';
+      setItems([]);
+      setSkippedCount(0);
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
-      setToast({
-        message: error instanceof Error ? error.message : 'Upload failed.',
-        tone: 'error'
-      });
+      if (error instanceof UploadQueueError) {
+        // Keep the failed file and everything after it so retry resumes here.
+        setItems(batch.slice(error.fileIndex));
+        setToast({ message: error.message, tone: 'error' });
+      } else {
+        setToast({
+          message: error instanceof Error ? error.message : 'Upload failed.',
+          tone: 'error'
+        });
+      }
     } finally {
       setIsUploading(false);
+      setProgress(null);
     }
   };
+
+  const previewItems = items.slice(0, PREVIEW_FILE_COUNT);
+  const remainderCount = Math.max(0, items.length - previewItems.length);
+  const submitLabel = items.length > 1 ? `Upload ${items.length} files` : 'Upload file';
 
   return (
     <>
@@ -65,7 +115,7 @@ export default function UploadPanel() {
         <div className="panel-heading">
           <div>
             <span className="panel-kicker">Quick action</span>
-            <h2>Upload a file</h2>
+            <h2>Upload files</h2>
           </div>
           <CloudUpload aria-hidden="true" size={24} />
         </div>
@@ -125,8 +175,8 @@ export default function UploadPanel() {
         </fieldset>
 
         <div
-          className={`drop-zone ${isDragging ? 'drop-zone-active' : ''} ${selectedFile ? 'drop-zone-selected' : ''}`}
-          onClick={() => inputRef.current?.click()}
+          className={`drop-zone ${isDragging ? 'drop-zone-active' : ''} ${items.length > 0 ? 'drop-zone-selected' : ''}`}
+          onClick={() => openPicker(filesInputRef)}
           onDragEnter={(event) => {
             event.preventDefault();
             setIsDragging(true);
@@ -139,35 +189,95 @@ export default function UploadPanel() {
           onDrop={(event) => {
             event.preventDefault();
             setIsDragging(false);
-            chooseFile(event.dataTransfer.files[0]);
+            void collectDroppedFiles(event.dataTransfer).then(acceptItems);
           }}
         >
           <input
-            ref={inputRef}
+            ref={filesInputRef}
             type="file"
-            className="visually-hidden"
-            onChange={(event) => chooseFile(event.target.files?.[0])}
+            className="visually-hidden upload-files-input"
+            multiple
+            onChange={onInputChange}
+            disabled={isUploading}
+          />
+          <input
+            ref={folderInputRef}
+            type="file"
+            className="visually-hidden upload-folder-input"
+            multiple
+            onChange={onInputChange}
             disabled={isUploading}
           />
           <span className="drop-icon">
             <CloudUpload aria-hidden="true" size={28} />
           </span>
-          <strong>{selectedFile ? selectedFile.name : 'Drop a file here'}</strong>
-          <span>
-            {selectedFile
-              ? formatFileSize(selectedFile.size)
-              : 'or click to choose one from your device'}
+          {items.length === 0 ? (
+            <>
+              <strong>Drop files or folders here</strong>
+              <span>or click to choose files from your device</span>
+            </>
+          ) : (
+            <>
+              <strong>
+                {items.length === 1
+                  ? items[0].relativePath || items[0].file.name
+                  : `${items.length} files selected`}
+              </strong>
+              <span>
+                {formatFileSize(totalBytes)}
+                {skippedCount > 0 ? ` · ${skippedCount} hidden skipped` : ''}
+              </span>
+              {items.length > 1 && (
+                <ul className="upload-file-list">
+                  {previewItems.map((item, index) => (
+                    <li key={`${item.relativePath}-${index}`}>
+                      {item.relativePath || item.file.name}
+                    </li>
+                  ))}
+                  {remainderCount > 0 && <li>… and {remainderCount} more</li>}
+                </ul>
+              )}
+            </>
+          )}
+          <span className="upload-choice-row">
+            <button
+              type="button"
+              className="button button-ghost button-small"
+              disabled={isUploading}
+              onClick={(event) => {
+                event.stopPropagation();
+                openPicker(folderInputRef);
+              }}
+            >
+              <FolderUp aria-hidden="true" size={15} />
+              Choose a folder
+            </button>
           </span>
         </div>
 
-        {isUploading && (
+        {target.kind === 'inbox' && hasFolders && (
+          <p className="upload-structure-note">
+            Inbox keeps file names only; folder structure is not preserved there.
+          </p>
+        )}
+
+        {isUploading && progress && (
           <div className="progress-block" aria-live="polite">
             <div className="progress-label">
-              <span>Uploading…</span>
-              <span>{progress}%</span>
+              <span>
+                {progress.totalFiles > 1
+                  ? `Uploading ${Math.min(progress.completedFiles + 1, progress.totalFiles)}/${progress.totalFiles}`
+                  : 'Uploading…'}
+              </span>
+              <span>{progress.percent}%</span>
             </div>
+            {progress.totalFiles > 1 && (
+              <div className="progress-file" aria-hidden="true">
+                {progress.currentName}
+              </div>
+            )}
             <div className="progress-track">
-              <div className="progress-value" style={{ width: `${progress}%` }} />
+              <div className="progress-value" style={{ width: `${progress.percent}%` }} />
             </div>
           </div>
         )}
@@ -175,9 +285,9 @@ export default function UploadPanel() {
         <button
           className="button button-primary button-full"
           type="submit"
-          disabled={!selectedFile || isUploading}
+          disabled={items.length === 0 || isUploading}
         >
-          {isUploading ? 'Uploading…' : 'Upload file'}
+          {isUploading ? 'Uploading…' : submitLabel}
         </button>
       </form>
       {isPickerOpen && (
@@ -194,16 +304,4 @@ export default function UploadPanel() {
       {toast && <Toast {...toast} onDismiss={() => setToast(null)} />}
     </>
   );
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB', 'TB'];
-  let value = bytes / 1024;
-  let unit = units[0];
-  for (let index = 0; value >= 1024 && index < units.length - 1; index += 1) {
-    value /= 1024;
-    unit = units[index + 1];
-  }
-  return `${value.toFixed(value >= 10 ? 0 : 1)} ${unit}`;
 }

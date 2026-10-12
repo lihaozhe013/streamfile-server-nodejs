@@ -183,6 +183,9 @@ Errors are JSON `{ "error": string }`.
 - Collisions never overwrite: names become `name (1).ext`, `name (2).ext`, ...
   via a hard-link EEXIST retry with an exclusive-copy fallback across
   filesystems.
+- Recursive folder uploads reuse this endpoint: the client sends one request
+  per file with `destination` set to the upload target joined with the file's
+  relative directory, so intermediate directories are created server-side.
 - Rejected uploads are deleted from staging. Errors are JSON 400/500. No upload
   size limit is configured.
 - When `features.upload` is false, `POST /upload` returns 403
@@ -201,6 +204,12 @@ Errors are JSON `{ "error": string }`.
   `src/routes/fileRouteLoader.ts` classifies by extension: `md` -> markdown
   page, media set -> media player, otherwise directory listing; a failed
   listing falls back to a resource page.
+- Upload UI accepts multiple files and whole folders: the file input is
+  `multiple`, a second input carries `webkitdirectory`, and drops recurse into
+  dropped folders via the entries API. Batches upload sequentially, one
+  `POST /upload` per file, with `destination` joined with each file's relative
+  directory. Entries inside dot-prefixed directories are skipped client-side
+  and counted in the UI; the inbox target stores flat names only.
 - `image` extensions are linked directly to `/files/<path>` (no `?raw=1`) and
   rendered by the browser; backend serves them as bytes.
 - Video pages list same-directory `.srt` files and add them to the Video.js

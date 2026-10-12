@@ -64,7 +64,7 @@ test('redirects the home route and keeps both upload targets available', async (
   await expect(page.getByRole('radio', { name: /Inbox/ })).toBeVisible();
   await expect(page.getByRole('radio', { name: /Files folder/ })).toBeVisible();
 
-  await page.locator('.upload-panel input[type="file"]').setInputFiles({
+  await page.locator('.upload-panel .upload-files-input').setInputFiles({
     name: 'inbox.txt',
     mimeType: 'text/plain',
     buffer: Buffer.from('inbox')
@@ -76,7 +76,7 @@ test('redirects the home route and keeps both upload targets available', async (
   const picker = page.getByRole('dialog', { name: 'Choose upload folder' });
   await picker.getByRole('button', { name: 'photos' }).click();
   await picker.getByRole('button', { name: /Upload to/ }).click();
-  await page.locator('.upload-panel input[type="file"]').setInputFiles({
+  await page.locator('.upload-panel .upload-files-input').setInputFiles({
     name: 'folder.txt',
     mimeType: 'text/plain',
     buffer: Buffer.from('folder')
